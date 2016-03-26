@@ -1,4 +1,6 @@
 #include "AbstractPipelineAction.h"
+#include "AbstractInput.h"
+#include "AbstractOutput.h"
 
 /*
  * AbstractPipelineAction.cpp
@@ -15,16 +17,20 @@ void AbstractPipelineAction::run() {
 void AbstractPipelineAction::reset() {
 	if(this->isDone){
 		this->isDone = false;
-		for(auto& action : this->getParentActions()){
-			action->reset();
+		for(auto& input : this->inputs){
+			if(auto* output = input->getOutputSlot()){
+				output->getPipeline()->reset();
+			}
 		}
 	}
 }
 
 void AbstractPipelineAction::runImpl() {
 	if(!this->isDone){
-		for(auto& action : this->getParentActions()){
-			action->runImpl();
+		for(auto& input : this->inputs){
+			if(auto* output = input->getOutputSlot()){
+				output->getPipeline()->runImpl();
+			}
 		}
 		this->execute();
 		this->isDone = true;

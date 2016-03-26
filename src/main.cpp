@@ -5,11 +5,11 @@
  *      Author: tly
  */
 
-#include "Pipeline/PipelineAction.h"
 #include <iostream>
+#include "Pipeline/StaticPipelineAction.h"
 
 template<typename T>
-struct ParameterAction : PipelineAction<Input(),Output(T)>{
+struct ParameterAction : StaticPipelineAction<Input(),Output(T)>{
 	void setValue(const T& val){
 		this->template getOutput<0>().getValue() = val;
 	}
@@ -20,7 +20,7 @@ protected:
 	void execute(){};
 };
 
-struct SumAction : PipelineAction<Input(int,int,int),Output(int)>{
+struct SumAction : StaticPipelineAction<Input(int,int,int),Output(int)>{
 protected:
 	void execute(){
 		int val = this->getInput<0>().getValue()
