@@ -8,9 +8,14 @@
 
 template<typename T>
 struct Buffer{
-	Buffer(size_t elemCount);
+	Buffer(size_t elemCount)
+		:elemCount(elemCount){}
 
-	const size_t elemCount;
+	size_t getElemCount() const{
+		return elemCount;
+	}
+protected:
+	size_t elemCount;
 };
 
 

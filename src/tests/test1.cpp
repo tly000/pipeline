@@ -6,19 +6,8 @@
  */
 
 #include <iostream>
-#include "Pipeline/StaticPipelineAction.h"
-
-template<typename T>
-struct ParameterAction : StaticPipelineAction<Input(),Output(T)>{
-	void setValue(const T& val){
-		this->template getOutput<0>().getValue() = val;
-	}
-	const T& getValue() const{
-		return this->template getOutput<0>().getValue();
-	}
-protected:
-	void execute(){};
-};
+#include "../Pipeline/StaticPipelineAction.h"
+#include "../Actions/ParameterAction.h"
 
 struct SumAction : StaticPipelineAction<Input(int,int,int),Output(int)>{
 protected:
@@ -26,11 +15,11 @@ protected:
 		int val = this->getInput<0>().getValue()
 				+ this->getInput<1>().getValue()
 				+ this->getInput<2>().getValue();
-		this->getOutput<0>().getValue() = val;
+		this->getOutput<0>().setValue(val);
 	}
 };
 
-int main(){
+void test1(){
 	ParameterAction<int> param1,param2,param3;
 	param1.setValue(11);
 	param2.setValue(22);

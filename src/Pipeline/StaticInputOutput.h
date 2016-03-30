@@ -28,17 +28,21 @@ struct StaticInput : AbstractInput{
 
 template<typename T>
 struct StaticOutput : AbstractOutput{
-	StaticOutput(AbstractPipelineAction* pipeline,T data = T())
+	StaticOutput(AbstractPipelineAction* pipeline)
 		:AbstractOutput(pipeline),
-		 data(data){}
+		 data(nullptr){}
 
 	void connectTo(StaticInput<T>& slot);
 
 	const T& getValue() const;
 
 	T& getValue();
+
+	void setValue(const T&);
+
+	virtual bool hasValue() const;
 protected:
-	T data;
+	std::unique_ptr<T> data;
 };
 
 template<typename T>
@@ -62,10 +66,24 @@ inline void StaticOutput<T>::connectTo(StaticInput<T>& slot) {
 
 template<typename T>
 inline T& StaticOutput<T>::getValue() {
-	return data;
+	return *data;
 }
 
 template<typename T>
 inline void StaticInput<T>::connectTo(StaticOutput<T>& slot) {
 	AbstractInput::connectTo(slot);
+}
+
+template<typename T>
+inline void StaticOutput<T>::setValue(const T& val) {
+	if(this->hasValue()){
+		this->getValue() = val;
+	} else {
+		this->data = std::make_unique<T>(val);
+	}
+}
+
+template<typename T>
+inline bool StaticOutput<T>::hasValue() const {
+	return data.get() != nullptr;
 }

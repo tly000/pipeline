@@ -17,6 +17,10 @@ AbstractOutput* AbstractInput::getOutputSlot() {
 	return outputSlot;
 }
 
+const AbstractOutput* AbstractInput::getOutputSlot() const {
+	return outputSlot;
+}
+
 AbstractPipelineAction* AbstractInput::getPipeline() const {
 	return pipeline;
 }
@@ -28,4 +32,12 @@ AbstractInput::AbstractInput(AbstractPipelineAction* pipeline)
 
 AbstractInput::~AbstractInput() {
 	eraseFromList(pipeline->inputs,this);
+}
+
+bool AbstractInput::isConnected() {
+	return getOutputSlot();
+}
+
+bool AbstractInput::hasValue() const {
+	return this->getOutputSlot() && this->getOutputSlot()->hasValue();
 }

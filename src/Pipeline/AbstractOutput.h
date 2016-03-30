@@ -11,10 +11,12 @@
  */
 struct AbstractInput;
 
-struct AbstractOutput /*: NonCopyable*/{
+struct AbstractOutput : NonCopyable{
 	AbstractOutput(AbstractPipelineAction* pipeline);
 
 	AbstractPipelineAction* getPipeline() const;
+
+	virtual bool hasValue() const = 0;
 
 	virtual ~AbstractOutput();
 protected:

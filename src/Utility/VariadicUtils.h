@@ -1,4 +1,6 @@
 #pragma once
+#include <utility>
+
 /*
  * VariadicUtils.h
  *
@@ -6,7 +8,7 @@
  *      Author: tly
  */
 
-#define variadicForEach(statement) { int dummy[]{ 0,(({statement;}),0)...}; (void)dummy; }
+#define variadicForEach(statement) { int dummy[]{ 0,(statement,0)...}; (void)dummy; }
 
 template<typename Tuple,typename F>
 void tupleForEach(Tuple&&, F&&);

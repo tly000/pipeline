@@ -2,6 +2,7 @@
 #include <tuple>
 #include <cstdint>
 #include <set>
+#include <memory>
 #include "AbstractPipelineAction.h"
 #include "../Utility/NonCopyable.h"
 #include "../Utility/VariadicUtils.h"
@@ -25,8 +26,8 @@ template<typename T> using int_t = int;
 template<typename... Inputs,typename... Outputs>
 struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipelineAction, NonCopyable{
 	StaticPipelineAction()
-		:inputSlots{StaticInput<Inputs>(this)...},
-		 outputSlots{StaticOutput<Outputs>(this)...}{}
+		:inputSlots{std::make_unique<StaticInput<Inputs>>(this)...},
+		 outputSlots{std::make_unique<StaticOutput<Outputs>>(this)...}{}
 
 	template<size_t N> auto& getInput();
 	template<size_t N> auto& getOutput();
@@ -36,8 +37,8 @@ struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipel
 
 	virtual ~StaticPipelineAction() = default;
 protected:
-	std::tuple<StaticInput<Inputs>...> inputSlots;
-	std::tuple<StaticOutput<Outputs>...> outputSlots;
+	std::tuple<std::unique_ptr<StaticInput<Inputs>>...> inputSlots;
+	std::tuple<std::unique_ptr<StaticOutput<Outputs>>...> outputSlots;
 };
 
 template<typename... Inputs,typename... Outputs>
@@ -48,10 +49,10 @@ void StaticPipelineAction<Input(Inputs...),Output(Outputs...)>::connectTo(Action
 
 template<typename... Inputs, typename... Outputs> template<size_t N>
 auto& StaticPipelineAction<Input(Inputs...), Output(Outputs...)>::getInput(){
-	return std::get<N>(inputSlots);
+	return *std::get<N>(inputSlots);
 }
 
 template<typename... Inputs, typename... Outputs> template<size_t N>
 auto& StaticPipelineAction<Input(Inputs...), Output(Outputs...)>::getOutput(){
-	return std::get<N>(outputSlots);
+	return *std::get<N>(outputSlots);
 }

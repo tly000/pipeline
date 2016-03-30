@@ -1,6 +1,6 @@
 #pragma once
 #include "../Buffer.h"
-#include <memory>
+#include <vector>
 
 /*
  * CPUBuffer.h
@@ -11,12 +11,13 @@
 
 template<typename T> struct CPUBuffer : Buffer<T>{
 	CPUBuffer(size_t elemCount)
-	  : Buffer(elemCount),
-		data(std::make_unique<T[]>(elemCount)){}
+	  : Buffer<T>(elemCount),
+		data(elemCount){}
 
-	T* getDataPointer(){ return data.get(); }
+	T* getDataPointer(){ return data.data(); }
+	const T* getDataPointer() const{ return data.data(); }
 protected:
-	std::unique_ptr<T[]> data;
+	std::vector<T> data;
 };
 
 

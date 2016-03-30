@@ -7,9 +7,19 @@
  */
 
 template<typename T> struct Image{
-	Image(size_t width,size_t height);
+	Image(size_t width,size_t height)
+		:width(width),
+		 height(height){}
 
-	const size_t width, height;
+	size_t getWidth() const{
+		return width;
+	}
+
+	size_t getHeight() const{
+		return height;
+	}
+protected:
+	size_t width, height;
 };
 
 

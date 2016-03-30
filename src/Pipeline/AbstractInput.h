@@ -11,10 +11,15 @@
 
 struct AbstractOutput;
 
-struct AbstractInput /*: NonCopyable*/{
+struct AbstractInput : NonCopyable{
 	AbstractInput(AbstractPipelineAction* pipeline);
 
 	AbstractOutput* getOutputSlot();
+	const AbstractOutput* getOutputSlot() const;
+
+	bool isConnected();
+
+	bool hasValue() const;
 
 	AbstractPipelineAction* getPipeline() const;
 

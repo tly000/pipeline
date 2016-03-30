@@ -1,6 +1,7 @@
 #pragma once
 #include <list>
 #include <algorithm>
+#include <string>
 
 /*
  * Utils.h
@@ -19,5 +20,4 @@ template<typename T> bool eraseFromList(std::list<T>& list,const T& el){
 	}
 }
 
-
-
+std::string fileToString(const std::string& fileName);

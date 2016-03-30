@@ -10,8 +10,11 @@
  */
 
 template<typename T> struct CLBuffer : Buffer<T>{
-	CLBuffer(size_t elemCount) :
-		Buffer(elemCount){}
+	CLBuffer(cl::Context& ctx,cl_mem_flags memFlags,size_t elemCount) :
+		Buffer(elemCount),
+		bufferHandle(memFlags,sizeof(T) * elemCount){}
+protected:
+	cl::Buffer bufferHandle;
 };
 
 

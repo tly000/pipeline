@@ -10,6 +10,7 @@ struct NonCopyable{
 	NonCopyable() = default;
 
 	NonCopyable& operator=(const NonCopyable&) = delete;
+	NonCopyable& operator=(NonCopyable&&) = delete;
 
 	NonCopyable(const NonCopyable&) = delete;
 	NonCopyable(NonCopyable&&) = default;
