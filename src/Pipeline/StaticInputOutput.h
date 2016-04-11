@@ -21,7 +21,7 @@ struct StaticInput : AbstractInput{
 	StaticInput(AbstractPipelineAction* pipeline)
 		:AbstractInput(pipeline){}
 
-	const T& getValue() const;
+	T& getValue() const;
 
 	void connectTo(StaticOutput<T>& slot);
 };
@@ -46,7 +46,7 @@ protected:
 };
 
 template<typename T>
-inline const T& StaticInput<T>::getValue() const {
+inline T& StaticInput<T>::getValue() const {
 	if(outputSlot){
 		return static_cast<StaticOutput<T>*>(outputSlot)->getValue();
 	}else{

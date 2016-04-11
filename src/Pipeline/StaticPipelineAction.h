@@ -21,8 +21,6 @@ template<int A,int B> struct IntPair{};
 
 template<typename...> struct StaticPipelineAction;
 
-template<typename T> using int_t = int;
-
 template<typename... Inputs,typename... Outputs>
 struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipelineAction, NonCopyable{
 	StaticPipelineAction()
@@ -36,6 +34,9 @@ struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipel
 	void connectTo(Action& action,IntPair<As,Bs>...);
 
 	virtual ~StaticPipelineAction() = default;
+
+	const static uint32_t numInputs = sizeof...(Inputs);
+	const static uint32_t numOutputs = sizeof...(Outputs);
 protected:
 	std::tuple<std::unique_ptr<StaticInput<Inputs>>...> inputSlots;
 	std::tuple<std::unique_ptr<StaticOutput<Outputs>>...> outputSlots;

@@ -25,27 +25,3 @@ protected:
 	}
 };
 
-template<typename...> struct LazyGeneratorAction;
-
-template<typename... Inputs,typename T>
-struct LazyGeneratorAction<Input(Inputs...),Output(T)> : GeneratorAction<Input(Inputs...),Output(T)>{
-	virtual ~LazyGeneratorAction() = default;
-protected:
-	virtual void execute(){
-		auto newValues = createInputTuple(std::index_sequence_for<Inputs...>{});
-		if(first || lastValues != newValues){
-			GeneratorAction<Input(Inputs...),Output(T)>::execute();
-			first = false;
-		}
-	}
-	bool first = true;
-	std::tuple<Inputs...> lastValues;
-
-	template<size_t N> std::tuple<Inputs...> createInputTuple(std::index_sequence<N...>){
-		return std::tuple<Inputs...>{
-			this->template getInput<N>().getValue()...
-		};
-	}
-};
-
-

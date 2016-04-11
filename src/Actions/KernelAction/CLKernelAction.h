@@ -1,7 +1,6 @@
 #pragma once
-#include "../Pipeline/StaticPipelineAction.h"
+#include "KernelAction.h"
 #include <string>
-#include <map>
 #include <CL/cl.hpp>
 
 /*
@@ -12,11 +11,10 @@
  */
 
 template<typename... Inputs>
-struct CLKernelAction : StaticPipelineAction<Input(Inputs...),Output()>{
+struct CLKernelAction : KernelAction<cl::Kernel,Inputs...>{
 
-	CLKernelAction(const cl::CommandQueue& queue,const cl::Program& prog,const std::string& kernelName)
-		: kernel(prog,kernelName.c_str()),
-		  queue(queue){
+	CLKernelAction(const cl::CommandQueue& queue)
+		: queue(queue){
 		int argCount = kernel.getInfo<CL_KERNEL_NUM_ARGS>();
 		if(argCount != sizeof...(Inputs)){
 			std::cerr << "warning: CLKernelAction argument count does not match the argument count of " << kernelName << std::endl;
@@ -25,7 +23,6 @@ struct CLKernelAction : StaticPipelineAction<Input(Inputs...),Output()>{
 
 	virtual ~CLKernelAction() = default;
 protected:
-	cl::Kernel kernel;
 	cl::CommandQueue queue;
 
 	virtual void execute(){
