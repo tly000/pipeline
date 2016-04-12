@@ -12,12 +12,12 @@
 template<typename T> struct CPUBuffer : Buffer<T>{
 	CPUBuffer(size_t elemCount)
 	  : Buffer<T>(elemCount),
-		data(elemCount){}
+		data(std::make_shared<std::vector<T>>(elemCount)){}
 
-	T* getDataPointer(){ return data.data(); }
-	const T* getDataPointer() const{ return data.data(); }
+	T* getDataPointer(){ return data->data(); }
+	const T* getDataPointer() const{ return data->data(); }
 protected:
-	std::vector<T> data;
+	std::shared_ptr<std::vector<T>> data;
 };
 
 
