@@ -2,6 +2,8 @@
 #include <list>
 #include <algorithm>
 #include <string>
+#include <typeinfo>
+#include <iostream>
 
 /*
  * Utils.h
@@ -21,3 +23,8 @@ template<typename T> bool eraseFromList(std::list<T>& list,const T& el){
 }
 
 std::string fileToString(const std::string& fileName);
+
+std::string demangle(const std::type_info&);
+std::string demangle(const char*);
+
+#define _log(message) std::cout << "[log] " << demangle(__FUNCTION__) << ":" << __LINE__ << ":\n" << message << std::endl

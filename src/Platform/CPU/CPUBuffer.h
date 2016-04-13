@@ -1,6 +1,7 @@
 #pragma once
 #include "../Buffer.h"
 #include <vector>
+#include <memory>
 
 /*
  * CPUBuffer.h
@@ -10,7 +11,7 @@
  */
 
 template<typename T> struct CPUBuffer : Buffer<T>{
-	CPUBuffer(size_t elemCount)
+	CPUBuffer(std::size_t elemCount)
 	  : Buffer<T>(elemCount),
 		data(std::make_shared<std::vector<T>>(elemCount)){}
 

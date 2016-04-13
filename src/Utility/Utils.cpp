@@ -25,4 +25,22 @@ std::string fileToString(const std::string& fileName){
 	}
 }
 
+std::string demangle(const std::type_info& info){
+	return demangle(info.name());
+}
+
+#include <cxxabi.h>
+
+std::string demangle(const char* mangledName){
+	size_t length;
+	int error;
+	std::unique_ptr<char,decltype(&std::free)> demangledName(
+		abi::__cxa_demangle(mangledName,nullptr,&length,&error),
+		&std::free
+	);
+	return 	error ?
+			mangledName :
+			std::string(demangledName.get(),demangledName.get() + length);
+}
+
 

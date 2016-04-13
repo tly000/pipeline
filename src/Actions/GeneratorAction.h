@@ -15,13 +15,13 @@ struct GeneratorAction<Input(Inputs...),Output(T)> : StaticPipelineAction<Input(
 	virtual ~GeneratorAction() = default;
 protected:
 	virtual void execute(){
-		executeImpl(std::index_sequence_for<Inputs>{});
+		executeImpl(std::index_sequence_for<Inputs...>{});
 	}
 
-	template<size_t... N> void executeImpl(std::index_sequence<N>){
-		this->template getOutput<0>.getValue() = T(
-			this->template getInput<N>.getValue()...
-		);
+	template<size_t... N> void executeImpl(std::index_sequence<N...>){
+		this->template getOutput<0>().setValue(T{
+			this->template getInput<N>().getValue()...
+		});
 	}
 };
 

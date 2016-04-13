@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdint>
+
 /*
  * Buffer.h
  *
@@ -8,14 +10,14 @@
 
 template<typename T>
 struct Buffer{
-	Buffer(size_t elemCount)
+	Buffer(std::size_t elemCount)
 		:elemCount(elemCount){}
 
-	size_t getElemCount() const{
+	std::size_t getElemCount() const{
 		return elemCount;
 	}
 protected:
-	size_t elemCount;
+	std::size_t elemCount;
 };
 
 

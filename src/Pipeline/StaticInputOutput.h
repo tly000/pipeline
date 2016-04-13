@@ -19,11 +19,18 @@ template<typename T> struct StaticOutput;
 template<typename T>
 struct StaticInput : AbstractInput{
 	StaticInput(AbstractPipelineAction* pipeline)
-		:AbstractInput(pipeline){}
+		:AbstractInput(pipeline),
+		 defaultValue(nullptr){}
 
 	T& getValue() const;
 
-	void connectTo(StaticOutput<T>& slot);
+	virtual void connectTo(AbstractOutput& slot);
+
+	void setDefaultValue(const T&);
+
+	virtual bool hasValue() const;
+protected:
+	std::unique_ptr<T> defaultValue;
 };
 
 template<typename T>
@@ -32,7 +39,7 @@ struct StaticOutput : AbstractOutput{
 		:AbstractOutput(pipeline),
 		 data(nullptr){}
 
-	void connectTo(StaticInput<T>& slot);
+	virtual void connectTo(AbstractInput& slot);
 
 	const T& getValue() const;
 
@@ -49,6 +56,8 @@ template<typename T>
 inline T& StaticInput<T>::getValue() const {
 	if(outputSlot){
 		return static_cast<StaticOutput<T>*>(outputSlot)->getValue();
+	}else if(defaultValue){
+		return *defaultValue;
 	}else{
 		throw std::runtime_error("slot not connected.");
 	}
@@ -56,22 +65,38 @@ inline T& StaticInput<T>::getValue() const {
 
 template<typename T>
 inline const T& StaticOutput<T>::getValue() const {
-	return data;
+	if(data.get()){
+		return *data;
+	} else {
+		throw std::runtime_error("output contains no value.");
+	}
 }
 
 template<typename T>
-inline void StaticOutput<T>::connectTo(StaticInput<T>& slot) {
-	AbstractOutput::connectTo(slot);
+inline void StaticOutput<T>::connectTo(AbstractInput& slot) {
+	if(dynamic_cast<StaticInput<T>*>(&slot)){
+		AbstractOutput::connectTo(slot);
+	} else {
+		throw std::runtime_error("connected slot type is not compatible");
+	}
 }
 
 template<typename T>
 inline T& StaticOutput<T>::getValue() {
-	return *data;
+	if(data.get()){
+		return *data;
+	} else {
+		throw std::runtime_error("output contains no value.");
+	}
 }
 
 template<typename T>
-inline void StaticInput<T>::connectTo(StaticOutput<T>& slot) {
-	AbstractInput::connectTo(slot);
+inline void StaticInput<T>::connectTo(AbstractOutput& slot) {
+	if(dynamic_cast<StaticOutput<T>*>(&slot)){
+		AbstractInput::connectTo(slot);
+	} else {
+		throw std::runtime_error("connected slot type is not compatible");
+	}
 }
 
 template<typename T>
@@ -86,4 +111,14 @@ inline void StaticOutput<T>::setValue(const T& val) {
 template<typename T>
 inline bool StaticOutput<T>::hasValue() const {
 	return data.get() != nullptr;
+}
+
+template<typename T>
+inline void StaticInput<T>::setDefaultValue(const T& val) {
+	this->defaultValue = std::make_unique<T>(val);
+}
+
+template<typename T>
+inline bool StaticInput<T>::hasValue() const {
+	return this->defaultValue || AbstractInput::hasValue();
 }

@@ -9,7 +9,7 @@
  */
 
 template<typename Factory,typename... Inputs> struct KernelGeneratorAction
-	: LazyAction<Input(std::string,std::string),Output(Factory::Kernel<Inputs...>)>{
+	: LazyAction<Input(std::string,std::string),Output(typename Factory::template Kernel<Inputs...>)>{
 
 	KernelGeneratorAction(Factory factory = Factory()) : factory(factory){}
 protected:

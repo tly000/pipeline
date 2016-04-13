@@ -1,6 +1,7 @@
 #include "AbstractPipelineAction.h"
 #include "AbstractInput.h"
 #include "AbstractOutput.h"
+#include "../Utility/Utils.h"
 
 /*
  * AbstractPipelineAction.cpp
@@ -27,16 +28,17 @@ void AbstractPipelineAction::reset() {
 
 void AbstractPipelineAction::runImpl() {
 	if(!this->isDone){
+		int i = 0;
 		for(auto& input : this->inputs){
 			if(auto* output = input->getOutputSlot()){
 				output->getPipeline()->runImpl();
+			} else if(!input->hasValue()) {
+				_log("[warning]: slot " << i << " of action " << demangle(typeid(*this)) << " not connected.");
 			}
+			i++;
 		}
+		_log("[info]: executing " << demangle(typeid(*this)));
 		this->execute();
 		this->isDone = true;
 	}
 }
-
-
-
-

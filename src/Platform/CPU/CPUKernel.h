@@ -10,14 +10,33 @@
 
 template<typename... Inputs>
 struct CPUKernel : Kernel<Inputs...>{
+	using KernelFunc = void(*)(const Range& globalID,const Range& localID,Inputs&...);
 
-	CPUKernel(void(* kernelFunc)(Inputs&...)) : kernelFunc(kernelFunc){}
+	CPUKernel(KernelFunc kernelFunc) : kernelFunc(kernelFunc){}
 
-	void run(Inputs&... inputs){
-		kernelFunc(inputs...);
+	void run(
+		const Range& globalOffset,
+		const Range& globalSize,
+		const Range& localSize,
+		Inputs&... inputs){
+		for(unsigned l = 0; l < localSize.x; l++){
+			for(unsigned m = 0; m < localSize.y; m++){
+				for(unsigned n = 0; n < localSize.z; n++){
+
+					for(auto i = globalOffset.x; i < globalSize.x; i++){
+						for(auto j = globalOffset.y; j < globalSize.y; j++){
+							for(auto k = globalOffset.z; k < globalSize.z; k++){
+								kernelFunc(Range{i,j,k},Range{l,m,n},inputs...);
+							}
+						}
+					}
+
+				}
+			}
+		}
 	}
 protected:
-	void(* kernelFunc)(Inputs&...);
+	KernelFunc kernelFunc;
 };
 
 

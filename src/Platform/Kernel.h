@@ -1,4 +1,5 @@
 #pragma once
+#include "../Type/Range.h"
 
 /*
  * Kernel.h
@@ -9,7 +10,12 @@
 
 template<typename... Inputs>
 struct Kernel{
-	virtual void run(Inputs&...) = 0;
+	virtual void run(
+		const Range& globalOffset,
+		const Range& globalSize,
+		const Range& localSize,
+		Inputs&...
+	) = 0;
 
 	virtual ~Kernel() = default;
 };

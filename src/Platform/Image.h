@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdint>
+
 /*
  * Image.h
  *
@@ -7,19 +9,19 @@
  */
 
 template<typename T> struct Image{
-	Image(size_t width,size_t height)
+	Image(std::size_t width,std::size_t height)
 		:width(width),
 		 height(height){}
 
-	size_t getWidth() const{
+	std::size_t getWidth() const{
 		return width;
 	}
 
-	size_t getHeight() const{
+	std::size_t getHeight() const{
 		return height;
 	}
 protected:
-	size_t width, height;
+	std::size_t width, height;
 };
 
 

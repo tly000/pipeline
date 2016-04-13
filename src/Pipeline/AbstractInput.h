@@ -19,16 +19,16 @@ struct AbstractInput : NonCopyable{
 
 	bool isConnected();
 
-	bool hasValue() const;
+	virtual bool hasValue() const;
 
 	AbstractPipelineAction* getPipeline() const;
 
 	virtual ~AbstractInput();
+
+	virtual void connectTo(AbstractOutput& slot);
 protected:
 	AbstractPipelineAction* const pipeline;
 	AbstractOutput* outputSlot = nullptr;
-
-	void connectTo(AbstractOutput& slot);
 
 	friend AbstractOutput;
 };
