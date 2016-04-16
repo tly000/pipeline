@@ -26,4 +26,8 @@ inline float tofloat(const float a){
 	return a;
 }
 
+inline float fromfloat(const float a){
+	return a;
+}
+
 

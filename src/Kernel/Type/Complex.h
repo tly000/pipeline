@@ -8,7 +8,9 @@
 
 #ifndef Type
 #define Type float
-#include "Float.h"
+#include "../Type/Float.h"
+//#define Type Q16_16
+//#include "../Type/Q16_16.h"
 #endif
 
 typedef struct{
@@ -20,21 +22,21 @@ inline Type cabs2(Complex a){
 }
 
 inline Complex cadd(Complex a,Complex b){
-	return {
+	return (Complex) {
 		tadd(a.real,b.real),
 		tadd(a.imag,b.imag)
 	};
 }
 
 inline Complex csub(Complex a,Complex b){
-	return {
+	return (Complex) {
 		tsub(a.real,b.real),
 		tsub(a.imag,b.imag)
 	};
 }
 
 inline Complex cmul(Complex a,Complex b){
-	return {
+	return (Complex) {
 		tsub(tmul(a.real,b.real),tmul(a.imag,b.imag)),
 		tadd(tmul(a.imag,b.real),tmul(a.real,b.imag))
 	};
@@ -42,7 +44,7 @@ inline Complex cmul(Complex a,Complex b){
 
 inline Complex cdiv(Complex a,Complex b){
 	Type abs2 = cabs2(b);
-	return {
+	return (Complex) {
 		tdiv(tadd(tmul(a.real,b.real),tmul(a.imag,b.imag)),abs2),
 		tdiv(tsub(tmul(a.imag,b.real),tmul(a.real,b.imag)), abs2)
 	};

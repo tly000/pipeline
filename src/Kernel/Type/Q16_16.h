@@ -6,10 +6,8 @@
  *      Author: tly
  */
 
-#include "StandardTypes.h"
-#ifdef __OPENCL_VERSION__
-typedef int Q16_16;
-#else
+#include "../Type/StandardTypes.h"
+
 typedef int32_t Q16_16;
 
 
@@ -31,5 +29,9 @@ inline Q16_16 tdiv(const Q16_16 a,const Q16_16 b){
 
 inline float tofloat(const Q16_16 a){
 	return	(float)(a) / (1 << 16);
+}
+
+inline Q16_16 fromfloat(const float a){
+	return	a * (1 << 16);
 }
 

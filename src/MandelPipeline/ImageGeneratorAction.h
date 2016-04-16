@@ -11,7 +11,7 @@
 template<typename Factory,typename T> struct ImageGeneratorAction
 	: LazyAction<Input(uint32_t,uint32_t),Output(typename Factory::template Image<T>)>{
 
-	ImageGeneratorAction(Factory factory = Factory()) : factory(factory){}
+	ImageGeneratorAction(Factory factory) : factory(factory){}
 protected:
 	Factory factory;
 

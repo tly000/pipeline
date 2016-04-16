@@ -24,8 +24,9 @@ protected:
 		if(first || lastValues != newValues){
 			this->executeImpl();
 			first = false;
+			lastValues = newValues;
 		} else{
-			_log("info: lazy execution of " << demangle(typeid(*this)) << " skipped.");
+			_log("[info] lazy execution of " << demangle(typeid(*this)) << " skipped.");
 		}
 	}
 

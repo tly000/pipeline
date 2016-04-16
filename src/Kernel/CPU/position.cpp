@@ -11,8 +11,8 @@ void positionKernel(const Range& globalID,const Range& localID,CPUImage<Complex>
 	int w = image.getWidth();
 	int h = image.getHeight();
 	image.at(globalID.x,globalID.y) = Complex{
-		3 * float(globalID.x - w/2) / w,
-		3 * float(globalID.y - h/2) / h
+		fromfloat(3 * (float(globalID.x) - w/2) / w),
+		fromfloat(3 * (float(globalID.y) - h/2) / h)
 	};
 }
 

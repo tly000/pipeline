@@ -2,6 +2,7 @@
 #include <list>
 #include <algorithm>
 #include <string>
+#include <set>
 #include <typeinfo>
 #include <iostream>
 
@@ -24,7 +25,10 @@ template<typename T> bool eraseFromList(std::list<T>& list,const T& el){
 
 std::string fileToString(const std::string& fileName);
 
+std::string loadSourceFileWithHeaders(const std::string& fileName);
+std::string loadSourceFileWithHeaders(const std::string& fileName,std::set<std::string>& alreadyLoadedFiles);
+
 std::string demangle(const std::type_info&);
 std::string demangle(const char*);
 
-#define _log(message) std::cout << "[log] " << demangle(__FUNCTION__) << ":" << __LINE__ << ":\n" << message << std::endl
+#define _log(message) std::cout << "[log] " << demangle(__FUNCTION__) << ":" << __LINE__ << ": " << message << std::endl

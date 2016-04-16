@@ -20,6 +20,8 @@ template<typename T> struct Image{
 	std::size_t getHeight() const{
 		return height;
 	}
+
+	virtual ~Image() = default;
 protected:
 	std::size_t width, height;
 };

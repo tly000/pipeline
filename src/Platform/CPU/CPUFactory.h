@@ -5,6 +5,8 @@
 #include <map>
 
 #include "../../Kernel/CPU/position.h"
+#include "../../Kernel/CPU/calculation.h"
+#include "../../Kernel/CPU/coloring.h"
 
 /*
  * CPUFactory.h
@@ -33,10 +35,18 @@ struct CPUFactory{
 			throw std::runtime_error("kernel function not found");
 		}
 	}
+
+	std::string getDeviceName() const {
+		return "C++ on CPU";
+	}
 protected:
 	std::map<std::pair<std::string,std::string>,void*> internalKernelFunctions = {
 		{
 			{"position","positionKernel"}, reinterpret_cast<void*>(positionKernel)
+		},{
+			{"calculation","mandelbrotKernel"}, reinterpret_cast<void*>(mandelbrotKernel)
+		},{
+			{"coloring","coloringKernel"}, reinterpret_cast<void*>(coloringKernel)
 		}
 	};
 };
