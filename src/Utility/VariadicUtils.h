@@ -1,5 +1,6 @@
 #pragma once
 #include <utility>
+#include <tuple>
 
 /*
  * VariadicUtils.h
@@ -7,6 +8,8 @@
  *  Created on: Mar 26, 2016
  *      Author: tly
  */
+
+template<size_t N,typename... Types> using NthType = std::tuple_element_t<N,std::tuple<Types...>>;
 
 #define variadicForEach(statement) { int dummy[]{ 0,(statement,0)...}; (void)dummy; }
 

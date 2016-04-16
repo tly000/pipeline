@@ -10,7 +10,7 @@
 #include "../../Platform/CPU/CPUImage.h"
 #include "../../Type/Range.h"
 
-void coloringKernel(const Range& globalID,const Range& localID,CPUImage<uint32_t>& iterInput,CPUImage<uint32_t>& colorOutput);
+extern "C" void coloringKernel(const Range& globalID,const Range& localID,CPUImage<uint32_t>& iterInput,CPUImage<uint32_t>& colorOutput);
 
 
 

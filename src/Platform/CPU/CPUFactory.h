@@ -7,6 +7,7 @@
 #include "../../Kernel/CPU/position.h"
 #include "../../Kernel/CPU/calculation.h"
 #include "../../Kernel/CPU/coloring.h"
+#include "../../Utility/DynamicLibrary.h"
 
 /*
  * CPUFactory.h
@@ -27,28 +28,22 @@ struct CPUFactory{
 		return CPUBuffer<T>(elemCount);
 	}
 	template<typename... Inputs> Kernel<Inputs...> createKernel(const std::string& progName,const std::string& kernelName){
-		auto it = internalKernelFunctions.find({progName,kernelName});
-		if(it != internalKernelFunctions.end()){
-			//unsafe cast, but impossible to handle otherwise
-			return CPUKernel<Inputs...>(reinterpret_cast<typename CPUKernel<Inputs...>::KernelFunc>(it->second));
-		}else{
-			throw std::runtime_error("kernel function not found");
-		}
+		std::string filePath = "./src/Kernel/CPU/" + progName + ".cpp";
+		std::string libPath = "./" + progName + ".lib";
+		std::string output = systemCommand(
+			"g++ -std=c++11 -shared \"" + filePath + "\" -o \"" + libPath + "\""
+		);
+
+		DynamicLibrary library(libPath);
+		return CPUKernel<Inputs...>(
+			library,
+			reinterpret_cast<typename Kernel<Inputs...>::KernelFunc>(library.loadSymbol(kernelName))
+		);
 	}
 
 	std::string getDeviceName() const {
 		return "C++ on CPU";
 	}
-protected:
-	std::map<std::pair<std::string,std::string>,void*> internalKernelFunctions = {
-		{
-			{"position","positionKernel"}, reinterpret_cast<void*>(positionKernel)
-		},{
-			{"calculation","mandelbrotKernel"}, reinterpret_cast<void*>(mandelbrotKernel)
-		},{
-			{"coloring","coloringKernel"}, reinterpret_cast<void*>(coloringKernel)
-		}
-	};
 };
 
 

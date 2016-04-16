@@ -11,6 +11,6 @@
 #include "../Type/Complex.h"
 #include "../../Type/Range.h"
 
-void mandelbrotKernel(const Range& globalID,const Range& localID,CPUImage<Complex>& image,CPUImage<unsigned>& iterOutput);
+extern "C" void mandelbrotKernel(const Range& globalID,const Range& localID,CPUImage<Complex>& image,CPUImage<unsigned>& iterOutput);
 
 

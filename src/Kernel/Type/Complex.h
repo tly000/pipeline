@@ -7,10 +7,10 @@
  */
 
 #ifndef Type
-#define Type float
-#include "../Type/Float.h"
-//#define Type Q16_16
-//#include "../Type/Q16_16.h"
+//#define Type float
+//#include "../Type/Float.h"
+#define Type Q16_16
+#include "../Type/Q16_16.h"
 #endif
 
 typedef struct{

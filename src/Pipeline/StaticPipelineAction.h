@@ -27,8 +27,8 @@ struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipel
 		:inputSlots{std::make_unique<StaticInput<Inputs>>(this)...},
 		 outputSlots{std::make_unique<StaticOutput<Outputs>>(this)...}{}
 
-	template<size_t N> auto& getInput();
-	template<size_t N> auto& getOutput();
+	template<size_t N> StaticInput<NthType<N,Inputs...>>& getInput();
+	template<size_t N> StaticOutput<NthType<N,Outputs...>>& getOutput();
 
 	template<typename Action,int... As,int... Bs>
 	void connectTo(Action& action,IntPair<As,Bs>...);
@@ -49,11 +49,11 @@ void StaticPipelineAction<Input(Inputs...),Output(Outputs...)>::connectTo(Action
 }
 
 template<typename... Inputs, typename... Outputs> template<size_t N>
-auto& StaticPipelineAction<Input(Inputs...), Output(Outputs...)>::getInput(){
+StaticInput<NthType<N,Inputs...>>& StaticPipelineAction<Input(Inputs...), Output(Outputs...)>::getInput(){
 	return *std::get<N>(inputSlots);
 }
 
 template<typename... Inputs, typename... Outputs> template<size_t N>
-auto& StaticPipelineAction<Input(Inputs...), Output(Outputs...)>::getOutput(){
+StaticOutput<NthType<N,Outputs...>>& StaticPipelineAction<Input(Inputs...), Output(Outputs...)>::getOutput(){
 	return *std::get<N>(outputSlots);
 }

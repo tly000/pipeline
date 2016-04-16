@@ -90,4 +90,21 @@ std::string demangle(const char* mangledName){
 			std::string((const char*) demangledName.get());
 }
 
+//http://stackoverflow.com/questions/478898/how-to-execute-a-command-and-get-output-of-command-within-c-using-posix
+std::string systemCommand(const std::string& command) {
+	std::unique_ptr<FILE,decltype(&pclose)> pipe{
+		popen(command.c_str(),"r"),&pclose
+	};
 
+	if(!pipe){
+		throw std::runtime_error("could not open pipe.");
+	}
+
+    char buffer[128];
+    std::string result = "";
+    while (!feof(pipe.get())) {
+        if (fgets(buffer, 128, pipe.get()) != NULL)
+            result += buffer;
+    }
+    return result;
+}

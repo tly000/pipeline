@@ -10,8 +10,6 @@
  *      Author: tly
  */
 
-template<size_t N,typename... X> using NthType = std::tuple_element_t<N,std::tuple<X...>>;
-
 template<size_t...> struct KernelOutput{};
 
 template<typename...> struct KernelAction;

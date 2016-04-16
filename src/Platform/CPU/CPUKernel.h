@@ -1,5 +1,6 @@
 #pragma once
 #include "../Kernel.h"
+#include "../../Utility/DynamicLibrary.h"
 
 /*
  * CPUKernel.h
@@ -12,7 +13,8 @@ template<typename... Inputs>
 struct CPUKernel : Kernel<Inputs...>{
 	using KernelFunc = void(*)(const Range& globalID,const Range& localID,Inputs&...);
 
-	CPUKernel(KernelFunc kernelFunc) : kernelFunc(kernelFunc){}
+	CPUKernel(DynamicLibrary library,KernelFunc kernelFunc)
+		: library(library),kernelFunc(kernelFunc){}
 
 	void run(
 		const Range& globalOffset,
@@ -36,6 +38,7 @@ struct CPUKernel : Kernel<Inputs...>{
 		}
 	}
 protected:
+	DynamicLibrary library;
 	KernelFunc kernelFunc;
 };
 
