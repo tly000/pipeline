@@ -1,7 +1,12 @@
 #include "../Type/StandardTypes.h"
 
-constant uint32_t MAXITER = 64;
-constant float BAILOUT = 4;
+#ifndef MAXITER 
+#define MAXITER 64
+#endif
+
+#ifndef BAILOUT 
+#define BAILOUT 4
+#endif
 
 const sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST;
 

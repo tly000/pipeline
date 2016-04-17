@@ -7,11 +7,13 @@
  */
 
 #ifndef Type
-//#define Type float
-//#include "../Type/Float.h"
-#define Type Q16_16
-#include "../Type/Q16_16.h"
+#define Type float
 #endif
+
+#define __HEADER(x) #x
+#define _HEADER(x) __HEADER(x.h)
+#define HEADER(x) _HEADER(x)
+#include HEADER(Type)
 
 typedef struct{
 	Type real,imag;

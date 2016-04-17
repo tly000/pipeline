@@ -17,8 +17,10 @@ typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned long uint64_t;
 
-#else
+#elif defined(__cplusplus)
 #include <stdint.h>
+#else
+#error "system not supported"
 #endif
 
 

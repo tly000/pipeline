@@ -16,5 +16,20 @@ void positionKernel(const Range& globalID,const Range& localID,CPUImage<Complex>
 	};
 }
 
+#undef Type
+
+#ifdef _WIN32
+#include <windows.h>
+
+bool DllMain(
+  _In_ HINSTANCE hinstDLL,
+  _In_ DWORD     fdwReason,
+  _In_ LPVOID    lpvReserved
+){
+	return true;
+}
+
+#endif
+
 
 

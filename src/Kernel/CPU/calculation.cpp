@@ -8,15 +8,23 @@
  *      Author: tly
  */
 
-const uint32_t MAXITER = 64;
-const float BAILOUT = 4;
+#ifndef MAXITER
+#define MAXITER 64
+#endif
+
+#ifndef BAILOUT
+#define BAILOUT 64
+#endif
 
 void mandelbrotKernel(
 	const Range& globalID, const Range& localID,
 	CPUImage<Complex>& image, CPUImage<unsigned>& iterOutput) {
 
 	Complex c = image.at(globalID.x,globalID.y);
-	Complex z{0,0};
+	Complex z{
+		fromfloat(0),
+		fromfloat(0)
+	};
 
 	unsigned i = 0;
 	while(i < MAXITER && tofloat(cabs2(z)) <= BAILOUT){

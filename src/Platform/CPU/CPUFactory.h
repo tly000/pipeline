@@ -2,13 +2,9 @@
 #include "CPUBuffer.h"
 #include "CPUImage.h"
 #include "CPUKernel.h"
-#include <map>
-
-#include "../../Kernel/CPU/position.h"
-#include "../../Kernel/CPU/calculation.h"
-#include "../../Kernel/CPU/coloring.h"
 #include "../../Utility/DynamicLibrary.h"
 
+#include <map>
 /*
  * CPUFactory.h
  *
@@ -27,14 +23,21 @@ struct CPUFactory{
 	template<typename T> Buffer<T> createBuffer(uint32_t elemCount){
 		return CPUBuffer<T>(elemCount);
 	}
-	template<typename... Inputs> Kernel<Inputs...> createKernel(const std::string& progName,const std::string& kernelName){
+	template<typename... Inputs> Kernel<Inputs...> createKernel(const std::string& progName,const std::string& kernelName,const std::string& compilerParams){
 		std::string filePath = "./src/Kernel/CPU/" + progName + ".cpp";
-		std::string libPath = "./" + progName + ".lib";
-		std::string output = systemCommand(
-			"g++ -std=c++11 -shared \"" + filePath + "\" -o \"" + libPath + "\""
+		std::string libPath = "./src/Kernel/CPU/" + progName + ".lib";
+		std::pair<int,std::string> output = systemCommand(
+			"g++ -shared -std=c++11 " + compilerParams +
+			" \"" + filePath + "\""
+			" -o \"" + libPath + "\""
 		);
+		if(output.first){
+			throw std::runtime_error("error compiling program " + filePath + " :\n" + output.second);
+		} else {
+			_log("[info] successfully compiled " << filePath << ".");
+		}
 
-		DynamicLibrary library(libPath);
+		DynamicLibrary library("\""+libPath+"\"");
 		return CPUKernel<Inputs...>(
 			library,
 			reinterpret_cast<typename Kernel<Inputs...>::KernelFunc>(library.loadSymbol(kernelName))

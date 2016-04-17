@@ -23,7 +23,7 @@ template<typename T> bool eraseFromList(std::list<T>& list,const T& el){
 	}
 }
 
-std::string systemCommand(const std::string& command);
+std::pair<int,std::string> systemCommand(const std::string& command);
 
 std::string fileToString(const std::string& fileName);
 

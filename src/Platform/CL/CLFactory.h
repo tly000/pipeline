@@ -50,8 +50,17 @@ struct CLFactory{
 	template<typename T> Buffer<T> createBuffer(uint32_t elemCount){
 		return CLBuffer<T>(elemCount);
 	}
-	template<typename... Inputs> Kernel<Inputs...> createKernel(const std::string& progName,const std::string& kernelName){
-		std::string source = loadSourceFileWithHeaders("src/Kernel/CL/" + progName + ".cl");
+	template<typename... Inputs> Kernel<Inputs...> createKernel(const std::string& progName,const std::string& kernelName,const std::string& compilerParams){
+		std::string filePath = "src/Kernel/CL/" + progName + ".cl";
+		std::string preprocessedFilePath = "temp.cl";
+		auto result = systemCommand(
+			"cpp -undef -P -D__OPENCL_VERSION__ " + compilerParams +
+			" \"" + filePath  + "\" " + preprocessedFilePath
+		);
+		if(result.first){
+			throw std::runtime_error("error preprocessing " + filePath + ".");
+		}
+		std::string source = fileToString(preprocessedFilePath);
 		cl::Program program(context,source);
 		try{
 			program.build();

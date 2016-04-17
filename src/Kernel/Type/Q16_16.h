@@ -10,7 +10,6 @@
 
 typedef int32_t Q16_16;
 
-
 inline Q16_16 tadd(const Q16_16 a,const Q16_16 b){
 	return a + b;
 }
