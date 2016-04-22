@@ -26,7 +26,7 @@ protected:
 			first = false;
 			lastValues = newValues;
 		} else{
-			_log("[info] lazy execution of " << demangle(typeid(*this)) << " skipped.");
+			_logDebug("lazy execution of " << demangle(typeid(*this)) << " skipped.");
 		}
 	}
 

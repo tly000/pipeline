@@ -8,7 +8,8 @@
 #include "../Type/Vec.h"
 #include <BackTracer.h>
 #include "../Utility/Timer.h"
-#include "../Kernel/Type/Q16_16.h"
+//#include "../Kernel/Type/Q16_16.h"
+#include "../Kernel/Type/Fixed4.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../stb_image_write.h"
@@ -19,13 +20,12 @@
  *      Author: tly
  */
 
-template<typename T,typename Factory> void runPipeline(){
+template<typename T,typename Factory> void runPipeline(const std::string& typeName,Factory& factory){
 	BackTracer::registerErrorHandler();
-	Factory factory;
 	using U32Image = typename Factory::template Image<uint32_t>;
 	using ComplexImage = typename Factory::template Image<Vec<2,T>>;
 
-	_log("[info] creating pipeline with " << demangle(typeid(Factory)) << " using \"" << factory.getDeviceName() << "\".");
+	_log("[info] creating pipeline with type " << typeName << " and platform " << factory.getDeviceName());
 
 	ParameterAction<uint32_t,uint32_t> sizeParam;
 	sizeParam.setValue<0>(512);
@@ -33,7 +33,7 @@ template<typename T,typename Factory> void runPipeline(){
 	std::string compilerParams =
 		"-DMAXITER=64 "
 		"-DBAILOUT=4 "
-		"-DType="+demangle(typeid(T));
+		"-DType="+typeName;
 
 	GeneratorAction<Input(uint32_t,uint32_t,uint32_t),Output(Range)> imageRangeGenerator;
 	sizeParam.output(0,1) >> imageRangeGenerator.input(0,1);
@@ -86,19 +86,42 @@ template<typename T,typename Factory> void runPipeline(){
 
 	timer.start();
 	coloringKernel.run();
-	_log("[info] 1st time: " << timer.stop() << " us.");
+	_log("[info] 1st time: ");
+	_log("[info] position: " << positionKernel.template getOutput<1>().getValue());
+	_log("[info] calculation: " << mandelbrotKernel.template getOutput<1>().getValue());
+	_log("[info] coloring: " << coloringKernel.template getOutput<1>().getValue());
+	_log("[info] full: " << timer.stop() << " us.");
 	timer.start();
 	coloringKernel.run();
-	_log("[info] 2nd time: " << timer.stop() << " us.");
+	_log("[info] 2nd time: ");
+	_log("[info] position: " << positionKernel.template getOutput<1>().getValue());
+	_log("[info] calculation: " << mandelbrotKernel.template getOutput<1>().getValue());
+	_log("[info] coloring: " << coloringKernel.template getOutput<1>().getValue());
+	_log("[info] full: " << timer.stop() << " us.");
 
 	const auto& coloredImage = coloringKernel.template getOutput<0>().getValue();
-	//stbi_write_bmp("test.bmp",512,512,4,coloredImage.getDataPointer());
+	std::vector<unsigned> data;
+	coloredImage.copyToBuffer(data);
+	std::string fileName = "test_" + typeName + ".bmp";
+	stbi_write_bmp(fileName.c_str(),sizeParam.getValue<0>(),sizeParam.getValue<1>(),4,data.data());
 }
 
-int main(){
-	runPipeline<float,CLFactory>();
-	runPipeline<float,CPUFactory>();
-}
+/*int main(){
+	CLFactory gpu(1);
+	CPUFactory cpu;
+	CLFactory cpu2(2);
+	//runPipeline<float,CLFactory>("float",gpu);
+	//runPipeline<double,CLFactory>("double",gpu);
+	//runPipeline<Fixed4,CLFactory>("Fixed4",gpu);
+
+	runPipeline<float,CPUFactory>("float",cpu);
+	runPipeline<double,CPUFactory>("double",cpu);
+	runPipeline<Fixed4,CPUFactory>("Fixed4",cpu);
+
+	//runPipeline<float,CLFactory>("float",cpu2);
+	//runPipeline<double,CLFactory>("double",cpu2);
+	//runPipeline<Fixed4,CLFactory>("Fixed4",cpu2);
+}*/
 
 
 

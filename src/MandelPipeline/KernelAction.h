@@ -2,6 +2,7 @@
 #include "../Pipeline/StaticPipelineAction.h"
 #include "../Type/Range.h"
 #include <tuple>
+#include "../Utility/Timer.h"
 
 /*
  * KernelAction.h
@@ -18,7 +19,7 @@ template<typename Factory,
 		 typename... Inputs,
 		 size_t... Outputs>
 struct KernelAction<Factory,Input(Inputs...),KernelOutput<Outputs...>>
-	: StaticPipelineAction<Input(typename Factory::template Kernel<Inputs...>,Range,Range,Range,Inputs...),Output(NthType<Outputs,Inputs...>...)>{
+	: StaticPipelineAction<Input(typename Factory::template Kernel<Inputs...>,Range,Range,Range,Inputs...),Output(NthType<Outputs,Inputs...>...,uint64_t)>{
 
 	KernelAction(){
 		this->getLocalSizeInput().setDefaultValue(Range{1,1,1});
@@ -50,10 +51,15 @@ private:
 	template<size_t... N> void executeImpl(std::index_sequence<N...>){
 		auto& kernel = this->template getInput<0>().getValue();
 
+		Timer t;
+
+		t.start();
 		//run kernel
 		kernel.run(this->template getInput<N+1>().getValue()...);
+		uint64_t time = t.stop();
 		//delegate inputs to outputs
 		this->delegateOutputs(std::make_index_sequence<sizeof...(Outputs)>());
+		this->template getOutput<sizeof...(Outputs)>().setValue(time);
 	}
 
 	template<size_t... N> void delegateOutputs(std::index_sequence<N...>){

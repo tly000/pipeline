@@ -11,8 +11,9 @@
  */
 
 template<typename T,typename...> struct CLArgumentForwarder{
-	static T& forward(T& ref){
-		return ref;
+	static void forward(cl::Kernel& k,int& i,T& ref){
+		k.setArg(i,ref);
+		i++;
 	}
 };
 
@@ -28,7 +29,7 @@ template<typename... Inputs> struct CLKernel : Kernel<Inputs...>{
 		Inputs&... inputs
 	){
 		int i = 0;
-		variadicForEach(kernel.setArg(i++,CLArgumentForwarder<Inputs>::forward(inputs)));
+		variadicForEach(CLArgumentForwarder<Inputs>::forward(kernel,i,inputs));
 		cl::NDRange offset(globalOffset.x,globalOffset.y,globalOffset.z);
 		cl::NDRange global(globalSize.x,globalSize.y,globalSize.z);
 		cl::NDRange local(localSize.x,localSize.y,localSize.z);
@@ -41,14 +42,20 @@ protected:
 };
 
 template<typename T> struct CLArgumentForwarder<CLImage<T>>{
-	static cl::Image2D forward(CLImage<T>& image){
-		return image.getHandle();
+	static void forward(cl::Kernel& k,int& i,CLImage<T>& image){
+		k.setArg(i,image.getHandle());
+		i++;
+		k.setArg(i,uint32_t(image.getWidth()));
+		i++;
+		k.setArg(i,uint32_t(image.getHeight()));
+		i++;
 	}
 };
 
 template<typename T> struct CLArgumentForwarder<CLBuffer<T>>{
-	static cl::Buffer forward(CLBuffer<T>& buffer){
-		return buffer.getHandle();
+	static void forward(cl::Kernel& k,int& i,CLBuffer<T>& buffer){
+		k.setArg(i,buffer.getHandle());
+		i++;
 	}
 };
 

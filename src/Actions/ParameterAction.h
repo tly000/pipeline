@@ -13,7 +13,7 @@ struct ParameterAction : StaticPipelineAction<Input(),Output(Types...)>{
 	template<size_t N = 0,typename T> void setValue(const T& val){
 		this->template getOutput<N>().setValue(val);
 	}
-	template<size_t N = 0>  const auto& getValue() const{
+	template<size_t N = 0> const auto& getValue() const{
 		return this->template getOutput<N>().getValue();
 	}
 protected:

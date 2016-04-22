@@ -26,7 +26,11 @@ struct CLFactory{
 					this->queue = cl::CommandQueue(this->context);
 					this->device = dev;
 					break;
-				}catch(cl::Error& e){}
+				}catch(...){
+					this->context = nullptr;
+					this->queue = nullptr;
+					this->device = nullptr;
+				}
 			}
 			if(!this->device()){
 				throw std::runtime_error("couldnt find any working OpenCL device.");
@@ -45,7 +49,7 @@ struct CLFactory{
 	template<typename... Inputs> using Kernel = CLKernel<Inputs...>;
 
 	template<typename T> Image<T> createImage(uint32_t width,uint32_t height){
-		return CLImage<T>(context,CL_MEM_READ_WRITE,width,height);
+		return CLImage<T>(context,queue,CL_MEM_READ_WRITE,width,height);
 	}
 	template<typename T> Buffer<T> createBuffer(uint32_t elemCount){
 		return CLBuffer<T>(elemCount);

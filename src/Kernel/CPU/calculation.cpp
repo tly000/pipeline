@@ -27,8 +27,8 @@ void mandelbrotKernel(
 	};
 
 	unsigned i = 0;
-	while(i < MAXITER && tofloat(cabs2(z)) <= BAILOUT){
-		z = cadd(cmul(z,z),c);
+	while(i < MAXITER && cfabs2(z) <= BAILOUT){
+		z = cadd(csqr(z),c);
 		i++;
 	}
 

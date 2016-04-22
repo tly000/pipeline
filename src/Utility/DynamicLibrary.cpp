@@ -54,6 +54,8 @@
 		:libraryHandle(LoadLibrary(fileName.c_str()),&FreeLibrary){
 		if(!libraryHandle.get()){
 			throw std::runtime_error(std::string("error loading DynamicLibrary " + fileName + ": ") + GetLastErrorAsString());
+		} else {
+			_log("[info] successfully loaded " << fileName);
 		}
 	}
 

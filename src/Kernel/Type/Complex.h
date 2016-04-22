@@ -6,6 +6,7 @@
  *      Author: tly
  */
 
+#include "StandardTypes.h"
 #ifndef Type
 #define Type float
 #endif
@@ -18,6 +19,12 @@
 typedef struct{
 	Type real,imag;
 } Complex;
+
+inline float cfabs2(Complex a){
+	float r = tofloat(a.real);
+	float i = tofloat(a.imag);
+	return r*r + i*i;
+}
 
 inline Type cabs2(Complex a){
 	return tadd(tmul(a.real,a.real),tmul(a.imag,a.imag));
@@ -41,6 +48,13 @@ inline Complex cmul(Complex a,Complex b){
 	return (Complex) {
 		tsub(tmul(a.real,b.real),tmul(a.imag,b.imag)),
 		tadd(tmul(a.imag,b.real),tmul(a.real,b.imag))
+	};
+}
+
+inline Complex csqr(Complex a){
+	return (Complex) {
+		tsub(tmul(a.real,a.real),tmul(a.imag,a.imag)),
+		tmul(fromfloat(2),tmul(a.real,a.imag))
 	};
 }
 

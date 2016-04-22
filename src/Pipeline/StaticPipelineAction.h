@@ -30,6 +30,9 @@ struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipel
 	template<size_t N> StaticInput<NthType<N,Inputs...>>& getInput();
 	template<size_t N> StaticOutput<NthType<N,Outputs...>>& getOutput();
 
+	template<size_t N> StaticInput<NthType<N,Inputs...>>& getInput() const;
+	template<size_t N> StaticOutput<NthType<N,Outputs...>>& getOutput() const;
+
 	template<typename Action,int... As,int... Bs>
 	void connectTo(Action& action,IntPair<As,Bs>...);
 
@@ -55,5 +58,15 @@ StaticInput<NthType<N,Inputs...>>& StaticPipelineAction<Input(Inputs...), Output
 
 template<typename... Inputs, typename... Outputs> template<size_t N>
 StaticOutput<NthType<N,Outputs...>>& StaticPipelineAction<Input(Inputs...), Output(Outputs...)>::getOutput(){
+	return *std::get<N>(outputSlots);
+}
+
+template<typename... Inputs, typename... Outputs> template<size_t N>
+StaticInput<NthType<N,Inputs...>>& StaticPipelineAction<Input(Inputs...), Output(Outputs...)>::getInput() const{
+	return *std::get<N>(inputSlots);
+}
+
+template<typename... Inputs, typename... Outputs> template<size_t N>
+StaticOutput<NthType<N,Outputs...>>& StaticPipelineAction<Input(Inputs...), Output(Outputs...)>::getOutput() const{
 	return *std::get<N>(outputSlots);
 }

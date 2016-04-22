@@ -115,3 +115,23 @@ std::pair<int,std::string> systemCommand(const std::string& command) {
 		std::rethrow_exception(std::current_exception());
 	}
 }
+
+#if defined(__linux) || defined(__unix)
+	#include <unistd.h>
+	std::string getCurrentWorkingDirectory() {
+		char currentPath[FILENAME_MAX];
+		getcwd(currentPath,sizeof(currentPath));
+		return std::string((const char*)currentPath);
+	}
+#elif defined(__APPLE__)
+	#error "Utils for apple not implemented"
+#elif defined(_WIN32)
+	#include <direct.h>
+	std::string getCurrentWorkingDirectory() {
+		char currentPath[FILENAME_MAX];
+		_getcwd(currentPath,sizeof(currentPath));
+		return std::string((const char*)currentPath);
+	}
+#else
+	#error "os not detected."
+#endif

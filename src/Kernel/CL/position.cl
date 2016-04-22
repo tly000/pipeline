@@ -1,18 +1,12 @@
+#include "../Type/Complex.h"
 
-kernel void positionKernel(write_only image2d_t output){
+kernel void positionKernel(global write_only Complex* output,uint32_t w,uint32_t h){
 	int2 globalID = {
 		get_global_id(0),
 		get_global_id(1)
 	};
-	int w = get_image_width(output);
-	int h = get_image_height(output);
-	write_imagef(
-		output,globalID,
-		(float4)(
-			3 * ((float)(globalID.x) - w/2) / w,
-			3 * ((float)(globalID.y) - h/2) / h,
-			0,
-			0
-		)
-	);
+	output[globalID.x + globalID.y * w] = (Complex){
+		fromfloat(3 * ((float)(globalID.x) - w/2) / w),
+		fromfloat(3 * ((float)(globalID.y) - h/2) / h)
+	};
 }

@@ -33,4 +33,12 @@ std::string loadSourceFileWithHeaders(const std::string& fileName,std::set<std::
 std::string demangle(const std::type_info&);
 std::string demangle(const char*);
 
+std::string getCurrentWorkingDirectory();
+
+#ifdef DEBUGMESSAGES
+#define _logDebug(message) std::cout << "[log] " << demangle(__FUNCTION__) << ":" << __LINE__ << ": " << "[debug] " << message << std::endl
+#else
+#define _logDebug(message)
+#endif
+
 #define _log(message) std::cout << "[log] " << demangle(__FUNCTION__) << ":" << __LINE__ << ": " << message << std::endl

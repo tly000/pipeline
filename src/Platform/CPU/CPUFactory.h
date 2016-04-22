@@ -25,9 +25,9 @@ struct CPUFactory{
 	}
 	template<typename... Inputs> Kernel<Inputs...> createKernel(const std::string& progName,const std::string& kernelName,const std::string& compilerParams){
 		std::string filePath = "./src/Kernel/CPU/" + progName + ".cpp";
-		std::string libPath = "./src/Kernel/CPU/" + progName + ".lib";
+		std::string libPath = progName + ".lib";
 		std::pair<int,std::string> output = systemCommand(
-			"g++ -shared -std=c++11 " + compilerParams +
+			"g++ -O3 -shared -std=c++11 " + compilerParams +
 			" \"" + filePath + "\""
 			" -o \"" + libPath + "\""
 		);
@@ -37,7 +37,7 @@ struct CPUFactory{
 			_log("[info] successfully compiled " << filePath << ".");
 		}
 
-		DynamicLibrary library("\""+libPath+"\"");
+		DynamicLibrary library(getCurrentWorkingDirectory() + "/" + libPath);
 		return CPUKernel<Inputs...>(
 			library,
 			reinterpret_cast<typename Kernel<Inputs...>::KernelFunc>(library.loadSymbol(kernelName))

@@ -19,7 +19,8 @@ inline Q16_16 tsub(const Q16_16 a,const Q16_16 b){
 }
 
 inline Q16_16 tmul(const Q16_16 a,const Q16_16 b){
-	return ((int64_t)(a) * (int64_t)(b)) >> 16;
+	return ((int64_t)(a)*(int64_t)(b)) >> 16;
+	//fast: (a >> 8) * (b >> 8)
 }
 
 inline Q16_16 tdiv(const Q16_16 a,const Q16_16 b){
