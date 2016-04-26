@@ -106,22 +106,22 @@ template<typename T,typename Factory> void runPipeline(const std::string& typeNa
 	stbi_write_bmp(fileName.c_str(),sizeParam.getValue<0>(),sizeParam.getValue<1>(),4,data.data());
 }
 
-/*int main(){
+int main(){
 	CLFactory gpu(1);
 	CPUFactory cpu;
 	CLFactory cpu2(2);
-	//runPipeline<float,CLFactory>("float",gpu);
-	//runPipeline<double,CLFactory>("double",gpu);
-	//runPipeline<Fixed4,CLFactory>("Fixed4",gpu);
+	runPipeline<float,CLFactory>("float",gpu);
+	runPipeline<double,CLFactory>("double",gpu);
+	runPipeline<Fixed4,CLFactory>("Fixed4",gpu);
 
 	runPipeline<float,CPUFactory>("float",cpu);
 	runPipeline<double,CPUFactory>("double",cpu);
 	runPipeline<Fixed4,CPUFactory>("Fixed4",cpu);
 
-	//runPipeline<float,CLFactory>("float",cpu2);
-	//runPipeline<double,CLFactory>("double",cpu2);
-	//runPipeline<Fixed4,CLFactory>("Fixed4",cpu2);
-}*/
+	runPipeline<float,CLFactory>("float",cpu2);
+	runPipeline<double,CLFactory>("double",cpu2);
+	runPipeline<Fixed4,CLFactory>("Fixed4",cpu2);
+}
 
 
 
