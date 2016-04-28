@@ -12,21 +12,43 @@
 #include "../Kernel/Type/Complex.h"
 
 void fixedPointTest(){
-	for(float i = -25; i < 25; i++){
-		for(float j = -25; j < 25; j++){
-			float fA = i * 0.001;
-			float fB = j * 0.001;
+	for(int i = 0; i < 300; i++){
+		float fA = rand() / float(RAND_MAX) * 500;
+		float fB = rand() / float(RAND_MAX) * 500;
 
-			Fixed a = fromfloat(fA), b = fromfloat(fB);
-			Fixed c = tmul(a,b);
+		Fixed a = fromfloat(fA);
+		Fixed b = fromfloat(fB);
 
-			if(tofloat(c) != (fA*fB)){
-				std::cout << fA << " * " << fB << " = " << (fA*fB) << std::endl;
-				std::cout << tofloat(a) << " * " << tofloat(b) << " = " << tofloat(c) << std::endl;
-				std::cout << std::endl;
-			}
+		bool cmpGT[] = {
+			a.words[0] > b.words[0],
+			a.words[1] > b.words[1],
+			a.words[2] > b.words[2],
+			a.words[3] > b.words[3]
+		};
+		bool cmpLT[] = {
+			a.words[0] < b.words[0],
+			a.words[1] < b.words[1],
+			a.words[2] < b.words[2],
+			a.words[3] < b.words[3]
+		};
+		int cmp[] = {
+			cmpLT[0] - cmpGT[0],
+			cmpLT[1] - cmpGT[1],
+			cmpLT[2] - cmpGT[2],
+			cmpLT[3] - cmpGT[3]
+		};
+
+		int count = cmp[0] * 8 + cmp[1] * 4 + cmp[2] * 2 + cmp[3];
+
+		if(count > 0){
+			std::cout << fA << " less than " << fB << " : " << (fA < fB) << ", " << fixedCompareLessThan(a,b) << std::endl;
+		}else if(count < 0){
+			std::cout << fA << " greater than " << fB << " : " << (fA > fB) << std::endl;
+		}else if(count == 0){
+			std::cout << fA << " equals " << fB << " : " << (fA == fB) << std::endl;
 		}
 	}
+
 }
 
 

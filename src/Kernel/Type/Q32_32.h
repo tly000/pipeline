@@ -19,17 +19,6 @@
 	} Q32_32;
 #endif
 
-
-inline uint32_t addWords(int n, uint32_t * z, const uint32_t * x, uint32_t carry) {
-	uint32_t c = carry;
-	for (int i = n - 1; i >= 0; i--) {
-		c += (uint32_t) z[i] + (uint64_t) x[i];
-		z[i] = (uint32_t) (c & 0xFFFFFFFFULL);
-		c >>= 32;
-	}
-	return (uint32_t) c;
-}
-
 inline Q32_32 tadd(const Q32_32 a,const Q32_32 b){
 	int64_t r = (int64_t)(a.y) + (int64_t)(b.y);
 	return (Q32_32){
