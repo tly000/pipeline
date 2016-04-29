@@ -10,6 +10,4 @@
 #define FixedSize 16
 #include "FixedN.h"
 
-typedef Fixed Fixed16;
-
 

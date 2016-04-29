@@ -10,6 +10,3 @@
 #define FixedSize 8
 #include "FixedN.h"
 
-typedef Fixed Fixed8;
-
-

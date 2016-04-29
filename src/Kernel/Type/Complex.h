@@ -6,6 +6,7 @@
  *      Author: tly
  */
 
+#include "../MacroTools.h"
 #include "StandardTypes.h"
 #ifndef Type
 #define Type float
@@ -15,6 +16,8 @@
 #define _HEADER(x) __HEADER(x.h)
 #define HEADER(x) _HEADER(x)
 #include HEADER(Type)
+
+#define floatToType _concat(floatTo,Type)
 
 typedef struct{
 	Type real,imag;
@@ -55,7 +58,7 @@ inline Complex cmul(const Complex a,const Complex b){
 inline Complex csqr(const Complex a){
 	return (Complex) {
 		tsub(tmul(a.real,a.real),tmul(a.imag,a.imag)),
-		tmul(fromfloat(2),tmul(a.real,a.imag))
+		tmul(floatToType(2),tmul(a.real,a.imag))
 	};
 }
 

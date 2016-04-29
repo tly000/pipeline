@@ -8,7 +8,8 @@
 #include "../Type/Vec.h"
 #include <BackTracer.h>
 #include "../Utility/Timer.h"
-//#include "../Kernel/Type/Q16_16.h"
+#include "../Kernel/Type/Fixed4.h"
+#include "../Kernel/Type/Fixed8.h"
 #include "../Kernel/Type/Fixed16.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -107,20 +108,24 @@ template<typename T,typename Factory> void runPipeline(const std::string& typeNa
 }
 
 int main(){
-	CLFactory gpu(1);
-	CPUFactory cpu;
-	CLFactory cpu2(2);
-	runPipeline<float,CLFactory>("float",gpu);
-	runPipeline<double,CLFactory>("double",gpu);
-	runPipeline<Fixed16,CLFactory>("Fixed16",gpu);
+	try{
+		CLFactory gpu(1);
+		CPUFactory cpu;
+		CLFactory cpu2(2);
+		runPipeline<float,CLFactory>("float",gpu);
+		runPipeline<double,CLFactory>("double",gpu);
+		runPipeline<Fixed4,CLFactory>("Fixed4",gpu);
 
-	runPipeline<float,CPUFactory>("float",cpu);
-	runPipeline<double,CPUFactory>("double",cpu);
-	runPipeline<Fixed16,CPUFactory>("Fixed16",cpu);
+		runPipeline<float,CPUFactory>("float",cpu);
+		runPipeline<double,CPUFactory>("double",cpu);
+		runPipeline<Fixed4,CPUFactory>("Fixed4",cpu);
 
-	runPipeline<float,CLFactory>("float",cpu2);
-	runPipeline<double,CLFactory>("double",cpu2);
-	runPipeline<Fixed16,CLFactory>("Fixed16",cpu2);
+		runPipeline<float,CLFactory>("float",cpu2);
+		runPipeline<double,CLFactory>("double",cpu2);
+		runPipeline<Fixed4,CLFactory>("Fixed4",cpu2);
+	}catch(cl::Error& e){
+		std::cout << e.err() << " : " << e.what() << std::endl;
+	}
 }
 
 

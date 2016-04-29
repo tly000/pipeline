@@ -154,6 +154,4 @@ inline float tofloat(Fixed4 a){
 #define FixedSize 4
 #include "FixedN.h"
 
-typedef Fixed Fixed4;
-
 #endif

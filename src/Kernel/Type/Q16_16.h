@@ -31,7 +31,7 @@ inline float tofloat(const Q16_16 a){
 	return	(float)(a) / (1 << 16);
 }
 
-inline Q16_16 fromfloat(const float a){
+inline Q16_16 floatToQ16_16(const float a){
 	return	a * (1 << 16);
 }
 

@@ -22,8 +22,8 @@ void mandelbrotKernel(
 
 	Complex c = image.at(globalID.x,globalID.y);
 	Complex z{
-		fromfloat(0),
-		fromfloat(0)
+		floatToType(0),
+		floatToType(0)
 	};
 
 	unsigned i = 0;

@@ -47,7 +47,7 @@ inline Q32_32 tmul(const Q32_32 a,const Q32_32 b){
 
 }
 
-inline Q32_32 fromfloat(const float a){
+inline Q32_32 floatToQ32_32(const float a){
 	return	(Q32_32){
 		(int32_t)(a),
 		(int32_t)(fmod(a,1) * ((uint64_t)(2) << 32))
@@ -55,7 +55,7 @@ inline Q32_32 fromfloat(const float a){
 }
 
 inline Q32_32 tdiv(const Q32_32 a,const Q32_32 b){
-	return fromfloat(0);
+	return floatToQ32_32(0);
 }
 
 inline float tofloat(const Q32_32 a){

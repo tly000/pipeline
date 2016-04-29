@@ -21,8 +21,8 @@ kernel void mandelbrotKernel(global read_only Complex* positionInput,uint32_t w,
 
 	Complex c = positionInput[bufferIndex];
 	Complex z = { 
-		fromfloat(0), 
-		fromfloat(0)
+		floatToType(0), 
+		floatToType(0)
 	};
 
 	unsigned i = 0;

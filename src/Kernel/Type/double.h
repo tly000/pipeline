@@ -26,7 +26,7 @@ inline double tofloat(const double a){
 	return a;
 }
 
-inline double fromfloat(const float a){
+inline double floatTodouble(const float a){
 	return a;
 }
 
