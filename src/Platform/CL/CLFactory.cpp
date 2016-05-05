@@ -16,12 +16,20 @@ void CLFactory::initOpenCL() {
 		platform.getDevices(CL_DEVICE_TYPE_ALL,&devs);
 		for(auto& dev : devs){
 			if(dev.getInfo<CL_DEVICE_AVAILABLE>()){
-				devices.push_back(dev);
+				//try to make a context.
+				try{
+					cl::Context context(dev);
+					devices.push_back(dev);
+				}catch(...){
+					//this device doesnt work.
+				}
 			}
 		}
 	}
+	openCLInitialized = true;
 }
 
+bool CLFactory::openCLInitialized = false;
 std::vector<cl::Device> CLFactory::devices{};
 
 

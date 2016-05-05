@@ -14,10 +14,8 @@
 
 struct CLFactory{
 	CLFactory(uint32_t deviceID = -1){
-		static bool openCLInitialized = false;
 		if(!openCLInitialized){
 			initOpenCL();
-			openCLInitialized = true;
 		}
 		if(deviceID == uint32_t(-1)){
 			for(auto& dev : devices){
@@ -79,7 +77,17 @@ struct CLFactory{
 	}
 
 	std::string getDeviceName() const {
-		return device.getInfo<CL_DEVICE_NAME>();
+		std::string devName = device.getInfo<CL_DEVICE_NAME>();
+		devName = devName.substr(0,devName.size()-1);
+		devName = devName.substr(devName.find_first_not_of(" \t\n\r"));
+		return devName + " " + device.getInfo< CL_DEVICE_VERSION>().substr(0,sizeof("OpenCL X.X")-1);
+	}
+
+	static uint32_t getNumberOfDevices(){
+		if(!openCLInitialized){
+			initOpenCL();
+		}
+		return devices.size();
 	}
 protected:
 	cl::Device device;
@@ -87,5 +95,7 @@ protected:
 	cl::CommandQueue queue;
 
 	static void initOpenCL();
+
+	static bool openCLInitialized;
 	static std::vector<cl::Device> devices;
 };

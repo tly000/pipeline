@@ -16,9 +16,17 @@ kernel void coloringKernel(global read_only uint32_t* iterInput,uint32_t w,uint3
 		get_global_id(1)
 	};
 	int bufferIndex = globalID.x + w * globalID.y;
-	float val = sqrt(((float)iterInput[bufferIndex]) / MAXITER);
-	struct{
+	
+	uint32_t iter = iterInput[bufferIndex];
+	typedef struct{
 		uint8_t r,g,b,a;
-	} color = { 0, (uint8_t)(val * 255), (uint8_t)((1-val) * 255), 255};
+	} Color;
+	Color color;
+	if(iter == MAXITER){
+		color = (Color){ 255, 255, 255, 255};
+	}else{
+		float val = fabs(fmod((float)iter / 100,2.0f)-1.0f);
+		color = (Color){ 0, (uint8_t)(val * 150), (uint8_t)(val * 255), 255};
+	}
 	colorOutput[bufferIndex] = *(uint32_t*)&color;
 }

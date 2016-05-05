@@ -1,4 +1,3 @@
-#include "../Actions/BoxedAction.h"
 #include "../Actions/ParameterAction.h"
 #include "../Platform/CPU/CPUImage.h"
 #include <iostream>

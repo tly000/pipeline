@@ -22,16 +22,16 @@
 inline Q32_32 tadd(const Q32_32 a,const Q32_32 b){
 	int64_t r = (int64_t)(a.y) + (int64_t)(b.y);
 	return (Q32_32){
-		(int32_t)(a.x + b.x + (r >> 32)),
-		(int32_t)(r & 0xFFFFFFFF)
+		(uint32_t)(a.x + b.x + (r >> 32)),
+		(uint32_t)(r & 0xFFFFFFFF)
 	};
 }
 
 inline Q32_32 tsub(const Q32_32 a,const Q32_32 b){
 	int64_t r = ((int64_t)(a.x) << 32) - ((int64_t)(b.x) << 32);
 	return (Q32_32){
-		(int32_t)((r & 0xFFFFFFFF00000000) >> 32),
-		(int32_t)(a.y - b.y + (r & 0xFFFFFFFF))
+		(uint32_t)((r & 0xFFFFFFFF00000000) >> 32),
+		(uint32_t)(a.y - b.y + (r & 0xFFFFFFFF))
 	};
 }
 
@@ -41,16 +41,16 @@ inline Q32_32 tmul(const Q32_32 a,const Q32_32 b){
 			 lohi = (uint64_t)(a.y) * (uint64_t)(b.x),
 			 lolo = (uint64_t)(a.y) * (uint64_t)(b.y);
 	return (Q32_32){
-		hihi + (hilo >> 32) + (lohi >> 32),
-		(hilo & 0xFFFFFFFF) + (lohi & 0xFFFFFFFF) + (lolo >> 32)
+		(uint32_t)(hihi + (hilo >> 32) + (lohi >> 32)),
+		(uint32_t)((hilo & 0xFFFFFFFF) + (lohi & 0xFFFFFFFF) + (lolo >> 32))
 	};
 
 }
 
 inline Q32_32 floatToQ32_32(const float a){
 	return	(Q32_32){
-		(int32_t)(a),
-		(int32_t)(fmod(a,1) * ((uint64_t)(2) << 32))
+		(uint32_t)(a),
+		(uint32_t)(fmod(a,1) * ((uint64_t)(2) << 32))
 	};
 }
 

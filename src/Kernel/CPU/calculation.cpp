@@ -13,7 +13,7 @@
 #endif
 
 #ifndef BAILOUT
-#define BAILOUT 64
+#define BAILOUT 4
 #endif
 
 void mandelbrotKernel(

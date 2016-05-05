@@ -10,7 +10,7 @@
 #include "../Type/Complex.h"
 #include "../../Type/Range.h"
 
-extern "C" void positionKernel(const Range& globalID,const Range& localID,CPUImage<Complex>& image);
+extern "C" void positionKernel(const Range& globalID,const Range& localID,CPUImage<Complex>& image,Type& offsetReal,Type& offsetImag,Type& scale);
 
 
 

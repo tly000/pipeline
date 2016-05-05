@@ -131,7 +131,13 @@ std::pair<int,std::string> systemCommand(const std::string& command) {
 		char currentPath[FILENAME_MAX];
 		_getcwd(currentPath,sizeof(currentPath));
 		return std::string((const char*)currentPath);
-	}
+}
+
+bool fileExists(const std::string& fileName) {
+	std::ifstream file(fileName);
+	return bool(file);
+}
+
 #else
 	#error "os not detected."
 #endif

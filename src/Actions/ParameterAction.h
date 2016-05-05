@@ -1,5 +1,6 @@
 #pragma once
 #include "../Pipeline/StaticPipelineAction.h"
+#include <map>
 
 /*
  * ParameterAction.h
@@ -10,6 +11,7 @@
 
 template<typename... Types>
 struct ParameterAction : StaticPipelineAction<Input(),Output(Types...)>{
+
 	template<size_t N = 0,typename T> void setValue(const T& val){
 		this->template getOutput<N>().setValue(val);
 	}

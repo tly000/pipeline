@@ -9,14 +9,28 @@
  *      Author: tly
  */
 
+#ifndef MAXITER
+#define MAXITER 64
+#endif
+
+#ifndef BAILOUT
+#define BAILOUT 4
+#endif
+
 
 void coloringKernel(
 	const Range& globalID, const Range& localID,
 	CPUImage<uint32_t>& iterInput, CPUImage<uint32_t>& colorOutput) {
 
-	float val = std::sqrt(iterInput.at(globalID.x,globalID.y) / 64.0f);
+	uint32_t iter = iterInput.at(globalID.x,globalID.y);
 	struct{
 		uint8_t r,g,b,a;
-	} color{ 0, uint8_t(val * 255), uint8_t((1-val) * 255), 255};
+	} color;
+	if(iter == MAXITER){
+		color = { 255, 255, 255, 255};
+	}else{
+		float val = fabs(fmod((float)iter / 100,2)-1);
+		color = { 0, uint8_t(val * 150), uint8_t(val * 255), 255};
+	}
 	colorOutput.at(globalID.x,globalID.y) = reinterpret_cast<uint32_t&>(color);
 }

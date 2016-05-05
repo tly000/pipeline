@@ -47,6 +47,11 @@ struct KernelAction<Factory,Input(Inputs...),KernelOutput<Outputs...>>
 	StaticInput<Range>& getLocalSizeInput(){
 		return this->template getInput<3>();
 	}
+
+	template<typename... Indices> InputPack<sizeof...(Indices)> kernelInput(Indices... is){
+		auto addFour = [](int i){ return i+4;};
+		return this->template input(addFour(is)...);
+	}
 private:
 	template<size_t... N> void executeImpl(std::index_sequence<N...>){
 		auto& kernel = this->template getInput<0>().getValue();

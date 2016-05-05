@@ -2,29 +2,29 @@
 #include "../Pipeline/StaticPipelineAction.h"
 
 /*
- * LambdaAction.h
+ * FunctionAction.h
  *
- *  Created on: 30.03.2016
+ *  Created on: 05.05.2016
  *      Author: tly
  */
 
 template<typename...> struct FunctionAction;
 
-template<typename... Inputs,typename... Outputs>
-struct FunctionAction<Input(Inputs...),Output(Outputs...)>
-	: StaticPipelineAction<Input(Inputs...),Output(Outputs...)>{
-
-	FunctionAction(std::function<void(FunctionAction<Input(Inputs...),Output(Outputs...)>&)> func)
-		:generatorFunc(func){}
-
-	virtual ~FunctionAction() = default;
+template<typename... Inputs,typename... Outputs> struct FunctionAction<Input(Inputs...),Output(Outputs...)>
+: StaticPipelineAction<Input(Inputs...),Output(Outputs...)>{
+	FunctionAction(Outputs(* ...functions)(const Inputs&)):
+		functions{functions...}{}
 protected:
-	virtual void execute(){
-		generatorFunc(*this);
+	std::tuple<Outputs(*)(const Inputs&)...> functions;
+
+	void execute(){
+		this->executeImpl(std::index_sequence_for<Inputs...>());
 	}
 
-	std::function<std::tuple<Outputs...>(Inputs...)> generatorFunc;
+	template<size_t... I> void executeImpl(std::index_sequence<I...>){
+		variadicForEach(this->template getOutput<I>().setValue(
+			std::get<I>(functions)(this->template getInput<I>().getValue())
+		));
+	}
 };
-
-
 

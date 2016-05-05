@@ -25,7 +25,14 @@ struct CPUFactory{
 	}
 	template<typename... Inputs> Kernel<Inputs...> createKernel(const std::string& progName,const std::string& kernelName,const std::string& compilerParams){
 		std::string filePath = "./src/Kernel/CPU/" + progName + ".cpp";
-		std::string libPath = progName + ".lib";
+
+		std::string libName = progName;
+		int i = 0;
+		while(fileExists(libName + ".lib")){
+			libName = progName + std::to_string(i);
+			i++;
+		}
+		std::string libPath = libName + ".lib";
 		std::pair<int,std::string> output = systemCommand(
 			"g++ -O3 -shared -std=c++11 " + compilerParams +
 			" \"" + filePath + "\""

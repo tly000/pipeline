@@ -9,16 +9,19 @@
  */
 
 template<typename Factory,typename... Inputs> struct KernelGeneratorAction
-	: LazyAction<Input(std::string,std::string),Output(typename Factory::template Kernel<Inputs...>)>{
+	: LazyAction<Input(std::string,std::string,std::string),Output(typename Factory::template Kernel<Inputs...>)>{
 
-	KernelGeneratorAction(Factory factory) : factory(factory){}
+	KernelGeneratorAction(Factory factory) : factory(factory){
+		this->template getInput<2>().setDefaultValue("");
+	}
 protected:
 	Factory factory;
 
 	void executeImpl(){
 		std::string progName = this->template getInput<0>().getValue();
 		std::string kernelName = this->template getInput<1>().getValue();
-		this->template getOutput<0>().setValue(factory.createKernel(progName,kernelName));
+		std::string kernelParams = this->template getInput<2>().getValue();
+		this->template getOutput<0>().setValue(factory.template createKernel<Inputs...>(progName,kernelName,kernelParams));
 	}
 };
 

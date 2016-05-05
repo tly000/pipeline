@@ -33,7 +33,6 @@ inline float cfabs2(const Complex a){
 	return tofloat(cabs2(a));
 }
 
-
 inline Complex cadd(const Complex a,const Complex b){
 	return (Complex) {
 		tadd(a.real,b.real),
@@ -69,7 +68,6 @@ inline Complex cdiv(const Complex a,const Complex b){
 		tdiv(tsub(tmul(a.imag,b.real),tmul(a.real,b.imag)), abs2)
 	};
 }
-
 
 
 

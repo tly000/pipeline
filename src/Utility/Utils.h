@@ -26,6 +26,7 @@ template<typename T> bool eraseFromList(std::list<T>& list,const T& el){
 std::pair<int,std::string> systemCommand(const std::string& command);
 
 std::string fileToString(const std::string& fileName);
+bool fileExists(const std::string& fileName);
 
 std::string loadSourceFileWithHeaders(const std::string& fileName);
 std::string loadSourceFileWithHeaders(const std::string& fileName,std::set<std::string>& alreadyLoadedFiles);

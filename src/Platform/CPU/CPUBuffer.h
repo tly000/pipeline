@@ -22,6 +22,14 @@ template<typename T> struct CPUBuffer : Buffer<T>{
 		buffer.resize(this->elemCount);
 		buffer.insert(buffer.begin(),data->begin(),data->end());
 	}
+
+	std::vector<T>& getDataBuffer(){
+		return *data;
+	}
+
+	std::vector<T>& getDataBuffer() const{
+		return *data;
+	}
 protected:
 	std::shared_ptr<std::vector<T>> data;
 };
