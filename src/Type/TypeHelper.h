@@ -14,9 +14,6 @@
 #include "../Kernel/Type/float.h"
 #include "../Kernel/Type/double.h"
 #include <string>
-#include <stdexcept>
-#include <sstream>
-#include <locale>
 
 template<typename T> T fromFloatToType(float);
 

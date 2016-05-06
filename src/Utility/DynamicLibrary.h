@@ -10,7 +10,7 @@
  */
 
 struct DynamicLibrary{
-	DynamicLibrary(const std::string& fileName);
+	DynamicLibrary(const std::string& fileName,bool removeOnDelete);
 
 	void* loadSymbol(const std::string& symbolName) const;
 protected:

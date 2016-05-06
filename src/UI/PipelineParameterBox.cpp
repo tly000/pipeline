@@ -38,18 +38,23 @@ protected:
 
 PipelineParameterBox::PipelineParameterBox(PipelineWrapper& pipeline)
 	:Gtk::Box(Gtk::Orientation::ORIENTATION_VERTICAL){
-	std::cout << demangle(typeid(pipeline)) << std::endl;
+	this->set_vexpand(true);
 	auto params = pipeline.getParamPacks();
 
-	auto grid = Gtk::manage(new Gtk::Grid());
+	auto palette = Gtk::manage(new Gtk::ToolPalette());
+	palette->set_vexpand(true);
 
-	int currentYPos = 0;
 	for(auto& paramPack : params){
-		std::string name = paramPack.first;
-		auto nameLabel = Gtk::manage(new Gtk::Label(name));
-		grid->attach(*nameLabel,0,currentYPos,3,1);
-		currentYPos++;
 
+		std::string name = paramPack.first;
+		auto toolItemGroup = Gtk::manage(new Gtk::ToolItemGroup(name));
+
+		auto grid = Gtk::manage(new Gtk::Grid());
+		grid->set_column_homogeneous(true);
+		grid->set_row_spacing(10);
+		grid->set_column_spacing(10);
+
+		int currentYPos = 0;
 		for(auto& param : *paramPack.second){
 			auto label = Gtk::manage(new Gtk::Label(param->name));
 			auto item = Gtk::manage(
@@ -59,8 +64,16 @@ PipelineParameterBox::PipelineParameterBox(PipelineWrapper& pipeline)
 			grid->attach(*item,1,currentYPos,2,1);
 			currentYPos++;
 		}
+
+		auto toolItem = Gtk::manage(new Gtk::ToolItem());
+		toolItem->set_border_width(10);
+
+		toolItem->add(*grid);
+		toolItemGroup->add(*toolItem);
+
+		palette->add(*toolItemGroup);
 	}
-	this->add(*grid);
+	this->add(*palette);
 }
 
 

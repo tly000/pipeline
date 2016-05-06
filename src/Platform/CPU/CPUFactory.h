@@ -44,7 +44,7 @@ struct CPUFactory{
 			_log("[info] successfully compiled " << filePath << ".");
 		}
 
-		DynamicLibrary library(getCurrentWorkingDirectory() + "/" + libPath);
+		DynamicLibrary library(getCurrentWorkingDirectory() + "/" + libPath,true);
 		return CPUKernel<Inputs...>(
 			library,
 			reinterpret_cast<typename Kernel<Inputs...>::KernelFunc>(library.loadSymbol(kernelName))

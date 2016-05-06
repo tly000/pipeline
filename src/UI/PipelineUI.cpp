@@ -89,14 +89,20 @@ void MainWindow::loadPlatform() {
 	if(parameterBox.get_children().size()){
 		parameterBox.remove(*parameterBox.get_children().front());
 	}
-	std::cout << "loading platform" << std::endl;
 	std::string platformName = platformBox.get_active_text();
 	std::string typeName = typeBox.get_active_text();
-
-	std::cout << platformName << ", " << typeName << std::endl;
 	auto accessPair = std::make_pair(platformName,typeName);
 
 	auto platform = this->platformMap.at(accessPair);
+	if(this->selectedPlatform != nullptr){
+		for(auto& pack : this->selectedPlatform->getPipeline().getParamPacks()){
+			std::string packname = pack.first;
+			auto& packOfNewPlatform = platform->getPipeline().getParamPack(packname);
+			for(auto& param : *pack.second){
+				packOfNewPlatform.getParam(param->name).setValueFromString(param->getValueAsString());
+			}
+		}
+	}
 	this->selectedPlatform = platform;
 
 	parameterBox.add(platform->getParameterBox());

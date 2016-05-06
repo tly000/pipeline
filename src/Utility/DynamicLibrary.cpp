@@ -1,4 +1,5 @@
 #include "DynamicLibrary.h"
+#include <cstdio>
 
 /*
  * DynamicLibrary.cpp
@@ -11,7 +12,7 @@
 	#include <dlfcn.h>
 
 	DynamicLibrary::DynamicLibrary(const std::string& fileName)
-		:libraryHandle(dlopen(fileName.c_str(),RTLD_NOW),&dlclose){
+		:libraryHandle(dlopen(fileName.c_str(),RTLD_NOW),[=](void* l){ dlclose(l); if(removeOnDelete){ std::remove(fileName.c_str()); }}){
 		if(char* error = dlerror()){
 			throw std::runtime_error(std::string("error loading DynamicLibrary: ") + error);
 		}
@@ -50,8 +51,8 @@
 	    return message;
 	}
 
-	DynamicLibrary::DynamicLibrary(const std::string& fileName)
-		:libraryHandle(LoadLibrary(fileName.c_str()),&FreeLibrary){
+	DynamicLibrary::DynamicLibrary(const std::string& fileName,bool removeOnDelete)
+		:libraryHandle(LoadLibrary(fileName.c_str()),[=](void* l){ FreeLibrary((HMODULE)l); if(removeOnDelete){ std::remove(fileName.c_str()); }}){
 		if(!libraryHandle.get()){
 			throw std::runtime_error(std::string("error loading DynamicLibrary " + fileName + ": ") + GetLastErrorAsString());
 		} else {

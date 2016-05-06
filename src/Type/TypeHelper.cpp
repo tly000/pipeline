@@ -1,4 +1,9 @@
 #include "TypeHelper.h"
+#include <stdexcept>
+#include <sstream>
+#include <locale>
+#include <iomanip>
+#include <limits>
 
 /*
  * TypeHelper.cpp
@@ -119,8 +124,12 @@ template<> Fixed16 fromString<Fixed16>(const std::string& s){
 }
 
 template<> std::string toString<float>(const float& s){
-	static std::locale l = std::locale::global(std::locale()); //using "." instead of "," in float strings
-	return std::to_string(s);
+	static std::locale l = std::locale::global(std::locale());
+	std::stringstream ss;
+	ss.precision(std::numeric_limits<float>::max_digits10);
+	ss.imbue(std::locale());//using "." instead of "," in float strings
+	ss << std::fixed << s;
+	return ss.str();
 }
 
 template<> std::string toString<int>(const int& s){
@@ -132,8 +141,12 @@ template<> std::string toString<uint32_t>(const uint32_t& s){
 }
 
 template<> std::string toString<double>(const double& s){
-	static std::locale l = std::locale::global(std::locale()); //using "." instead of "," in float strings
-	return std::to_string(s);
+	static std::locale l = std::locale::global(std::locale());
+	std::stringstream ss;
+	ss.precision(std::numeric_limits<double>::max_digits10);
+	ss.imbue(std::locale());//using "." instead of "," in float strings
+	ss << std::fixed << s;
+	return ss.str();
 }
 
 template<> std::string toString<std::string>(const std::string& s){
