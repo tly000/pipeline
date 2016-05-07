@@ -11,8 +11,7 @@
 #include <string>
 #include <vector>
 
-#include <gtkmm.h>
-#include <gdkmm.h>
+#include "GtkHeader.h"
 
 #include <iostream>
 #include <BackTracer.h>

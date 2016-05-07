@@ -8,7 +8,7 @@
  */
 
 #include "../Platform/CPU/CPUImage.h"
-#include <gtkmm.h>
+#include "GtkHeader.h"
 
 struct MandelbrotImageView : Gtk::Overlay{
 	MandelbrotImageView(struct MainWindow* window);

@@ -133,11 +133,12 @@ std::pair<int,std::string> systemCommand(const std::string& command) {
 		return std::string((const char*)currentPath);
 }
 
+#else
+	#error "os not detected."
+#endif
+
+
 bool fileExists(const std::string& fileName) {
 	std::ifstream file(fileName);
 	return bool(file);
 }
-
-#else
-	#error "os not detected."
-#endif

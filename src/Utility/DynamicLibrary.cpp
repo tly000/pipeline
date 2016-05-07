@@ -11,14 +11,14 @@
 #if defined(__linux) || defined(__unix)
 	#include <dlfcn.h>
 
-	DynamicLibrary::DynamicLibrary(const std::string& fileName)
+	DynamicLibrary::DynamicLibrary(const std::string& fileName,bool removeOnDelete)
 		:libraryHandle(dlopen(fileName.c_str(),RTLD_NOW),[=](void* l){ dlclose(l); if(removeOnDelete){ std::remove(fileName.c_str()); }}){
 		if(char* error = dlerror()){
 			throw std::runtime_error(std::string("error loading DynamicLibrary: ") + error);
 		}
 	}
 
-	void* DynamicLibrary::getProcAdress(const std::string& symbolName) const {
+	void* DynamicLibrary::loadSymbol(const std::string& symbolName) const {
 		void* funcPtr = dlsym(this->libraryHandle.get(),symbolName.c_str());
 		if(char* error = dlerror()){
 			throw std::runtime_error(std::string("error on DynamicLibrary::getProcAdress : ") + error);

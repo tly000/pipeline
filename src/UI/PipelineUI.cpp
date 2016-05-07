@@ -45,8 +45,8 @@ MainWindow::MainWindow():
 	#undef addPlatform
 
 	platformBox.set_active(0);
-	platformBox.signal_changed().connect(sigc::mem_fun(*this,&loadPlatform));
-	typeBox.signal_changed().connect(sigc::mem_fun(*this,&loadPlatform));
+	platformBox.signal_changed().connect(sigc::mem_fun(*this,&MainWindow::loadPlatform));
+	typeBox.signal_changed().connect(sigc::mem_fun(*this,&MainWindow::loadPlatform));
 
 	header.pack_start(*Gtk::manage(new Gtk::Label("Device:")));
 	header.pack_start(platformBox);

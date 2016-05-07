@@ -14,7 +14,7 @@ int sgn(int x){
 }
 
 MandelbrotImageView::MandelbrotImageView(struct MainWindow* window)
-:image("test_double.bmp"),
+:image(Glib::ustring("test_double.bmp")),
  window(window){
 	this->add(image);
 	this->add_overlay(drawArea);

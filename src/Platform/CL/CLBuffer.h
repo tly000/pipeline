@@ -1,6 +1,7 @@
 #pragma once
 #include "../Buffer.h"
 #include "CL.h"
+#include <stdexcept>
 
 /*
  * CLBuffer.h

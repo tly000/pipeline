@@ -1,6 +1,6 @@
 #pragma once
-#include <gtkmm.h>
 #include "../MandelPipeline/PipelineWrapper.h"
+#include "GtkHeader.h"
 
 /*
  * PipelineParameterToolbar.h
