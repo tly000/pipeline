@@ -87,7 +87,7 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow* window)
 				if(window->get_cursor() != cursor1){
 					window->set_cursor(cursor1);
 				}
-				if(e->state && GDK_BUTTON1_MASK){
+				if(e->state & GDK_BUTTON1_MASK){
 					if(this->lastXPos != -1){
 						int dx = mx - this->lastXPos;
 						int dy = my - this->lastYPos;

@@ -190,15 +190,24 @@
 		return f;
 	}
 
+#if defined(__OPENCL_VERSION___) && defined(cl_khr_fp64)
+	#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+	#define conversionType double
+#else
+	#define conversionType float
+#endif
+
 	inline float tofloat(Fixed a){
 		bool negate = fixedGetSign(a);
 
 		fixedSetSign(a,false);
 		return (
 			(float)(a.words[0]) +
-			(float)((double)(a.words[1]) / ((uint64_t)(1) << 32))
+			(float)((conversionType)(a.words[1]) / ((uint64_t)(1) << 32))
 		) * (negate ? -1 : 1);
 	}
+
+#undef conversionType
 
 	inline Fixed tdiv(Fixed a,Fixed b){
 		Fixed c;
@@ -220,29 +229,6 @@
 
 		return c;
 	}
-
-//	inline Fixed tdiv(Fixed a,Fixed b){
-//		Fixed n;
-//		bool cSign = fixedGetSign(a) ^ fixedGetSign(b);
-//
-//		//remove sign to ensure correct calculation
-//		fixedSetSign(a,false);
-//		fixedSetSign(b,false);
-//
-//		Fixed f = floatToFixed(0.9/tofloat(b));
-//		n = a;
-//
-//		UNROLL
-//		for(int i = 0; i < DIV_PRECISION; i++){
-//			n = tmul(n,f);
-//			b = tmul(b,f);
-//			f = tsub(floatToFixed(2),b);
-//		}
-//
-//		fixedSetSign(n,cSign);
-//
-//		return n;
-//	}
 
 #else
 

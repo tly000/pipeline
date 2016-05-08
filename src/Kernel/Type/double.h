@@ -6,6 +6,14 @@
  *      Author: tly
  */
 
+#ifdef __OPENCL_VERSION___
+	#ifdef cl_khr_fp64
+		#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+	#else
+		#error "double precision is not supported on this device."
+	#endif
+#endif
+
 inline double tadd(const double a,const double b){
 	return a + b;
 }
