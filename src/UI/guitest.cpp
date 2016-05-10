@@ -8,7 +8,7 @@
  */
 
 
-int main() {
+/*int main() {
 	BackTracer::registerErrorHandler();
 
 	auto app = Gtk::Application::create("mandelpipeline");
@@ -20,5 +20,5 @@ int main() {
 	window.set_default_size(500,500);
 
 	app->run(window);
-}
+}*/
 

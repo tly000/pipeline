@@ -1,5 +1,5 @@
 #pragma once
-#include "WrappedMandelPipeline.h"
+#include "MandelPipelineWrapper.h"
 
 /*
  * ColoringWrapper.h
@@ -13,7 +13,9 @@ struct ColoringWrapper : NonCopyable{
 	using FloatImage = typename Factory::template Image<float>;
 	using U32Image = typename Factory::template Image<uint32_t>;
 
-	ColoringWrapper(WrappedMandelPipeline<Factory,T>* pipeline){
+	ColoringWrapper(MandelPipelineWrapper<Factory,T>* pipeline)
+		:colorImageGenerator(pipeline->factory),
+		 coloringKernelGenerator(pipeline->factory){
 		pipeline->imageRangeGenerator.output(0) >> colorImageGenerator.input(0);
 
 		coloringKernelGenerator.template getInput<0>().setDefaultValue("coloring");
@@ -21,7 +23,7 @@ struct ColoringWrapper : NonCopyable{
 		pipeline->kernelDefinesAction.output(0) >> coloringKernelGenerator.input(2);
 		coloringKernelGenerator.output(0) >> coloringKernel.getKernelInput();
 
-		pipeline->reductionKernel.output(0) >> coloringKernel.kernelInput(0);
+		pipeline->reduction.reductionKernel.output(0) >> coloringKernel.kernelInput(0);
 		colorImageGenerator.output(0) >> coloringKernel.kernelInput(1);
 		pipeline->imageRangeGenerator.output(0) >> coloringKernel.getGlobalSizeInput();
 	}

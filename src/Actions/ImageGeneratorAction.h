@@ -1,5 +1,6 @@
 #pragma once
 #include "../Actions/LazyAction.h"
+#include "../Type/Range.h"
 
 /*
  * ImageGeneratorAction.h

@@ -9,7 +9,7 @@
 
 #include "Type/StandardTypes.h"
 
-uint64_t random(uint64_t seed){
+inline uint64_t random(uint64_t seed){
 	return (seed * 0x5DEECE66DL + 0xBL) & ((1ULL << 48) - 1);
 }
 

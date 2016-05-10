@@ -1,5 +1,5 @@
 #pragma once
-#include "WrappedMandelPipeline.h"
+#include "MandelPipelineWrapper.h"
 
 /*
  * CalculationWrapper.h
@@ -13,9 +13,12 @@ struct CalculationWrapper : NonCopyable{
 	using FloatImage = typename Factory::template Image<float>;
 	using ComplexImage = typename Factory::template Image<Vec<2,T>>;
 
-	CalculationWrapper(WrappedMandelPipeline<Factory,T>* pipeline){
+	CalculationWrapper(MandelPipelineWrapper<Factory,T>* pipeline)
+		:mandelbrotImageGenerator(pipeline->factory),
+		 mandelbrotKernelGenerator(pipeline->factory){
 		iterationParam.setValue<0>(64);//iterations
-		iterationParam.setValue<1>(4);//bailout²
+		iterationParam.setValue<1>(4);//bailout
+		iterationParam.output(0,1) >> pipeline->toStringAction.input(0,1);
 		//calculation
 		pipeline->multisampleSizeParam.output(0) >> mandelbrotImageGenerator.input(0);
 
@@ -24,7 +27,7 @@ struct CalculationWrapper : NonCopyable{
 		pipeline->kernelDefinesAction.output(0) >> mandelbrotKernelGenerator.input(2);
 		mandelbrotKernelGenerator.output(0) >> mandelbrotKernel.getKernelInput();
 
-		pipeline->positionKernel.output(0) >> mandelbrotKernel.kernelInput(0);
+		pipeline->position.positionKernel.output(0) >> mandelbrotKernel.kernelInput(0);
 		mandelbrotImageGenerator.output(0) >> mandelbrotKernel.kernelInput(1);
 		pipeline->imageRangeGenerator.output(0) >> mandelbrotKernel.getGlobalSizeInput();
 		pipeline->multisampleRangeGenerator.output(0) >> mandelbrotKernel.getLocalSizeInput();

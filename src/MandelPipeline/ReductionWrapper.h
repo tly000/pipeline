@@ -1,5 +1,5 @@
 #pragma once
-#include "WrappedMandelPipeline.h"
+#include "MandelPipelineWrapper.h"
 
 /*
  * ReductionWrapper.h
@@ -12,7 +12,9 @@ template<typename Factory,typename T>
 struct ReductionWrapper : NonCopyable{
 	using FloatImage = typename Factory::template Image<float>;
 
-	ReductionWrapper(WrappedMandelPipeline<Factory,T>* pipeline){
+	ReductionWrapper(MandelPipelineWrapper<Factory,T>* pipeline)
+		:reducedIterationImageGenerator(pipeline->factory),
+		 reductionKernelGenerator(pipeline->factory){
 		//reduction
 		pipeline->imageRangeGenerator.output(0) >> reducedIterationImageGenerator.input(0);
 
@@ -21,7 +23,7 @@ struct ReductionWrapper : NonCopyable{
 		pipeline->kernelDefinesAction.output(0) >> reductionKernelGenerator.input(2);
 		reductionKernelGenerator.output(0) >> reductionKernel.getKernelInput();
 
-		pipeline->mandelbrotKernel.output(0) >> reductionKernel.kernelInput(0);
+		pipeline->calculation.mandelbrotKernel.output(0) >> reductionKernel.kernelInput(0);
 		reducedIterationImageGenerator.output(0) >> reductionKernel.kernelInput(1);
 		pipeline->imageRangeGenerator.output(0) >> reductionKernel.getGlobalSizeInput();
 		pipeline->multisampleRangeGenerator.output(0) >> reductionKernel.getLocalSizeInput();

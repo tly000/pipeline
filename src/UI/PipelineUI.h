@@ -16,9 +16,9 @@
 #include <iostream>
 #include <BackTracer.h>
 
+#include "../MandelPipeline/MandelPipelineWrapper.h"
 #include "../Platform/CL/CLFactory.h"
 #include "../Platform/CPU/CPUFactory.h"
-#include "../MandelPipeline/WrappedMandelPipeline.h"
 #include "../UI/PipelineParameterBox.h"
 #include "MandelbrotImageView.h"
 
@@ -41,7 +41,7 @@ struct Platform : AbstractPlatform{
 
 	PipelineWrapper& getPipeline(){
 		if(!pipeline){
-			pipeline = std::make_unique<WrappedMandelPipeline<Factory,T>>(factory,demangle(typeid(T)));
+			pipeline = std::make_unique<MandelPipelineWrapper<Factory,T>>(factory,demangle(typeid(T)));
 		}
 		return *pipeline;
 	}
@@ -89,7 +89,7 @@ struct Platform : AbstractPlatform{
 protected:
 	CPUImage<unsigned> outputImage{1,1};
 	Factory factory;
-	std::unique_ptr<WrappedMandelPipeline<Factory,T>> pipeline = nullptr;
+	std::unique_ptr<MandelPipelineWrapper<Factory,T>> pipeline = nullptr;
 	std::unique_ptr<PipelineParameterBox> paramBox = nullptr;
 };
 

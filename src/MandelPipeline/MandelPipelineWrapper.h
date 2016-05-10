@@ -5,6 +5,7 @@
 #include "../Actions/KernelAction.h"
 #include "../Actions/KernelGeneratorAction.h"
 #include "../Type/Vec.h"
+#include "../Type/Range.h"
 #include "../UI/UIParameterAction.h"
 #include "PipelineWrapper.h"
 #include "../Type/TypeHelper.h"
@@ -25,58 +26,18 @@ template<typename Factory,typename T> struct ReductionWrapper;
 template<typename Factory,typename T> struct ColoringWrapper;
 
 template<typename Factory,typename T>
-struct WrappedMandelPipeline : PipelineWrapper{
+struct MandelPipelineWrapper : PipelineWrapper{
 	using U32Image = typename Factory::template Image<uint32_t>;
 	using FloatImage = typename Factory::template Image<float>;
 	using ComplexImage = typename Factory::template Image<Vec<2,T>>;
 
-	WrappedMandelPipeline(Factory& factory,const std::string& typeName):
-		factory(factory){
-		_log("[info] creating pipeline with type " << typeName << " and platform " << factory.getDeviceName());
+	MandelPipelineWrapper(Factory& factory,const std::string& typeName);
 
-		sizeParam.setValue<0>(512);//width
-		sizeParam.setValue<1>(512);//height
+	void run();
 
-		sizeParam.output(0,1) >> imageRangeGenerator.input(0,1);
-		imageRangeGenerator.getInput<2>().setDefaultValue(1);
+	const U32Image& getRenderedImage();
 
-		multiSamplingParam.setValue<0>(false); //enable multisampling
-		multiSamplingParam.setValue<1>(2); //multisampling size
-		multiSamplingParam.setValue<2>(0); //multisampling pattern
-		multiSamplingParam.output(1,1) >> multisampleRangeGenerator.input(0,1);
-
-		imageRangeGenerator.output(0) >> multisampleSizeParam.input(0);
-		multisampleRangeGenerator.output(0) >> multisampleSizeParam.input(1);
-		multiSamplingParam.output(0) >> multisampleSizeParam.input(2);
-
-		iterationParam.output(0,1) >> toStringAction.input(0,1);
-		multiSamplingParam.output(0,1,2) >> toStringAction.input(2,3,4);
-
-		toStringAction.output(0,1) >> kernelDefinesAction.input(0,1);
-		toStringAction.output(2,3,4) >> kernelDefinesAction.input(3,4,5);
-		kernelDefinesAction.template getInput<2>().setDefaultValue(typeName);
-	}
-
-	virtual void run(){
-		_log("[info] running pipeline " + demangle(typeid(*this)));
-		Timer timer;
-
-		timer.start();
-		coloringKernel.run();
-		auto fullTime = timer.stop();
-		_log("[info] position: " << positionKernel.template getOutput<1>().getValue());
-		_log("[info] calculation: " << mandelbrotKernel.template getOutput<1>().getValue());
-		_log("[info] coloring: " << coloringKernel.template getOutput<1>().getValue());
-		_log("[info] full: " << fullTime << " us.");
-	}
-
-	const U32Image& getRenderedImage(){
-		return coloringKernel.template getOutput<0>().getValue();
-	}
-
-	UIParameterAction<T,T,T>& getPositionParam(){
-		return positionParam;
-	}
+	UIParameterAction<T,T,T>& getPositionParam();
 protected:
 	Factory& factory;
 
@@ -96,7 +57,8 @@ protected:
 		[](const Range& imageRange,const Range& msRange, const bool& msEnabled)->Range{
 			return msEnabled ? Range{
 				imageRange.x * msRange.x,
-				imageRange.y * msRange.y
+				imageRange.y * msRange.y,
+				1
 			} : imageRange;
 		}
 	};
@@ -107,6 +69,16 @@ protected:
 	};
 	//generates strings for the defines
 	ToStringAction<uint32_t,float,bool,uint32_t,uint32_t> toStringAction;
+
+	PositionWrapper<Factory,T> position;
+	CalculationWrapper<Factory,T> calculation;
+	ReductionWrapper<Factory,T> reduction;
+	ColoringWrapper<Factory,T> coloring;
 };
 
+#include "PositionWrapper.h"
+#include "CalculationWrapper.h"
+#include "ReductionWrapper.h"
+#include "ColoringWrapper.h"
 
+#include "MandelPipelineWrapper.inl"
