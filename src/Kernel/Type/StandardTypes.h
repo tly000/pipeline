@@ -19,6 +19,7 @@ typedef unsigned long uint64_t;
 
 #elif defined(__cplusplus)
 #include <stdint.h>
+#include <math.h>
 #else
 #error "system not supported"
 #endif

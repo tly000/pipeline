@@ -9,15 +9,15 @@
  */
 
 template<typename Factory,typename T> struct ImageGeneratorAction
-	: LazyAction<Input(uint32_t,uint32_t),Output(typename Factory::template Image<T>)>{
+	: LazyAction<Input(Range),Output(typename Factory::template Image<T>)>{
 
 	ImageGeneratorAction(Factory factory) : factory(factory){}
 protected:
 	Factory factory;
 
 	void executeImpl(){
-		uint32_t width = this->template getInput<0>().getValue();
-		uint32_t height = this->template getInput<1>().getValue();
+		uint32_t width = this->template getInput<0>().getValue().x;
+		uint32_t height = this->template getInput<0>().getValue().y;
 		this->template getOutput<0>().setValue(factory.template createImage<T>(width,height));
 	}
 };

@@ -30,6 +30,9 @@ inline void tupleForEach(Tuple&& t, F&& f) {
 	);
 }
 
+template<typename T,size_t I> using JustT = T;
+template<typename A,typename B> using Just= A;
+
 
 
 

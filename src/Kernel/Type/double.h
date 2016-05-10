@@ -38,4 +38,7 @@ inline double floatTodouble(const float a){
 	return a;
 }
 
+inline double tabs(const double a){
+	return fabs(a);
+}
 

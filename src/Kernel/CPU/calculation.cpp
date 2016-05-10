@@ -1,5 +1,7 @@
-#include "calculation.h"
-#include <iostream>
+#include "../../Type/Range.h"
+#include "../../Platform/CPU/CPUImage.h"
+#include "../Multisampling.h"
+#include "../Type/Complex.h"
 
 /*
  * calculation.cpp
@@ -16,11 +18,19 @@
 #define BAILOUT 4
 #endif
 
-void mandelbrotKernel(
+extern "C" void mandelbrotKernel(
 	const Range& globalID, const Range& localID,
-	CPUImage<Complex>& image, CPUImage<unsigned>& iterOutput) {
+	CPUImage<Complex>& image, CPUImage<float>& iterOutput) {
 
-	Complex c = image.at(globalID.x,globalID.y);
+	Range modifiedRange =
+		MULTISAMPLING_ENABLED ?
+		Range{
+			globalID.x * MULTISAMPLING_SIZE + localID.x,
+			globalID.y * MULTISAMPLING_SIZE + localID.y,
+			0
+		} :
+		globalID;
+	Complex c = image.at(modifiedRange.x,modifiedRange.y);
 	Complex z{
 		floatToType(0),
 		floatToType(0)
@@ -32,6 +42,6 @@ void mandelbrotKernel(
 		i++;
 	}
 
-	iterOutput.at(globalID.x,globalID.y) = i;
+	iterOutput.at(modifiedRange.x,modifiedRange.y) = i;
 }
 

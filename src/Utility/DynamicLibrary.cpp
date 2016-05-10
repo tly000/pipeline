@@ -21,7 +21,7 @@
 	void* DynamicLibrary::loadSymbol(const std::string& symbolName) const {
 		void* funcPtr = dlsym(this->libraryHandle.get(),symbolName.c_str());
 		if(char* error = dlerror()){
-			throw std::runtime_error(std::string("error on DynamicLibrary::getProcAdress : ") + error);
+			throw std::runtime_error(std::string("error on DynamicLibrary::loadSymbol : ") + error);
 		}
 		return funcPtr;
 	}
@@ -63,7 +63,7 @@
 	void* DynamicLibrary::loadSymbol(const std::string& symbolName) const {
 		auto funcPtr = GetProcAddress((HMODULE)this->libraryHandle.get(),symbolName.c_str());
 		if(!funcPtr){
-			throw std::runtime_error(std::string("error on DynamicLibrary::getProcAdress : ") + GetLastErrorAsString());
+			throw std::runtime_error(std::string("error on DynamicLibrary::loadSymbol : ") + GetLastErrorAsString());
 		}
 		return reinterpret_cast<void*>(funcPtr);
 	}

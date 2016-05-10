@@ -27,6 +27,10 @@ inline Q16_16 tdiv(const Q16_16 a,const Q16_16 b){
 	return ((int64_t)(a << 16)) / b;
 }
 
+inline Q16_16 tabs(const Q16_16 a){
+	return	abs(a);
+}
+
 inline float tofloat(const Q16_16 a){
 	return	(float)(a) / (1 << 16);
 }

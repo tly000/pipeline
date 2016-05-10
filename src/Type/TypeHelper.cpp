@@ -194,4 +194,11 @@ template<> std::string toString<Fixed16>(const Fixed16& s){
 	return toStringImpl(s);
 }
 
+template<> bool fromString<bool>(const std::string& s) {
+	return s == "true" ? true : s == "false" ? false : throw std::runtime_error("invalid string for fromString<bool>");
+}
+
+template<> std::string toString<bool>(const bool& b) {
+	return b ? "true" : "false";
+}
 

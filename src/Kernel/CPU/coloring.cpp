@@ -1,4 +1,5 @@
-#include "coloring.h"
+#include "../../Type/Range.h"
+#include "../../Platform/CPU/CPUImage.h"
 #include <iostream>
 #include <cmath>
 
@@ -18,9 +19,9 @@
 #endif
 
 
-void coloringKernel(
+extern "C" void coloringKernel(
 	const Range& globalID, const Range& localID,
-	CPUImage<uint32_t>& iterInput, CPUImage<uint32_t>& colorOutput) {
+	CPUImage<float>& iterInput, CPUImage<uint32_t>& colorOutput) {
 
 	uint32_t iter = iterInput.at(globalID.x,globalID.y);
 	struct{

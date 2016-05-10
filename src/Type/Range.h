@@ -12,5 +12,7 @@ struct Range{
 	std::uint32_t x,y,z;
 };
 
-
+constexpr bool operator==(const Range& a,const Range& b){
+	return a.x == b.x && a.y == b.y && a.z == b.z;
+}
 

@@ -44,6 +44,8 @@ template<> Fixed8 fromString<Fixed8>(const std::string&);
 
 template<> Fixed16 fromString<Fixed16>(const std::string&);
 
+template<> bool fromString<bool>(const std::string&);
+
 template<typename T> std::string toString(const T&);
 
 template<> std::string toString<float>(const float&);
@@ -59,5 +61,7 @@ template<> std::string toString<std::string>(const std::string&);
 template<> std::string toString<Fixed4>(const Fixed4&);
 
 template<> std::string toString<Fixed8>(const Fixed8&);
+
+template<> std::string toString<bool>(const bool&);
 
 template<> std::string toString<Fixed16>(const Fixed16&);

@@ -81,8 +81,13 @@ MainWindow::MainWindow():
 }
 
 void MainWindow::calculateNow() {
-	selectedPlatform->getPipeline().run();
-	this->imageView.updateView(selectedPlatform->getRenderedImage());
+	try{
+		selectedPlatform->getPipeline().run();
+		this->imageView.updateView(selectedPlatform->getRenderedImage());
+	}catch(std::exception& e){
+		auto messageBox = Gtk::MessageDialog(*this,e.what());
+		messageBox.run();
+	}
 }
 
 void MainWindow::loadPlatform() {

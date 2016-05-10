@@ -30,4 +30,8 @@ inline float floatTofloat(const float a){
 	return a;
 }
 
+inline float tabs(float a){
+	return fabs(a);
+}
+
 

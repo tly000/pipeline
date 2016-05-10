@@ -10,7 +10,6 @@
 
 template<typename T> struct KernelDefinesActionImpl;
 
-template<typename T,size_t I> using JustT = T;
 template<size_t... I> struct KernelDefinesActionImpl<std::index_sequence<I...>>
 	: LazyAction<Input(JustT<std::string,I>...),Output(std::string)>{
 

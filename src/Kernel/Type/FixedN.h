@@ -177,6 +177,11 @@
 		return c;
 	}
 
+	inline Fixed tabs(Fixed a){
+		fixedSetSign(a,false);
+		return a;
+	}
+
 	inline Fixed floatToFixed(float a){
 		bool negate = a < 0;
 		a = fabs(a);
