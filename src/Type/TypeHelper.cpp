@@ -23,24 +23,28 @@ fromFloatSpecialization(Fixed8);
 fromFloatSpecialization(Fixed16);
 
 template<> float fromString<float>(const std::string& s){
+	static std::locale l = std::locale::global(std::locale());
 	char* pos = nullptr;
 	float val = std::strtof(s.c_str(),&pos);
 	return pos == s.c_str() + s.size() ? val : throw std::runtime_error("invalid conversion");
 }
 
 template<> int fromString<int>(const std::string& s){
+	static std::locale l = std::locale::global(std::locale());
 	char* pos = nullptr;
 	int val = std::strtol(s.c_str(),&pos,10);
 	return pos == s.c_str() + s.size() ? val : throw std::runtime_error("invalid conversion");
 }
 
 template<> uint32_t fromString<uint32_t>(const std::string& s){
+	static std::locale l = std::locale::global(std::locale());
 	char* pos = nullptr;
 	uint32_t val = std::strtoul(s.c_str(),&pos,10);
 	return pos == s.c_str() + s.size() ? val : throw std::runtime_error("invalid conversion");
 }
 
 template<> double fromString<double>(const std::string& s){
+	static std::locale l = std::locale::global(std::locale());
 	char* pos = nullptr;
 	double val = std::strtod(s.c_str(),&pos);
 	return pos == s.c_str() + s.size() ? val : throw std::runtime_error("invalid conversion");
@@ -127,7 +131,6 @@ template<> std::string toString<float>(const float& s){
 	static std::locale l = std::locale::global(std::locale());
 	std::stringstream ss;
 	ss.precision(std::numeric_limits<float>::max_digits10);
-	ss.imbue(std::locale());//using "." instead of "," in float strings
 	ss << std::fixed << s;
 	return ss.str();
 }
@@ -144,7 +147,6 @@ template<> std::string toString<double>(const double& s){
 	static std::locale l = std::locale::global(std::locale());
 	std::stringstream ss;
 	ss.precision(std::numeric_limits<double>::max_digits10);
-	ss.imbue(std::locale());//using "." instead of "," in float strings
 	ss << std::fixed << s;
 	return ss.str();
 }

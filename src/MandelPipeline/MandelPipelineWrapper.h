@@ -37,7 +37,8 @@ struct MandelPipelineWrapper : PipelineWrapper{
 
 	const U32Image& getRenderedImage();
 
-	UIParameterAction<T,T,T>& getPositionParam();
+	UIParameterAction<T,T,T,float>& getPositionParam();
+
 protected:
 	Factory& factory;
 
@@ -52,10 +53,16 @@ protected:
 	UIParameterAction<bool,uint32_t,uint32_t> multiSamplingParam{"multisampling", "enable", "size" ,"pattern"};
 	//generates a Range object, fitting the sizeParam
 	GeneratorAction<Input(uint32_t,uint32_t,uint32_t),Output(Range)> imageRangeGenerator;
-	GeneratorAction<Input(uint32_t,uint32_t),Output(Range)> multisampleRangeGenerator;
+	FunctionCallAction<Input(uint32_t,bool),Range> multisampleRangeGenerator{
+		[](const uint32_t& multisampleSize,const bool& msEnabled)->Range{
+ 			return msEnabled ? Range{
+				multisampleSize,multisampleSize,1
+ 			} : Range{1,1,1};
+		}
+	};
 	FunctionCallAction<Input(Range,Range,bool),Range> multisampleSizeParam{
 		[](const Range& imageRange,const Range& msRange, const bool& msEnabled)->Range{
-			return msEnabled ? Range{
+ 			return msEnabled ? Range{
 				imageRange.x * msRange.x,
 				imageRange.y * msRange.y,
 				1
@@ -69,11 +76,10 @@ protected:
 	};
 	//generates strings for the defines
 	ToStringAction<uint32_t,float,bool,uint32_t,uint32_t> toStringAction;
-
 	PositionWrapper<Factory,T> position;
 	CalculationWrapper<Factory,T> calculation;
-	ReductionWrapper<Factory,T> reduction;
 	ColoringWrapper<Factory,T> coloring;
+	ReductionWrapper<Factory,T> reduction;
 };
 
 #include "PositionWrapper.h"

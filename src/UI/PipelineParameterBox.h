@@ -9,7 +9,7 @@
  *      Author: tly
  */
 
-struct PipelineParameterBox : Gtk::Box{
+struct PipelineParameterBox : Gtk::ToolPalette{
 	PipelineParameterBox(PipelineWrapper& pipeline);
 };
 

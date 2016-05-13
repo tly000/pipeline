@@ -159,11 +159,30 @@ void MandelbrotImageView::updateView(const CPUImage<unsigned>& cpuImage) {
 	);
 
 	int newWidth = cpuImage.getWidth();
-	int newHeight = cpuImage.getWidth();
+	int newHeight = cpuImage.getHeight();
 	bool needsScaling = false;
+	static bool first = true;
+	if(first){
+		first = false;
+	}else{
+		if(this->get_allocated_width() < newWidth || this->get_allocated_height() < newHeight){
+			float viewRatio = float(this->get_allocated_width()) / this->get_allocated_height();
+			float imageRatio= float(newWidth)/newHeight;
+			std::cout << viewRatio << ", " << imageRatio << std::endl;
+			if(viewRatio > imageRatio){
+				newHeight = this->get_allocated_height();
+				newWidth = this->get_allocated_height() * imageRatio;
+			}else{
+				newHeight = this->get_allocated_width() / imageRatio;
+				newWidth = this->get_allocated_width();
+			}
+			needsScaling = true;
+		}
+	}
 
 	if(needsScaling){
-		pixBuf = pix->scale_simple(newWidth,newHeight,Gdk::INTERP_HYPER);
+		std::cout << newWidth << ", " << newHeight << std::endl;
+		pixBuf = pix->scale_simple(newWidth,newHeight,Gdk::INTERP_BILINEAR);
 	}else{
 		pixBuf = pix;
 	}

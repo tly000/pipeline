@@ -13,8 +13,8 @@ MandelPipelineWrapper<Factory,T>::MandelPipelineWrapper(Factory& factory,const s
 	:factory(factory),
 	 position(this),
 	 calculation(this),
-	 reduction(this),
-	 coloring(this){
+	 coloring(this),
+	 reduction(this){
 	_log("[info] creating pipeline with type " << typeName << " and platform " << factory.getDeviceName());
 
 	sizeParam.setValue<0>(512);//width
@@ -26,7 +26,7 @@ MandelPipelineWrapper<Factory,T>::MandelPipelineWrapper(Factory& factory,const s
 	multiSamplingParam.setValue<0>(false); //enable multisampling
 	multiSamplingParam.setValue<1>(2); //multisampling size
 	multiSamplingParam.setValue<2>(0); //multisampling pattern
-	multiSamplingParam.output(1,1) >> multisampleRangeGenerator.input(0,1);
+	multiSamplingParam.output(1,0) >> multisampleRangeGenerator.input(0,1);
 
 	imageRangeGenerator.output(0) >> multisampleSizeParam.input(0);
 	multisampleRangeGenerator.output(0) >> multisampleSizeParam.input(1);
@@ -37,6 +37,8 @@ MandelPipelineWrapper<Factory,T>::MandelPipelineWrapper(Factory& factory,const s
 	toStringAction.output(0,1) >> kernelDefinesAction.input(0,1);
 	toStringAction.output(2,3,4) >> kernelDefinesAction.input(3,4,5);
 	kernelDefinesAction.template getInput<2>().setDefaultValue(typeName);
+	this->addParam(sizeParam);
+	this->addParam(multiSamplingParam);
 }
 
 template<typename Factory,typename T>
@@ -45,21 +47,22 @@ void MandelPipelineWrapper<Factory,T>::run(){
 	Timer timer;
 
 	timer.start();
-	coloring.coloringKernel.run();
+	reduction.reductionKernel.run();
 	auto fullTime = timer.stop();
 	_log("[info] position: " << position.positionKernel.template getOutput<1>().getValue());
 	_log("[info] calculation: " << calculation.mandelbrotKernel.template getOutput<1>().getValue());
 	_log("[info] coloring: " << coloring.coloringKernel.template getOutput<1>().getValue());
+	_log("[info] reduction: " << reduction.reductionKernel.template getOutput<1>().getValue());
 	_log("[info] full: " << fullTime << " us.");
 }
 
 template<typename Factory,typename T>
 const typename MandelPipelineWrapper<Factory,T>::U32Image& MandelPipelineWrapper<Factory,T>::getRenderedImage(){
-	return coloring.coloringKernel.template getOutput<0>().getValue();
+	return reduction.reductionKernel.template getOutput<0>().getValue();
 }
 
 template<typename Factory,typename T>
-UIParameterAction<T,T,T>& MandelPipelineWrapper<Factory,T>::getPositionParam(){
+UIParameterAction<T,T,T,float>& MandelPipelineWrapper<Factory,T>::getPositionParam(){
 	return position.positionParam;
 }
 

@@ -34,7 +34,7 @@ struct CPUFactory{
 		}
 		std::string libPath = libName + ".lib";
 		std::pair<int,std::string> output = systemCommand(
-			"g++ -O3 -shared -fPIC -std=c++11 " + compilerParams +
+			"g++ -O3 -shared -fPIC -std=c++14 " + compilerParams +
 			" \"" + filePath + "\""
 			" -o \"" + libPath + "\""
 		);

@@ -2,6 +2,7 @@
 #include "../../Platform/CPU/CPUImage.h"
 #include <iostream>
 #include <cmath>
+#include "../../Type/Vec.h"
 
 /*
  * coloring.cpp
@@ -21,17 +22,13 @@
 
 extern "C" void coloringKernel(
 	const Range& globalID, const Range& localID,
-	CPUImage<float>& iterInput, CPUImage<uint32_t>& colorOutput) {
+	CPUImage<float>& iterInput, CPUImage<Vec<3,float>>& colorOutput) {
 
-	uint32_t iter = iterInput.at(globalID.x,globalID.y);
-	struct{
-		uint8_t r,g,b,a;
-	} color;
+	float iter = iterInput.at(globalID.x,globalID.y);
 	if(iter == MAXITER){
-		color = { 255, 255, 255, 255};
+		colorOutput.at(globalID.x,globalID.y) = { 1,1,1};
 	}else{
-		float val = fabs(fmod((float)iter / 100,2)-1);
-		color = { 0, uint8_t(val * 150), uint8_t(val * 255), 255};
+		float val = fabs(fmod(iter / 100,2)-1);
+		colorOutput.at(globalID.x,globalID.y) ={ 0, val * 0.7f , val };
 	}
-	colorOutput.at(globalID.x,globalID.y) = reinterpret_cast<uint32_t&>(color);
 }

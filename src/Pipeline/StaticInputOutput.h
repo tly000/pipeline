@@ -77,6 +77,7 @@ inline void StaticOutput<T>::connectTo(AbstractInput& slot) {
 	if(dynamic_cast<StaticInput<T>*>(&slot)){
 		AbstractOutput::connectTo(slot);
 	} else {
+		std::cout << demangle(typeid(*this)) << std::endl;
 		throw std::runtime_error("connected slot type is not compatible");
 	}
 }

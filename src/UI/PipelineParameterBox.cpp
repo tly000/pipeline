@@ -7,6 +7,7 @@
  *      Author: tly
  */
 
+template<typename T,typename = void>
 struct ParameterItem : Gtk::Entry{
 	ParameterItem(Parameter& param)
 	:param(param){
@@ -36,15 +37,64 @@ protected:
 	}
 };
 
-PipelineParameterBox::PipelineParameterBox(PipelineWrapper& pipeline)
-	:Gtk::Box(Gtk::Orientation::ORIENTATION_VERTICAL){
+
+template<typename T> struct ParameterItem<T,std::enable_if_t<std::is_integral<T>::value>> : Gtk::SpinButton{
+	using Limits = std::numeric_limits<T>;
+
+	ParameterItem(TypedParameter<T>& param)
+	:Gtk::SpinButton(Gtk::Adjustment::create(0,Limits::min(),Limits::max()),1),
+	 param(param){
+		this->add_events(Gdk::EventMask::KEY_PRESS_MASK);
+		this->set_text(param.getValueAsString());
+		this->signal_focus_out_event().connect([this](GdkEventFocus*){
+			this->commitChange();
+			return false;
+		});
+		this->signal_key_press_event().connect([this](GdkEventKey* e){
+			if(e->keyval == GDK_KEY_Return){
+				this->commitChange();
+			}
+			return false;
+		});
+		this->param.registerObserver([this](Parameter*){
+			this->set_text(this->param.getValueAsString());
+		});
+	}
+protected:
+	TypedParameter<T>& param;
+
+	void commitChange(){
+		if(!this->param.setValueFromString(this->get_text().raw())){
+			this->set_text(this->param.getValueAsString());
+		}
+	}
+};
+
+template<> struct ParameterItem<bool> : Gtk::CheckButton{
+
+	ParameterItem(TypedParameter<bool>& param)
+	:param(param){
+		this->add_events(Gdk::EventMask::KEY_PRESS_MASK);
+		this->set_active(param.getValue());
+		this->signal_toggled().connect([this]{
+			this->commitChange();
+		});
+		this->param.registerObserver([this](Parameter*){
+			this->set_active(this->param.getValue());
+		});
+	}
+protected:
+	TypedParameter<bool>& param;
+
+	void commitChange(){
+		this->param.setValue(this->get_active());
+	}
+};
+
+PipelineParameterBox::PipelineParameterBox(PipelineWrapper& pipeline){
 	this->set_vexpand(true);
-	auto params = pipeline.getParamPacks();
 
-	auto palette = Gtk::manage(new Gtk::ToolPalette());
-	palette->set_vexpand(true);
-
-	for(auto& paramPack : params){
+	for(auto& paramPack : pipeline.getParamPacks()){
 
 		std::string name = paramPack.first;
 		auto toolItemGroup = Gtk::manage(new Gtk::ToolItemGroup(name));
@@ -57,9 +107,28 @@ PipelineParameterBox::PipelineParameterBox(PipelineWrapper& pipeline)
 		int currentYPos = 0;
 		for(auto& param : *paramPack.second){
 			auto label = Gtk::manage(new Gtk::Label(param->name));
-			auto item = Gtk::manage(
-				new ParameterItem(*param)
-			);
+			Gtk::Widget* item = nullptr;
+
+			auto paramCase = [&](auto v){
+				if(auto* p = dynamic_cast<TypedParameter<decltype(v)>*>(param.get())){
+					item = Gtk::manage(
+						new ParameterItem<decltype(v)>(*p)
+					);
+					return true;
+				}
+				return false;
+			};
+
+			if(!paramCase(int32_t()) &&
+			   !paramCase(uint32_t())&&
+			   !paramCase(bool())
+			){
+				item = Gtk::manage(
+					new ParameterItem<std::string>(*param)
+				);
+			}
+
+			#undef paramCase
 			grid->attach(*label,0,currentYPos,1,1);
 			grid->attach(*item,1,currentYPos,2,1);
 			currentYPos++;
@@ -71,9 +140,9 @@ PipelineParameterBox::PipelineParameterBox(PipelineWrapper& pipeline)
 		toolItem->add(*grid);
 		toolItemGroup->add(*toolItem);
 
-		palette->add(*toolItemGroup);
+		this->add(*toolItemGroup);
 	}
-	this->add(*palette);
+	this->show_all();
 }
 
 

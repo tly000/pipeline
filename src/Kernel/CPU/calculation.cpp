@@ -22,15 +22,7 @@ extern "C" void mandelbrotKernel(
 	const Range& globalID, const Range& localID,
 	CPUImage<Complex>& image, CPUImage<float>& iterOutput) {
 
-	Range modifiedRange =
-		MULTISAMPLING_ENABLED ?
-		Range{
-			globalID.x * MULTISAMPLING_SIZE + localID.x,
-			globalID.y * MULTISAMPLING_SIZE + localID.y,
-			0
-		} :
-		globalID;
-	Complex c = image.at(modifiedRange.x,modifiedRange.y);
+	Complex c = image.at(globalID.x,globalID.y);
 	Complex z{
 		floatToType(0),
 		floatToType(0)
@@ -42,6 +34,6 @@ extern "C" void mandelbrotKernel(
 		i++;
 	}
 
-	iterOutput.at(modifiedRange.x,modifiedRange.y) = i;
+	iterOutput.at(globalID.x,globalID.y) = i;
 }
 

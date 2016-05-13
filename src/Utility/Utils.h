@@ -43,3 +43,5 @@ std::string getCurrentWorkingDirectory();
 #endif
 
 #define _log(message) std::cout << "[log] " << demangle(__FUNCTION__) << ":" << __LINE__ << ": " << message << std::endl
+
+#define symbolexport extern "C" __declspec(dllexport)

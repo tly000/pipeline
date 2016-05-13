@@ -43,7 +43,8 @@ struct TypedParameter : Parameter{
 			T val = fromString<T>(s);
 			this->setValue(val);
 			return true;
-		}catch(...){
+		}catch(std::exception& e){
+			std::cout << e.what() << std::endl;
 			return false;
 		}
 	}

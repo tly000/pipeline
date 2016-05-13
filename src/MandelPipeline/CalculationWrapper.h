@@ -29,8 +29,8 @@ struct CalculationWrapper : NonCopyable{
 
 		pipeline->position.positionKernel.output(0) >> mandelbrotKernel.kernelInput(0);
 		mandelbrotImageGenerator.output(0) >> mandelbrotKernel.kernelInput(1);
-		pipeline->imageRangeGenerator.output(0) >> mandelbrotKernel.getGlobalSizeInput();
-		pipeline->multisampleRangeGenerator.output(0) >> mandelbrotKernel.getLocalSizeInput();
+		pipeline->multisampleSizeParam.output(0) >> mandelbrotKernel.getGlobalSizeInput();
+		pipeline->addParam(iterationParam);
 	}
 
 	UIParameterAction<unsigned,float> iterationParam{"iteration", "iterations", "bailout"};

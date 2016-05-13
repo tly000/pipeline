@@ -8,23 +8,25 @@
 #define BAILOUT 4
 #endif
 
-kernel void coloringKernel(global read_only float* iterInput,uint32_t w,uint32_t h,global write_only uint32_t* colorOutput,uint32_t w2,uint32_t h2) {
+//see opencl 6.1.5 sizeof(float3)
+kernel void coloringKernel(global read_only float* iterInput,uint32_t w,uint32_t h,global write_only float* colorOutput,uint32_t w2,uint32_t h2) {
 	int2 globalID = {
 		get_global_id(0),
 		get_global_id(1)
 	};
-	int bufferIndex = globalID.x + w * globalID.y;
+	int bufferIndex = globalID.x + globalID.y * w;
 	
 	float iter = iterInput[bufferIndex];
-	typedef struct{
-		uint8_t r,g,b,a;
-	} Color;
-	Color color;
 	if(iter == MAXITER){
-		color = (Color){ 255, 255, 255, 255};
+		float3 color = { 1,1,1 };
+		colorOutput[3 * bufferIndex + 0] = color.s0;
+		colorOutput[3 * bufferIndex + 1] = color.s1;
+		colorOutput[3 * bufferIndex + 2] = color.s2;
 	}else{
-		float val = fabs(fmod(iter / 100,2.0f)-1.0f);
-		color = (Color){ 0, (uint8_t)(val * 150), (uint8_t)(val * 255), 255};
+		float val = fabs(fmod(iter / 100,2)-1);
+		float3 color = { 0, val * 0.7f , val };
+		colorOutput[3 * bufferIndex + 0] = color.s0;
+		colorOutput[3 * bufferIndex + 1] = color.s1;
+		colorOutput[3 * bufferIndex + 2] = color.s2;
 	}
-	colorOutput[bufferIndex] = *(uint32_t*)&color;
 }

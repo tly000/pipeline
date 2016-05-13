@@ -15,9 +15,6 @@ kernel void mandelbrotKernel(global read_only Complex* positionInput,uint32_t w,
 		get_global_id(0),
 		get_global_id(1)
 	};
-	if(MULTISAMPLING_ENABLED){
-		globalID = globalID * MULTISAMPLING_SIZE + (int2)(get_local_id(0),get_local_id(1));
-	}
 	
 	int bufferIndex = globalID.x + w * globalID.y; 
 
