@@ -93,29 +93,25 @@ ParserAction::Expression ParserAction::buildExpression(const ParseTree& tree) {
 	if(tree.elementName == "root"){
 		return this->buildExpression(tree.children.front());
 	}else if(tree.elementName == "add" || tree.elementName == "mul"){
-		if(tree.children.size() == 1){
-			return this->buildExpression(tree.children.front());
-		}else{
-			Expression exp = this->buildExpression(tree.children.front());
+		Expression exp = this->buildExpression(tree.children.front());
 
-			auto currentPos = ++ tree.children.begin();
-			while(currentPos != tree.children.end()){
-				std::string op = currentPos->elementName;
-				Expression right = this->buildExpression(*++currentPos);
+		auto currentPos = ++ tree.children.begin();
+		while(currentPos != tree.children.end()){
+			std::string op = currentPos->elementName;
+			Expression right = this->buildExpression(*++currentPos);
 
-				std::string funcName =
-					op == "+" ? "add" :
-					op == "-" ? "sub" :
-					op == "*" ? "mul" :
-					op == "/" ? "div" :
-					throw std::runtime_error("unknown operator" + op);
+			std::string funcName =
+				op == "+" ? "add" :
+				op == "-" ? "sub" :
+				op == "*" ? "mul" :
+				op == "/" ? "div" :
+				throw std::runtime_error("unknown operator" + op);
 
-				exp = this->createFunctionExpression(funcName,{exp,right});
+			exp = this->createFunctionExpression(funcName,{exp,right});
 
-				++currentPos;
-			}
-			return exp;
+			++currentPos;
 		}
+		return exp;
 	}else if(tree.elementName == "identifier"){
 		std::string name = tree.children.front().elementName;
 		if(name == "i"){

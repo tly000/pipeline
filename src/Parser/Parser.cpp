@@ -13,26 +13,9 @@ TokenizerRule match(char c){
 	};
 }
 
-TokenizerRule operator*(TokenizerRule rule){
-	return [rule](const char* t){
-		const char* currentPos = t;
-		while((currentPos = rule(currentPos))){
-			t = currentPos;
-		}
-		return t;
-	};
-}
-
-TokenizerRule operator+(TokenizerRule rule){
-	return rule >> *rule;
-}
-
-TokenizerRule operator~(TokenizerRule rule){
-	return [rule](const char* t){
-		const char* t1 = rule(t);
-		return t1 ? t1 : t;
-	};
-}
+TokenizerRule digit = [](const char* t){ return isdigit(*t) ? t+1 : nullptr; };
+TokenizerRule alpha = [](const char* t){ return isalpha(*t) ? t+1 : nullptr; };
+TokenizerRule nop = [](const char* t){ return t; };
 
 TokenizerRule range(char a,char b){
 	return [a,b](const char* t){
@@ -40,25 +23,39 @@ TokenizerRule range(char a,char b){
 	};
 }
 
-TokenizerRule digit = [](const char* t){ return isdigit(*t) ? t+1 : nullptr; };
-TokenizerRule alpha = [](const char* t){ return isalpha(*t) ? t+1 : nullptr; };
-
 TokenizerRule operator >>(TokenizerRule a, TokenizerRule b) {
 	return [a,b](const char* t){
-		return (t = a(t)) && (t = b(t)) ? t : nullptr;
+		(t = a(t)) && (t = b(t));
+		return t;
 	};
 }
 
 TokenizerRule operator |(TokenizerRule a, TokenizerRule b) {
 	return [a,b](const char* t){
 		const char* t1 = nullptr;
-		return (t1 = a(t)) || (t1 = b(t)) ? t1 : nullptr;
+		(t1 = a(t)) || (t1 = b(t));
+		return t1;
 	};
+}
+
+TokenizerRule operator*(TokenizerRule rule){
+	return ~(rule >> [rule](const char* t){
+		return (*rule)(t);
+	});
+	//return ~(rule >> *rule);
+}
+
+TokenizerRule operator+(TokenizerRule rule){
+	return rule >> *rule;
+}
+
+TokenizerRule operator~(TokenizerRule rule){
+	return rule | nop;
 }
 
 ParserRule match(std::string t){
 	return [t](int pos,const std::vector<Lexeme>& data,ParseTree& tree){
-		if(pos != data.size() && data.at(pos).name == t){
+		if(uint32_t(pos) != data.size() && data.at(pos).name == t){
 			tree.children.push_back({data.at(pos).token});
 			return pos + 1;
 		}
@@ -67,13 +64,9 @@ ParserRule match(std::string t){
 }
 
 ParserRule operator*(ParserRule rule){
-	return [rule](int pos,const std::vector<Lexeme>& data,ParseTree& tree){
-		int currentPos = pos;
-		while((currentPos = rule(currentPos,data,tree)) != -1){
-			pos = currentPos;
-		}
-		return pos;
-	};
+	return ~(rule >> [rule](int p,const std::vector<Lexeme>& d,ParseTree& t){
+		return (*rule)(p,d,t);
+	});
 }
 
 ParserRule operator+(ParserRule rule){

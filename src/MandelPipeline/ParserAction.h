@@ -28,18 +28,18 @@ struct ParserAction : LazyAction<Input(std::string),Output(std::string)>{
 		) | funcExp;
 		auto mulExp = branch("mul",
 			powExp >>
-			+(
+			*(
 				(match("*") | match("/")) >>
 				powExp
 			)
-		) | powExp;
+		);
 		auto addExp = branch("add",
 			mulExp >>
-			+(
+			*(
 				(match("+") | match("-")) >>
 				mulExp
 			)
-		) | mulExp;
+		);
 		exp = addExp;
 	}
 protected:

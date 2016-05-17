@@ -92,7 +92,8 @@ std::string demangle(const char* mangledName){
 
 //http://stackoverflow.com/questions/478898/how-to-execute-a-command-and-get-output-of-command-within-c-using-posix
 std::pair<int,std::string> systemCommand(const std::string& command) {
-	auto pipe = popen(command.c_str(),"r");
+	std::string redirectedCommand = command + " 2>&1";
+	auto pipe = popen(redirectedCommand.c_str(),"r");
 
 	if(!pipe){
 		throw std::runtime_error("could not open pipe.");

@@ -19,6 +19,7 @@ struct ParseTree{
 	std::list<ParseTree> children;
 };
 
+
 using TokenizerRule = std::function<const char*(const char*)>;
 using ParserRule = std::function<int(int pos,const std::vector<Lexeme>& data,ParseTree&)>;
 
@@ -36,6 +37,7 @@ TokenizerRule operator|(TokenizerRule a,TokenizerRule b);  //alternative
 
 extern TokenizerRule digit;
 extern TokenizerRule alpha;
+extern TokenizerRule nop;
 
 //ParserRules
 ParserRule match(std::string t);
