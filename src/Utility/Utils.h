@@ -44,4 +44,12 @@ std::string getCurrentWorkingDirectory();
 
 #define _log(message) std::cout << "[log] " << demangle(__FUNCTION__) << ":" << __LINE__ << ": " << message << std::endl
 
-#define symbolexport extern "C" __declspec(dllexport)
+#if defined(__linux) || defined(__unix)
+	#define symbolexport extern "C"
+#elif defined(__APPLE__)
+	#error "Utils for apple not implemented"
+#elif defined(_WIN32)
+	#define symbolexport extern "C" __declspec(dllexport)
+#else
+	#error "os not detected."
+#endif

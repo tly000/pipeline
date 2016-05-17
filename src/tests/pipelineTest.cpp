@@ -3,7 +3,6 @@
 #include "../Kernel/Type/Fixed4.h"
 #include "../Kernel/Type/Fixed8.h"
 #include "../Kernel/Type/Fixed16.h"
-#include <BackTracer.h>
 #include "../MandelPipeline/MandelPipelineWrapper.h"
 
 /*
@@ -14,7 +13,6 @@
  */
 
 symbolexport void pipelineTest(){
-	BackTracer::registerErrorHandler();
 	CLFactory gpu;
 
 	MandelPipelineWrapper<CLFactory,float> gpuPipeline(gpu,"float");

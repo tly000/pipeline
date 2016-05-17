@@ -14,8 +14,6 @@
 #include "GtkHeader.h"
 
 #include <iostream>
-#include <BackTracer.h>
-
 #include "../MandelPipeline/MandelPipelineWrapper.h"
 #include "../Platform/CL/CLFactory.h"
 #include "../Platform/CPU/CPUFactory.h"
