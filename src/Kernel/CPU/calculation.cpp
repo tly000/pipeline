@@ -30,7 +30,7 @@ extern "C" void mandelbrotKernel(
 
 	unsigned i = 0;
 	while(i < MAXITER && cfabs2(z) <= BAILOUT){
-		z = cadd(csqr(z),c);
+		z = FORMULA;
 		i++;
 	}
 

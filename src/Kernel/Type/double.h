@@ -42,3 +42,21 @@ inline double tabs(const double a){
 	return fabs(a);
 }
 
+inline double tsqrt(const double a){
+	return sqrt(a);
+}
+
+#ifdef __OPENCL_VERSION__
+
+inline double tpow(double a,int b){
+	return pown(a,b);
+}
+
+#else
+#include <cmath>
+
+inline double tpow(double a,int b){
+	return std::pow(a,b);
+}
+#endif
+

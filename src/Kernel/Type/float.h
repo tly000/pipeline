@@ -34,4 +34,20 @@ inline float tabs(float a){
 	return fabs(a);
 }
 
+inline float tsqrt(float a){
+	return sqrtf(a);
+}
 
+#ifdef __OPENCL_VERSION__
+
+inline float tpow(float a,int b){
+	return pown(a,b);
+}
+
+#else
+#include <cmath>
+
+inline float tpow(float a,int b){
+	return std::pow(a,b);
+}
+#endif

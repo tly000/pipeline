@@ -24,7 +24,7 @@ protected:
 
 	void executeImpl(){
 		std::string params = "";
-		variadicForEach(params += "-D" + names[I] + "=" + this->template getInput<I>().getValue() + " ");
+		variadicForEach(params += "-D" + names[I] + "=\"" + this->template getInput<I>().getValue() + "\" ");
 		this->template getOutput<0>().setValue(params);
 	}
 };

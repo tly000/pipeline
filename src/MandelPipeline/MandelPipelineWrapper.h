@@ -12,6 +12,7 @@
 #include "KernelDefinesAction.h"
 #include "ToStringAction.h"
 #include "../Actions/FunctionCallAction.h"
+#include "ParserAction.h"
 
 /*
  * WrappedMandelPipeline.h
@@ -51,6 +52,8 @@ protected:
 	//size of the generated image
 	UIParameterAction<uint32_t,uint32_t> sizeParam{"image dimensions","width","height"};
 	UIParameterAction<bool,uint32_t,uint32_t> multiSamplingParam{"multisampling", "enable", "size" ,"pattern"};
+	UIParameterAction<std::string> generalParam{"general","formula"};
+
 	//generates a Range object, fitting the sizeParam
 	GeneratorAction<Input(uint32_t,uint32_t,uint32_t),Output(Range)> imageRangeGenerator;
 	FunctionCallAction<Input(uint32_t,bool),Range> multisampleRangeGenerator{
@@ -70,9 +73,10 @@ protected:
 		}
 	};
 	//generates defines used to compile the kernels
-	KernelDefinesAction<6> kernelDefinesAction{
+	KernelDefinesAction<7> kernelDefinesAction{
 		"MAXITER","BAILOUT","Type",
-		"MULTISAMPLING_ENABLED","MULTISAMPLING_SIZE","MULTISAMPLING_PATTERN"
+		"MULTISAMPLING_ENABLED","MULTISAMPLING_SIZE","MULTISAMPLING_PATTERN",
+		"FORMULA",
 	};
 	//generates strings for the defines
 	ToStringAction<uint32_t,float,bool,uint32_t,uint32_t> toStringAction;
@@ -80,6 +84,7 @@ protected:
 	CalculationWrapper<Factory,T> calculation;
 	ColoringWrapper<Factory,T> coloring;
 	ReductionWrapper<Factory,T> reduction;
+	ParserAction formulaParser;
 };
 
 #include "PositionWrapper.h"

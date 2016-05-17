@@ -26,7 +26,7 @@ kernel void mandelbrotKernel(global read_only Complex* positionInput,uint32_t w,
 
 	unsigned i = 0;
 	while(i < MAXITER && tofloat(cabs2(z)) <= BAILOUT){
-		z = cadd(csqr(z),c);
+		z = FORMULA;
 		i++;
 	}
 	iterOutput[bufferIndex] = i;

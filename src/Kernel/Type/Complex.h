@@ -26,6 +26,11 @@ typedef struct{
 inline Type cabs2(const Complex a){
 	return tadd(tmul(a.real,a.real),tmul(a.imag,a.imag));
 }
+
+inline Type cabs(const Complex a){
+	return tsqrt(cabs2(a));
+}
+
 inline float cfabs2(const Complex a){
 	//float r = tofloat(a.real);
 	//float i = tofloat(a.imag);
@@ -69,6 +74,26 @@ inline Complex cdiv(const Complex a,const Complex b){
 	};
 }
 
+#define cpow(N) \
+inline Complex cpow##N(const Complex a){ \
+	Complex r = a; \
+	for(int i = 1; i < N; i++){ \
+		r = cmul(r,a); \
+	} \
+	return r; \
+}
 
+cpow(2)
+cpow(3)
+cpow(4)
+cpow(5)
+cpow(6)
+cpow(7)
+cpow(8)
+cpow(9)
 
+#undef cpow
+
+#define creal(c) (c).real
+#define cimag(c) (c).imag
 

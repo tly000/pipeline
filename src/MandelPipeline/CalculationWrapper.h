@@ -1,5 +1,6 @@
 #pragma once
 #include "MandelPipelineWrapper.h"
+#include "ParserAction.h"
 
 /*
  * CalculationWrapper.h
@@ -34,6 +35,7 @@ struct CalculationWrapper : NonCopyable{
 	}
 
 	UIParameterAction<unsigned,float> iterationParam{"iteration", "iterations", "bailout"};
+
 	//generates an image of size "sizeParam"
 	ImageGeneratorAction<Factory,float> mandelbrotImageGenerator;
 	KernelGeneratorAction<Factory,ComplexImage,FloatImage> mandelbrotKernelGenerator;
@@ -45,7 +47,6 @@ struct CalculationWrapper : NonCopyable{
 		Input(ComplexImage positions,FloatImage iterationOutput),
 		KernelOutput<1>
 	> mandelbrotKernel;
-
 };
 
 
