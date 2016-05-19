@@ -29,7 +29,7 @@ extern "C" void mandelbrotKernel(
 	};
 
 	unsigned i = 0;
-	while(i < MAXITER && cfabs2(z) <= BAILOUT){
+	while(i < MAXITER && tofloat(cabs2(z)) <= BAILOUT){
 		z = FORMULA;
 		i++;
 	}

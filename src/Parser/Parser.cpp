@@ -123,3 +123,54 @@ ParserRule form(ParserRule rule) {
 		return rule(pos,data,temp);
 	};
 }
+
+#include <algorithm>
+
+std::vector<Lexeme> tokenize(const std::vector<NamedTokenizerRule>& rules,const std::vector<std::string>& ignoredRules,const std::string& textString) {
+	std::vector<Lexeme> lexemes;
+	const char* text = textString.c_str();
+	continueOuterLoop: while(*text){
+		for(auto& t : rules){
+			if(const char* t1 = t.rule(text)){
+				if(std::find(ignoredRules.begin(),ignoredRules.end(),t.name) == ignoredRules.end()){
+					lexemes.push_back({t.name,std::string(text,uint32_t(t1-text))});
+				}
+				text = t1;
+				goto continueOuterLoop;
+			}
+		}
+		return {};
+	}
+	return lexemes;
+}
+
+#include <cstring>
+TokenizerRule text(std::string s) {
+	return [s](const char* t){
+		return std::strncmp(s.c_str(),t,s.size()) == 0 ? t + s.size() : nullptr;
+	};
+}
+
+TokenizerRule anyof(std::string s) {
+	return [s](const char* t){
+		return s.find(*t) == std::string::npos ? nullptr : t+1;
+	};
+}
+
+TokenizerRule noneof(std::string s) {
+	return [s](const char* t){
+		return s.find(*t) == std::string::npos ? t+1 : nullptr;
+	};
+}
+
+std::string printTree(const ParseTree& t){
+	std::string s = t.elementName;
+	if(t.children.size()){
+		s += '(';
+		for(auto& c : t.children){
+			s += printTree(c) + ",";
+		}
+		s.at(s.size()-1) = ')';
+	}
+	return s;
+}

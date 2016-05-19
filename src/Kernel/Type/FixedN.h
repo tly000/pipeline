@@ -143,6 +143,11 @@
 		}
 	}
 
+	inline Fixed tneg(Fixed a){
+		fixedSetSign(a,!fixedGetSign(a));
+		return a;
+	}
+
 	inline Fixed tmul(Fixed a,Fixed b){
 		Fixed c;
 		bool cSign = fixedGetSign(a) ^ fixedGetSign(b);

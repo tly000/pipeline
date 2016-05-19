@@ -76,6 +76,11 @@ struct ParamPack{
 		return *paramMap.at(name);
 	}
 
+
+	bool hasParam(const std::string& name) const {
+		return paramMap.count(name);
+	}
+
 	auto begin(){
 		return namedParams.begin();
 	}

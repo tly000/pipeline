@@ -30,6 +30,9 @@ struct AbstractPlatform{
 	virtual void rotate(float angle) = 0;
 	virtual std::string getName() const = 0;
 
+	virtual std::string paramsToJson(const std::map<std::string,std::list<std::string>>& paramsToSave)= 0;
+	virtual void paramsFromJson(const std::string& jsonObj)= 0;
+
 	virtual ~AbstractPlatform() = default;
 };
 

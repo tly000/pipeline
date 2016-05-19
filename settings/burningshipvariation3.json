@@ -1,0 +1,5 @@
+{
+	"general" : {
+		"formula" : "re(z)^2+2*i*re(z)*abs(im(z))-im(z)*abs(im(z))+c"
+	}
+}

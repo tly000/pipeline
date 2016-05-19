@@ -43,10 +43,7 @@ struct ParserAction : LazyAction<Input(std::string),Output(std::string)>{
 		exp = addExp;
 	}
 protected:
-	struct {
-		std::string name;
-		TokenizerRule rule;
-	} tokens[10] = {
+	std::vector<NamedTokenizerRule> rules{
 		{"whitespace",	+(match(' ') | match('\t') | match('\n'))},
 		{"decimal",		+digit >> ~(match('.') >> +digit)},
 		{"identifier",	+alpha},
@@ -60,8 +57,6 @@ protected:
 	};
 
 	ParserRule exp = nullptr;
-
-	std::vector<Lexeme> tokenize(const char* text);
 
 	void executeImpl();
 
@@ -97,6 +92,7 @@ protected:
 		{"re", Function{"creal",REAL,{COMPLEX}}},
 		{"im", Function{"cimag",REAL,{COMPLEX}}},
 		{"pow", Function{"tpow",REAL,{REAL,REAL}}},
+		{"conj", Function{"conj",COMPLEX,{COMPLEX}}}
 	};
 };
 

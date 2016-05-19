@@ -7,39 +7,9 @@
  *      Author: tly
  */
 
-std::vector<Lexeme> ParserAction::tokenize(const char* text){
-	std::vector<Lexeme> lexemes;
-	continueOuterLoop: while(*text){
-		for(auto& t : tokens){
-			if(const char* t1 = t.rule(text)){
-				if(t.name != "whitespace"){
-					lexemes.push_back({t.name,std::string(text,uint32_t(t1-text))});
-				}
-				text = t1;
-				goto continueOuterLoop;
-			}
-		}
-		return {};
-	}
-
-	return lexemes;
-}
-
-inline std::string printTree(const ParseTree& t){
-	std::string s = t.elementName;
-	if(t.children.size()){
-		s += '(';
-		for(auto& c : t.children){
-			s += printTree(c) + ",";
-		}
-		s.at(s.size()-1) = ')';
-	}
-	return s;
-}
-
 void ParserAction::executeImpl() {
 	std::string text = this->getInput<0>().getValue();
-	auto l = this->tokenize(text.c_str());
+	auto l = tokenize(this->rules,{"whitespace"},text.c_str());
 	ParseTree tree{"root"};
 	int result = this->exp(0,l,tree);
 	if(uint32_t(result) != l.size()){

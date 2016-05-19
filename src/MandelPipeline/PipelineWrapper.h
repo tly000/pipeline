@@ -1,6 +1,8 @@
 #pragma once
 #include "../UI/UIParameterAction.h"
 #include "../Pipeline/AbstractPipelineAction.h"
+#include <sstream>
+#include "../Parser/JsonParser.h"
 
 /*
  * PipelineWrapper.h

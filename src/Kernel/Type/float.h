@@ -35,7 +35,11 @@ inline float tabs(float a){
 }
 
 inline float tsqrt(float a){
-	return sqrtf(a);
+	return sqrt(a);
+}
+
+inline float tneg(float a){
+	return -a;
 }
 
 #ifdef __OPENCL_VERSION__

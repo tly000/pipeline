@@ -53,3 +53,5 @@ std::string getCurrentWorkingDirectory();
 #else
 	#error "os not detected."
 #endif
+
+#define assertOrThrow(b) { if(!(b)) throw std::runtime_error("assertion failed: " #b); }

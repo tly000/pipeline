@@ -74,6 +74,13 @@ inline Complex cdiv(const Complex a,const Complex b){
 	};
 }
 
+inline Complex conj(const Complex a){
+	return (Complex) {
+		a.real,
+		tneg(a.imag)
+	};
+}
+
 #define cpow(N) \
 inline Complex cpow##N(const Complex a){ \
 	Complex r = a; \

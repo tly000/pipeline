@@ -1,4 +1,5 @@
 #include "PipelineUI.h"
+#include <fstream>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../stb_image_write.h"
@@ -77,6 +78,66 @@ struct Platform : AbstractPlatform{
 	std::string getName() const {
 		return factory.getDeviceName();
 	}
+
+	std::string paramsToJson(const std::map<std::string,std::list<std::string>>& paramsToSave){
+		std::stringstream str;
+
+		bool firstPack = true;
+		str << "{\n";
+		for(auto& pack : paramsToSave){
+			if(!firstPack){
+				str << ",\n";
+			}else{
+				firstPack = false;
+			}
+			str << "\t\"" << pack.first << "\"" << " : {\n";
+			ParamPack& p = this->getPipeline().getParamPack(pack.first);
+
+			bool firstParam = true;
+			for(auto& paramName : pack.second){
+				if(!firstParam){
+					str << ",\n";
+				}else{
+					firstParam = false;
+				}
+				Parameter& param = p.getParam(paramName);
+				str << "\t\t\"" << param.name << "\"" << " : " << "\"" << param.getValueAsString() << "\"";
+			}
+			str << "\n\t}";
+		}
+		str << "\n}";
+		return str.str();
+	}
+
+	void paramsFromJson(const std::string& jsonObj){
+		ParseTree obj = JsonParser::parseJson(jsonObj);
+		_log("[info] json: " << printTree(obj));
+		auto unquote = [](const std::string& s){
+			return s.substr(1,s.size()-2);
+		};
+
+		assertOrThrow(obj.elementName == "object");
+		for(auto& child : obj.children){
+			assertOrThrow(child.elementName == "pair" && child.children.back().elementName == "object");
+			std::string paramPackName = unquote(child.children.front().children.front().elementName);
+			ParamPack& pack = this->getPipeline().getParamPack(paramPackName);
+			auto& object = child.children.back();
+
+			for(auto& param : object.children){
+				std::string name = unquote(param.children.front().children.front().elementName);
+				if(pack.hasParam(name)){
+					auto& value = param.children.back();
+					assertOrThrow(value.elementName == "string");
+					assertOrThrow(value.elementName == "string");
+					if(!pack.getParam(name).setValueFromString(unquote(value.children.front().elementName))){
+						throw std::runtime_error("invalid value for parameter " + name);
+					}
+				}else{
+					throw std::runtime_error("could not find parameter with name " + name + " inside pack with name " + paramPackName);
+				}
+			}
+		}
+	}
 protected:
 	CPUImage<unsigned> outputImage{1,1};
 	Factory factory;
@@ -133,6 +194,29 @@ MainWindow::MainWindow():
 	typeBox.append("Fixed16");
 	header.pack_start(typeBox);
 
+	auto openButton = Gtk::manage(new Gtk::Button());
+	openButton->set_image_from_icon_name("document-open-symbolic");
+	openButton->signal_clicked().connect([this]{
+		Gtk::FileChooserDialog dialog(*this,"Open settings",Gtk::FILE_CHOOSER_ACTION_OPEN);
+		dialog.set_current_folder("./settings");
+		dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+		dialog.add_button("_Open", Gtk::RESPONSE_ACCEPT);
+		auto filter = Gtk::FileFilter::create();
+		filter->set_name("settings file (*.json)");
+		filter->add_pattern("*.json");
+		dialog.add_filter(filter);
+		if(dialog.run() == Gtk::RESPONSE_ACCEPT){
+			std::string fileName = dialog.get_filename();
+			std::string jsonObj = fileToString(fileName);
+			try{
+				this->getSelectedPlatform()->paramsFromJson(jsonObj);
+			}catch(std::exception& e){
+				Gtk::MessageDialog messageBox(*this,std::string("error while loading settings: \n") + e.what());
+				messageBox.run();
+			}
+		}
+	});
+	header.pack_end(*openButton);
 	auto popOverBox = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_VERTICAL));
 		auto saveImageButton = Gtk::manage(new Gtk::Button());
 		saveImageButton->set_image_from_icon_name("camera-photo-symbolic");
@@ -161,6 +245,94 @@ MainWindow::MainWindow():
 		popOverBox->add(*saveImageButton);
 		auto saveSettingsButton = Gtk::manage(new Gtk::Button());
 		saveSettingsButton->set_image_from_icon_name("preferences-system-symbolic");
+		saveSettingsButton->signal_clicked().connect([this]{
+			struct Columns : Gtk::TreeStore::ColumnRecord{
+				Columns(){
+					this->add(paramName);
+					this->add(selected);
+				}
+				Gtk::TreeModelColumn<Glib::ustring> paramName;
+				Gtk::TreeModelColumn<bool> selected;
+			} record;
+			auto treeStore = Gtk::TreeStore::create(record);
+			Gtk::TreeView treeView(treeStore);
+
+			for(auto& paramPack : this->getSelectedPlatform()->getPipeline().getParamPacks()){
+				auto row = *treeStore->append();
+				row[record.paramName] = paramPack.first;
+				row[record.selected] = true;
+
+				for(auto& param : *paramPack.second){
+					auto childrow = *treeStore->append(row.children());
+					childrow[record.paramName] = param->name;
+					childrow[record.selected] = true;
+				}
+			}
+
+			treeStore->signal_row_changed().connect([&](const Gtk::TreeModel::Path& p,const Gtk::TreeModel::iterator&){
+				if(p.size() == 1){
+					auto& row = *treeStore->get_iter(p);
+					bool isSelected = row[record.selected];
+					for(auto& child : row.children()){
+						child[record.selected] = isSelected;
+					}
+				}
+			});
+
+			treeView.append_column_editable("", record.selected);
+			treeView.append_column("", record.paramName);
+			treeView.expand_all();
+
+			Gtk::Dialog selectionDialog("select settings",*this);
+			selectionDialog.get_content_area()->add(*Gtk::manage(new Gtk::Label("select settings to save:")));
+			selectionDialog.get_content_area()->add(treeView);
+			selectionDialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+			selectionDialog.add_button("_Ok", Gtk::RESPONSE_ACCEPT);
+			selectionDialog.show_all_children();
+			if(selectionDialog.run() != Gtk::RESPONSE_ACCEPT){
+				return;
+			}
+
+			std::map<std::string,std::list<std::string>> selectedParams;
+			for(auto& paramPackChild : treeStore->children()){
+				std::list<std::string> selected;
+				for(auto& paramChild : paramPackChild.children()){
+					if(paramChild[record.selected]){
+						selected.push_back(Glib::ustring(paramChild[record.paramName]));
+					}
+				}
+				if(selected.size()){
+					selectedParams.emplace(
+						Glib::ustring(paramPackChild[record.paramName]),
+						selected
+					);
+				}
+			}
+
+			Gtk::FileChooserDialog dialog(*this,"Save settings",Gtk::FILE_CHOOSER_ACTION_SAVE);
+		    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+		    dialog.add_button("_Save", Gtk::RESPONSE_ACCEPT);
+			auto filter = Gtk::FileFilter::create();
+			filter->set_name("json file (*.json)");
+			filter->add_pattern("*.json");
+			dialog.add_filter(filter);
+			if(dialog.run() != Gtk::RESPONSE_ACCEPT){
+				return;
+			}
+			std::string fileName = dialog.get_filename();
+			std::string object = this->getSelectedPlatform()->paramsToJson(selectedParams);
+			if(fileName.substr(fileName.size()-5) != ".json"){
+				fileName += ".json";
+			}
+			std::ofstream file(fileName);
+			if(file){
+				file << object;
+				file.close();
+			}else{
+				Gtk::MessageDialog messageBox(*this,"could not save json file.");
+				messageBox.run();
+			}
+		});
 		popOverBox->add(*saveSettingsButton);
 		popOverBox->show_all();
 	auto popOver = Gtk::manage(new Gtk::Popover());

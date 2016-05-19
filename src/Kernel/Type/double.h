@@ -46,6 +46,10 @@ inline double tsqrt(const double a){
 	return sqrt(a);
 }
 
+inline double tneg(const double a){
+	return -a;
+}
+
 #ifdef __OPENCL_VERSION__
 
 inline double tpow(double a,int b){
