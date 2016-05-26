@@ -22,6 +22,7 @@ struct CPUKernel : Kernel<Inputs...>{
 		const Range& localSize,
 		Inputs&... inputs){
 
+		#pragma omp parallel for collapse(3)
 		for(auto i = globalOffset.x; i < globalSize.x; i++){
 			for(auto j = globalOffset.y; j < globalSize.y; j++){
 				for(auto k = globalOffset.z; k < globalSize.z; k++){

@@ -54,4 +54,5 @@ inline float tpow(float a,int b){
 inline float tpow(float a,int b){
 	return std::pow(a,b);
 }
+
 #endif

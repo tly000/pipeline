@@ -34,11 +34,15 @@ MandelPipelineWrapper<Factory,T>::MandelPipelineWrapper(Factory& factory,const s
 
 	multiSamplingParam.output(0,1,2) >> toStringAction.input(2,3,4);
 
-	generalParam.setValue<0>("z*z + c");
-	generalParam.output(0) >> formulaParser.input(0);
+	generalParam.template setValue<0>("z*z + c");
+	generalParam.template setValue<1>(false);
+	generalParam.template getParam<2>().setValueFromString("0");
+	generalParam.template getParam<3>().setValueFromString("0");
 
-	toStringAction.output(0,1) >> kernelDefinesAction.input(0,1);
-	toStringAction.output(2,3,4) >> kernelDefinesAction.input(3,4,5);
+	generalParam.output(0) >> formulaParser.input(0);
+	generalParam.output(1) >> toStringAction.input(7);
+
+	toStringAction.output(0,1,2,3,4,5,6,7) >> kernelDefinesAction.input(0,1,3,4,5,7,8,9);
 	kernelDefinesAction.template getInput<2>().setDefaultValue(typeName);
 	formulaParser.output(0) >> kernelDefinesAction.input(6);
 	this->addParam(generalParam);

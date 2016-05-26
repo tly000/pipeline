@@ -52,7 +52,7 @@ protected:
 	//size of the generated image
 	UIParameterAction<uint32_t,uint32_t> sizeParam{"image dimensions","width","height"};
 	UIParameterAction<bool,uint32_t,uint32_t> multiSamplingParam{"multisampling", "enable", "size" ,"pattern"};
-	UIParameterAction<std::string> generalParam{"general","formula"};
+	UIParameterAction<std::string,bool,T,T> generalParam{"general","formula","julia mode","julia c real","julia c imag"};
 
 	//generates a Range object, fitting the sizeParam
 	GeneratorAction<Input(uint32_t,uint32_t,uint32_t),Output(Range)> imageRangeGenerator;
@@ -73,13 +73,13 @@ protected:
 		}
 	};
 	//generates defines used to compile the kernels
-	KernelDefinesAction<7> kernelDefinesAction{
+	KernelDefinesAction<10> kernelDefinesAction{
 		"MAXITER","BAILOUT","Type",
 		"MULTISAMPLING_ENABLED","MULTISAMPLING_SIZE","MULTISAMPLING_PATTERN",
-		"FORMULA",
+		"FORMULA","CYCLE_DETECTION","CYCLE_DETECTION_VISUALIZE","JULIAMODE"
 	};
 	//generates strings for the defines
-	ToStringAction<uint32_t,float,bool,uint32_t,uint32_t> toStringAction;
+	ToStringAction<uint32_t,float,bool,uint32_t,uint32_t,bool,bool,bool> toStringAction;
 	PositionWrapper<Factory,T> position;
 	CalculationWrapper<Factory,T> calculation;
 	ColoringWrapper<Factory,T> coloring;

@@ -62,5 +62,6 @@ inline double tpow(double a,int b){
 inline double tpow(double a,int b){
 	return std::pow(a,b);
 }
+
 #endif
 

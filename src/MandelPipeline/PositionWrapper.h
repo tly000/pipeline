@@ -42,7 +42,7 @@ struct PositionWrapper : NonCopyable{
 	//the position kernel
 	//input: ComplexImage to be filled with position data, T offsetReal, T offsetImage, T scaleReal, T scaleImag
 	//output: input 0 (the filled image)
-	KernelAction<
+	KernelAction <
 		Factory,
 		Input(ComplexImage positionImage,T,T,Vec<2,T>),
 		KernelOutput<0>

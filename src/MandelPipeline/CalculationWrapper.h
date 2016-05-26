@@ -19,7 +19,10 @@ struct CalculationWrapper : NonCopyable{
 		 mandelbrotKernelGenerator(pipeline->factory){
 		iterationParam.setValue<0>(64);//iterations
 		iterationParam.setValue<1>(4);//bailout
-		iterationParam.output(0,1) >> pipeline->toStringAction.input(0,1);
+		iterationParam.setValue<2>(false);//bailout
+		iterationParam.setValue<3>(false);//bailout
+
+		iterationParam.output(0,1,2,3) >> pipeline->toStringAction.input(0,1,5,6);
 		//calculation
 		pipeline->multisampleSizeParam.output(0) >> mandelbrotImageGenerator.input(0);
 
@@ -30,21 +33,25 @@ struct CalculationWrapper : NonCopyable{
 
 		pipeline->position.positionKernel.output(0) >> mandelbrotKernel.kernelInput(0);
 		mandelbrotImageGenerator.output(0) >> mandelbrotKernel.kernelInput(1);
+		pipeline->generalParam.output(2,3) >> mandelbrotKernel.kernelInput(2,3);
 		pipeline->multisampleSizeParam.output(0) >> mandelbrotKernel.getGlobalSizeInput();
 		pipeline->addParam(iterationParam);
 	}
 
-	UIParameterAction<unsigned,float> iterationParam{"iteration", "iterations", "bailout"};
+	UIParameterAction<unsigned,float,bool,bool> iterationParam{"iteration",
+		"iterations", "bailout",
+		"cycle detection", "visualize cycle detection"
+	};
 
 	//generates an image of size "sizeParam"
 	ImageGeneratorAction<Factory,float> mandelbrotImageGenerator;
-	KernelGeneratorAction<Factory,ComplexImage,FloatImage> mandelbrotKernelGenerator;
+	KernelGeneratorAction<Factory,ComplexImage,FloatImage,T,T> mandelbrotKernelGenerator;
 	//the main mandelbrot calculation
-	//input: ComplexImage holding complex coordinates, FloatImage to save the calculated iteration count
+	//input: ComplexImage holding complex coordinates, FloatImage to save the calculated iteration count, Complex c parameter
 	//output: input 1 (the iteration count image)
 	KernelAction<
 		Factory,
-		Input(ComplexImage positions,FloatImage iterationOutput),
+		Input(ComplexImage positions,FloatImage iterationOutput, T,T),
 		KernelOutput<1>
 	> mandelbrotKernel;
 };

@@ -200,6 +200,10 @@
 		return f;
 	}
 
+	inline Fixed tsqrt(Fixed a){
+		return a;
+	}
+
 #if defined(__OPENCL_VERSION___) && defined(cl_khr_fp64)
 	#pragma OPENCL EXTENSION cl_khr_fp64 : enable
 	#define conversionType double
