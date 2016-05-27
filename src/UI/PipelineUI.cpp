@@ -12,12 +12,13 @@
  */
 template<typename Factory,typename T>
 struct Platform : AbstractPlatform{
-	Platform(Factory factory):
+	Platform(Factory factory,std::string typeName):
+		typeName(typeName),
 		factory(factory){}
 
 	PipelineWrapper& getPipeline(){
 		if(!pipeline){
-			pipeline = std::make_unique<MandelPipelineWrapper<Factory,T>>(factory,demangle(typeid(T)));
+			pipeline = std::make_unique<MandelPipelineWrapper<Factory,T>>(factory,typeName);
 		}
 		return *pipeline;
 	}
@@ -139,6 +140,7 @@ struct Platform : AbstractPlatform{
 		}
 	}
 protected:
+	std::string typeName;
 	CPUImage<unsigned> outputImage{1,1};
 	Factory factory;
 	std::unique_ptr<MandelPipelineWrapper<Factory,T>> pipeline = nullptr;
@@ -149,7 +151,7 @@ MainWindow::MainWindow():
 	imageView(this){
 
 	#define addPlatform(T,factory,name) \
-		platforms.emplace_back(std::make_unique<Platform<decltype(factory),T>>(factory)); \
+		platforms.emplace_back(std::make_unique<Platform<decltype(factory),T>>(factory,#T)); \
 		platformMap.insert({ \
 			std::make_pair(name,#T),platforms.back().get() \
 		});
@@ -160,10 +162,11 @@ MainWindow::MainWindow():
 
 	addPlatform(float,factory,name);
 	addPlatform(double,factory,name);
+	addPlatform(float128,factory,name);
 	addPlatform(Fixed4,factory,name);
 	addPlatform(Fixed8,factory,name);
 	addPlatform(Fixed16,factory,name);
-
+	addPlatform(longdouble,factory,name);
 
 	for(uint32_t i = 0; i < CLFactory::getNumberOfDevices(); i++){
 		CLFactory factory(i);
@@ -172,9 +175,11 @@ MainWindow::MainWindow():
 
 		addPlatform(float,factory,name);
 		addPlatform(double,factory,name);
+		addPlatform(float128,factory,name);
 		addPlatform(Fixed4,factory,name);
 		addPlatform(Fixed8,factory,name);
 		addPlatform(Fixed16,factory,name);
+		addPlatform(longdouble,factory,name);
 	}
 	#undef addPlatform
 
@@ -192,6 +197,8 @@ MainWindow::MainWindow():
 	typeBox.append("Fixed4");
 	typeBox.append("Fixed8");
 	typeBox.append("Fixed16");
+	typeBox.append("float128");
+	typeBox.append("longdouble");
 	header.pack_start(typeBox);
 
 	auto openButton = Gtk::manage(new Gtk::Button());

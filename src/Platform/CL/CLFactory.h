@@ -60,7 +60,7 @@ struct CLFactory{
 			" \"" + filePath  + "\" " + preprocessedFilePath
 		);
 		if(result.first){
-			throw std::runtime_error("error preprocessing " + filePath + ".");
+			throw std::runtime_error("error preprocessing " + filePath + ": " + result.second);
 		}
 		std::string source = fileToString(preprocessedFilePath);
 		cl::Program program(context,source);

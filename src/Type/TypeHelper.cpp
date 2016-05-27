@@ -21,6 +21,8 @@ fromFloatSpecialization(Q32_32);
 fromFloatSpecialization(Fixed4);
 fromFloatSpecialization(Fixed8);
 fromFloatSpecialization(Fixed16);
+fromFloatSpecialization(float128);
+fromFloatSpecialization(longdouble);
 
 template<> float fromString<float>(const std::string& s){
 	static std::locale l = std::locale::global(std::locale());
@@ -204,3 +206,40 @@ template<> std::string toString<bool>(const bool& b) {
 	return b ? "true" : "false";
 }
 
+template<> float128 fromString<float128>(const std::string& s) {
+	char* rest = nullptr;
+	float128 f = strtoflt128 (s.c_str(), &rest);
+	if(rest != s.c_str() + s.size()){
+		throw std::runtime_error("invalid conversion");
+	}
+	return f;
+}
+
+#define _stringize(x) #x
+#define stringize(x) _stringize(x)
+
+template<> std::string toString<float128>(const float128& f) {
+	char buf[128];
+	quadmath_snprintf(buf,sizeof(buf),"%." stringize(FLT128_DIG) "Qf",f);
+	return (const char*)buf;
+}
+
+
+template<> longdouble fromString<longdouble>(const std::string& s) {
+	char* rest = nullptr;
+	longdouble f = std::strtold (s.c_str(), &rest);
+	if(rest != s.c_str() + s.size()){
+		throw std::runtime_error("invalid conversion");
+	}
+	return f;
+}
+
+#include <float.h>
+
+template<> std::string toString<longdouble>(const longdouble& f) {
+	char buf[128];
+	snprintf(buf,sizeof(buf),"%." stringize(LDBL_DIG) "Lf",f);
+	return (const char*)buf;
+}
+
+#undef stringize
