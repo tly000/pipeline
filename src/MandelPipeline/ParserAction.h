@@ -54,6 +54,7 @@ protected:
 		{"(",			match('(')},
 		{")",			match(')')},
 		{"^",			match('^')},
+		{",",			match(',')}
 	};
 
 	ParserRule exp = nullptr;
@@ -92,7 +93,7 @@ protected:
 		{"re", Function{"creal",REAL,{COMPLEX}}},
 		{"im", Function{"cimag",REAL,{COMPLEX}}},
 		{"pow", Function{"tpow",REAL,{REAL,REAL}}},
-		{"conj", Function{"conj",COMPLEX,{COMPLEX}}}
+		{"conj", Function{"conj",COMPLEX,{COMPLEX}}},
 	};
 };
 

@@ -14,7 +14,7 @@ kernel void positionKernel(global write_only Complex* output,uint32_t w,uint32_t
 	if(MULTISAMPLING_ENABLED){
 		uint64_t seed = globalID.x + globalID.y;
 
-		if(MULTISAMPLING_PATTERN == MULTISAMPLING_JITTERGRID){
+		if(MULTISAMPLING_PATTERN == JITTERING){
 			float xR = (uint32_t)(seed = random(seed)) / (float)UINT_MAX;
 			float yR = (uint32_t)(seed = random(seed)) / (float)UINT_MAX;
 			fx += xR - 0.5;

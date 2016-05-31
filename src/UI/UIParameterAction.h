@@ -2,6 +2,7 @@
 #include "../Actions/ParameterAction.h"
 #include "../Type/TypeHelper.h"
 #include <map>
+#include "GtkHeader.h"
 
 /*
  * NamedParameterAction.h
@@ -22,6 +23,8 @@ struct Parameter{
 	void registerObserver(std::function<void(Parameter*)> observer){
 		this->observers.push_back(observer);
 	}
+
+	virtual Gtk::Widget* createParameterWidget() = 0;
 protected:
 	void fireChangeEvent(){
 		for(auto& o : observers){
@@ -31,6 +34,8 @@ protected:
 private:
 	std::list<std::function<void(Parameter*)>> observers;
 };
+
+template<typename...> struct ParameterWidget;
 
 template<typename T>
 struct TypedParameter : Parameter{
@@ -64,6 +69,10 @@ struct TypedParameter : Parameter{
 
 	const T& getValue() const{
 		return output.getValue();
+	}
+
+	Gtk::Widget* createParameterWidget(){
+		return Gtk::manage(new ParameterWidget<T>(*this));
 	}
 protected:
 	StaticOutput<T>& output;
@@ -128,4 +137,4 @@ protected:
 	}
 };
 
-
+#include "ParameterWidgets.h"

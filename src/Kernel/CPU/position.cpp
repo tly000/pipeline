@@ -22,7 +22,7 @@ extern "C" void positionKernel(const Range& globalID,const Range& localID,CPUIma
 	if(MULTISAMPLING_ENABLED){
 		uint64_t seed = globalID.x + globalID.y + localID.x + localID.y;
 
-		if(MULTISAMPLING_PATTERN == MULTISAMPLING_JITTERGRID){
+		if(MULTISAMPLING_PATTERN == JITTERING){
 			float xR = uint32_t(seed = random(seed)) / (float)UINT_MAX;
 			float yR = uint32_t(seed = random(seed)) / (float)UINT_MAX;
 			fx += xR - 0.5;

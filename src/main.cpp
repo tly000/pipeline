@@ -7,21 +7,21 @@
  *      Author: tly
  */
 
-//#ifdef _WIN32
-//#include <windows.h>
-//int main(){
-//	auto h = GetModuleHandle(nullptr);
-//
-//	std::cout << "insert function name" << std::endl;
-//	std::string funcName;
-//	std::cin >> funcName;
-//
-//	auto fptr = GetProcAddress(h,funcName.c_str());
-//	if(fptr){
-//		reinterpret_cast<void(*)()>(fptr)();
-//	}else{
-//		std::cerr << "wrong function name" << std::endl;
-//	}
-//}
-//
-//#endif
+#ifdef _WIN32
+#include <windows.h>
+int main(){
+	auto h = GetModuleHandle(nullptr);
+
+	std::cout << "insert function name" << std::endl;
+	std::string funcName;
+	std::cin >> funcName;
+
+	auto fptr = GetProcAddress(h,funcName.c_str());
+	if(fptr){
+		reinterpret_cast<void(*)()>(fptr)();
+	}else{
+		std::cerr << "wrong function name" << std::endl;
+	}
+}
+
+#endif
