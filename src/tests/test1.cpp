@@ -20,15 +20,13 @@ protected:
 };
 
 void test1(){
-	ParameterAction<int> param1,param2,param3;
-	param1.setValue(11);
-	param2.setValue(22);
-	param3.setValue(33);
+	ParameterAction<KV("heyho",int),int,int> param;
+	param.setValue<0>(11);
+	param.setValue<1>(22);
+	param.setValue<2>(33);
 
 	SumAction sumAction;
-	param1.connectTo(sumAction,IntPair<0,0>{});
-	param2.connectTo(sumAction,IntPair<0,1>{});
-	param3.connectTo(sumAction,IntPair<0,2>{});
+	param.connectTo(sumAction,IntPair<0,0>{},IntPair<1,1>{},IntPair<2,2>{});
 
 	sumAction.run();
 	std::cout << sumAction.getOutput<0>().getValue() << std::endl;

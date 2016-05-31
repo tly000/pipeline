@@ -21,8 +21,9 @@ AbstractPipelineAction* AbstractOutput::getPipeline() const {
 	return pipeline;
 }
 
-AbstractOutput::AbstractOutput(AbstractPipelineAction* pipeline)
-	:pipeline(pipeline){
+AbstractOutput::AbstractOutput(AbstractPipelineAction* pipeline,std::string name)
+	:name(name),
+	 pipeline(pipeline){
 	pipeline->outputs.push_back(this);
 }
 

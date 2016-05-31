@@ -18,8 +18,8 @@ template<typename T> struct StaticOutput;
 
 template<typename T>
 struct StaticInput : AbstractInput{
-	StaticInput(AbstractPipelineAction* pipeline)
-		:AbstractInput(pipeline),
+	StaticInput(AbstractPipelineAction* pipeline,std::string name)
+		:AbstractInput(pipeline,name),
 		 defaultValue(nullptr){}
 
 	T& getValue() const;
@@ -35,8 +35,8 @@ protected:
 
 template<typename T>
 struct StaticOutput : AbstractOutput{
-	StaticOutput(AbstractPipelineAction* pipeline)
-		:AbstractOutput(pipeline),
+	StaticOutput(AbstractPipelineAction* pipeline,std::string name)
+		:AbstractOutput(pipeline,name),
 		 data(nullptr){}
 
 	virtual void connectTo(AbstractInput& slot);
@@ -77,7 +77,6 @@ inline void StaticOutput<T>::connectTo(AbstractInput& slot) {
 	if(dynamic_cast<StaticInput<T>*>(&slot)){
 		AbstractOutput::connectTo(slot);
 	} else {
-		std::cout << demangle(typeid(*this)) << std::endl;
 		throw std::runtime_error("connected slot type is not compatible");
 	}
 }

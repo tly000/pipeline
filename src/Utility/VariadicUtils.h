@@ -33,6 +33,14 @@ inline void tupleForEach(Tuple&& t, F&& f) {
 template<typename T,size_t I> using JustT = T;
 template<typename A,typename B> using Just= A;
 
+template<int I,typename T,typename U,typename... Rest> struct IndexOf{
+	constexpr static int value = IndexOf<I+1,T,Rest...>::value;
+};
+
+template<int I,typename T,typename... Rest> struct IndexOf<I,T,T,Rest...>{
+	constexpr static int value = I;
+};
+
 
 
 

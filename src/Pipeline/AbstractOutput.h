@@ -12,7 +12,7 @@
 struct AbstractInput;
 
 struct AbstractOutput : NonCopyable{
-	AbstractOutput(AbstractPipelineAction* pipeline);
+	AbstractOutput(AbstractPipelineAction* pipeline,std::string name);
 
 	AbstractPipelineAction* getPipeline() const;
 
@@ -23,6 +23,8 @@ struct AbstractOutput : NonCopyable{
 	virtual void connectTo(AbstractInput& slot);
 
 	virtual void operator>>(AbstractInput&);
+
+	const std::string name;
 protected:
 	AbstractPipelineAction* const pipeline;
 	std::list<AbstractInput*> inputSlots;
