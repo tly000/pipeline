@@ -25,12 +25,12 @@ struct AbstractInput : NonCopyable{
 
 	virtual ~AbstractInput();
 
-	virtual void connectTo(AbstractOutput& slot);
-
 	void disconnect();
 
 	const std::string name;
 protected:
+	void connectTo(AbstractOutput& slot);
+
 	AbstractPipelineAction* const pipeline;
 	AbstractOutput* outputSlot = nullptr;
 

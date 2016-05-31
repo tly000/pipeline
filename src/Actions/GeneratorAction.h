@@ -19,7 +19,7 @@ protected:
 	}
 
 	template<size_t... N> void executeImpl(std::index_sequence<N...>){
-		this->template getOutput<0>().setValue(T{
+		this->template getOutput<0>().setValue(Val<T>{
 			this->template getInput<N>().getValue()...
 		});
 	}

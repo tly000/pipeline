@@ -20,26 +20,12 @@ struct AbstractOutput : NonCopyable{
 
 	virtual ~AbstractOutput();
 
-	virtual void connectTo(AbstractInput& slot);
-
-	virtual void operator>>(AbstractInput&);
-
 	const std::string name;
 protected:
+	void connectTo(AbstractInput& slot);
+
 	AbstractPipelineAction* const pipeline;
 	std::list<AbstractInput*> inputSlots;
 
 	friend AbstractInput;
 };
-
-inline void operator>>(const OutputPack<1>& outputPack,AbstractInput& input){
-	outputPack.at(0)->connectTo(input);
-}
-
-inline void operator>>(AbstractOutput& output,const InputPack<1>& inputPack){
-	output.connectTo(*inputPack.at(0));
-}
-
-
-
-

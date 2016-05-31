@@ -12,10 +12,10 @@ template<typename...> struct FunctionAction;
 
 template<typename... Inputs,typename... Outputs> struct FunctionAction<Input(Inputs...),Output(Outputs...)>
 : StaticPipelineAction<Input(Inputs...),Output(Outputs...)>{
-	FunctionAction(Outputs(* ...functions)(const Inputs&)):
+	FunctionAction(Val<Outputs>(* ...functions)(const Val<Inputs>&)):
 		functions{functions...}{}
 protected:
-	std::tuple<Outputs(*)(const Inputs&)...> functions;
+	std::tuple<Val<Outputs>(*)(const Val<Inputs>&)...> functions;
 
 	void execute(){
 		this->executeImpl(std::index_sequence_for<Inputs...>());

@@ -15,7 +15,7 @@ symbolexport void mapstructTest(){
 		KV("element2", float),
 		KV("test", std::string)
 	> testMap;
-	testMap.at("element1"_c) = 77;
+	testMap.at("element1"_c).value = 77;
 
 	testMap.forEach([](auto& v){
 		std::cout << v.key() << std::endl;

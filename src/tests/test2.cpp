@@ -45,7 +45,7 @@ protected:
 	}
 };
 
-void test2(){
+int main(){
 	CPUImage<int> testImage(100,100);
 	for(size_t x = 0; x < 100; x++){
 		for(size_t y = 0; y < 100; y++){
@@ -59,8 +59,8 @@ void test2(){
 	radiusParam.setValue(5);
 
 	BoxFilterAction filter;
-	imageParam.connectTo(filter,IntPair<0,0>{});
-	radiusParam.connectTo(filter,IntPair<0,1>{});
+	imageParam.output<0>() >> filter.input<0>();
+	radiusParam.output<0>() >> filter.input<1>();
 
 	filter.run();
 

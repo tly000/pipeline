@@ -31,46 +31,76 @@ template<typename A,typename B> struct UnpackType<KeyValuePair<A,B>>{
 	using value_type = B;
 };
 
+template<typename T> using Val = typename UnpackType<T>::value_type;
+template<typename T> using Key = typename UnpackType<T>::key_type;
+
 template<typename... Inputs,typename... Outputs>
 struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipelineAction, NonCopyable{
 	StaticPipelineAction()
-		:inputSlots{std::make_unique<StaticInput<typename UnpackType<Inputs>::value_type>>(this,UnpackType<Inputs>::key_type::toString())...}//,
-		 //outputSlots{std::make_unique<StaticOutput<typename UnpackType<Outputs>::value_type>>(this,UnpackType<Outputs>::key_type::toString())...}
-		 {}
+		:inputSlots{std::make_unique<StaticInput<Val<Inputs>>(this,Key<Inputs>::toString())...},
+		 outputSlots{std::make_unique<StaticOutput<Val<Outputs>>(this,Key<Outputs>::toString())...}{}
 
-	template<size_t N> StaticInput<NthType<N,Inputs...>>& getInput(){
+	template<size_t N> auto& getInput(){
 		return *std::get<N>(inputSlots);
 	}
-	template<size_t N> StaticOutput<NthType<N,Outputs...>>& getOutput(){
+	template<size_t N> auto& getOutput(){
 		return *std::get<N>(outputSlots);
 	}
 
 	template<typename String> auto& getInput(const String&){
-		using Index = IndexOf<0,String,typename UnpackType<Inputs>::key_type...>;
+		using Index = IndexOf<0,String,Key<Inputs>...>;
 		static_assert(Index::value != -1, "Input not found.");
 		return this->getInput<Index::value>();
 	}
 	template<typename String> auto& getOutput(const String&){
-		using Index = IndexOf<0,String,typename UnpackType<Outputs>::key_type...>;
+		using Index = IndexOf<0,String,Key<Outputs>...>;
 		static_assert(Index::value != -1, "Output not found.");
 		return this->getOutput<Index::value>();
 	}
-
-	template<typename Action,int... As,int... Bs>
-	void connectTo(Action& action,IntPair<As,Bs>...);
 
 	virtual ~StaticPipelineAction() = default;
 
 	const static uint32_t numInputs = sizeof...(Inputs);
 	const static uint32_t numOutputs = sizeof...(Outputs);
+
+	template<int... Indices> auto output(){
+		return std::make_tuple(
+			&this->template getOutput<Indices>()...
+		);
+	}
+
+	template<int... Indices> auto input(){
+		return std::make_tuple(
+			&this->template getInput<Indices>()...
+		);
+	}
 protected:
-	std::tuple<std::unique_ptr<StaticInput<Inputs>>...> inputSlots;
-	std::tuple<std::unique_ptr<StaticOutput<Outputs>>...> outputSlots;
+	std::tuple<std::unique_ptr<StaticInput<Val<Inputs>>>...> inputSlots;
+	std::tuple<std::unique_ptr<StaticOutput<Val<Outputs>>>...> outputSlots;
 };
 
-template<typename... Inputs,typename... Outputs>
-template<typename Action,int... As,int... Bs>
-void StaticPipelineAction<Input(Inputs...),Output(Outputs...)>::connectTo(Action& action,IntPair<As,Bs>...){
-	variadicForEach(this->getOutput<As>().connectTo(action.getInput<Bs>()));
+template<typename... T> void operator>>(
+	std::tuple<StaticOutput<T>*...> outputs,
+	std::tuple<StaticInput<T>*...> inputs){
+	connectToImpl(outputs,inputs,std::index_sequence_for<T...>());
 }
+
+template<typename... T,size_t... I> void connectToImpl(
+	std::tuple<StaticOutput<T>*...> outputs,
+	std::tuple<StaticInput<T>*...> inputs,std::index_sequence<I...>){
+	variadicForEach(std::get<I>(outputs)->connectTo(*std::get<I>(inputs)));
+}
+
+template<typename T> void operator>>(
+	std::tuple<StaticOutput<T>*> outputs,
+	StaticInput<T>& input){
+	std::get<0>(outputs)->connectTo(input);
+}
+
+template<typename T> void operator>>(
+	StaticOutput<T>& output,
+	StaticInput<T>& input){
+	output.connectTo(input);
+}
+
 

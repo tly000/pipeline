@@ -24,7 +24,7 @@ struct StaticInput : AbstractInput{
 
 	T& getValue() const;
 
-	virtual void connectTo(AbstractOutput& slot);
+	void connectTo(StaticOutput<T>& slot);
 
 	void setDefaultValue(const T&);
 
@@ -39,7 +39,7 @@ struct StaticOutput : AbstractOutput{
 		:AbstractOutput(pipeline,name),
 		 data(nullptr){}
 
-	virtual void connectTo(AbstractInput& slot);
+	void connectTo(StaticInput<T>& slot);
 
 	const T& getValue() const;
 
@@ -73,12 +73,8 @@ inline const T& StaticOutput<T>::getValue() const {
 }
 
 template<typename T>
-inline void StaticOutput<T>::connectTo(AbstractInput& slot) {
-	if(dynamic_cast<StaticInput<T>*>(&slot)){
-		AbstractOutput::connectTo(slot);
-	} else {
-		throw std::runtime_error("connected slot type is not compatible");
-	}
+inline void StaticOutput<T>::connectTo(StaticInput<T>& slot) {
+	AbstractOutput::connectTo(slot);
 }
 
 template<typename T>
@@ -91,12 +87,8 @@ inline T& StaticOutput<T>::getValue() {
 }
 
 template<typename T>
-inline void StaticInput<T>::connectTo(AbstractOutput& slot) {
-	if(dynamic_cast<StaticOutput<T>*>(&slot)){
-		AbstractInput::connectTo(slot);
-	} else {
-		throw std::runtime_error("connected slot type is not compatible");
-	}
+inline void StaticInput<T>::connectTo(StaticOutput<T>& slot) {
+	AbstractInput::connectTo(slot);
 }
 
 template<typename T>

@@ -39,8 +39,8 @@ template<typename...> struct ParameterWidget;
 
 template<typename T>
 struct TypedParameter : Parameter{
-	TypedParameter(StaticOutput<T>& correspondingOutput,std::string name)
-		:Parameter(name),
+	TypedParameter(StaticOutput<T>& correspondingOutput)
+		:Parameter(correspondingOutput.name),
 		 output(correspondingOutput){}
 
 	virtual bool setValueFromString(std::string s){
@@ -103,25 +103,17 @@ protected:
 	std::vector<std::unique_ptr<Parameter>> namedParams;
 	std::map<std::string,Parameter*> paramMap;
 
-	template<typename T> void addParam(const std::string& name,StaticOutput<T>& output){
-		this->namedParams.emplace_back(std::make_unique<TypedParameter<T>>(output,name));
-		this->paramMap.insert({name,this->namedParams.back().get()});
+	template<typename T> void addParam(StaticOutput<T>& output){
+		this->namedParams.emplace_back(std::make_unique<TypedParameter<T>>(output));
+		this->paramMap.insert({output.name,this->namedParams.back().get()});
 	}
 };
 
 template<typename... Types>
 struct UIParameterAction : ParameterAction<Types...>, ParamPack{
-	template<typename... Names> UIParameterAction(std::string paramPackName,Names... names)
+	UIParameterAction(std::string paramPackName)
 		:ParamPack(paramPackName){
-		std::vector<std::string> nameList{names...};
-		if(sizeof...(Types) == 1 && nameList.empty()){
-			nameList.push_back(paramPackName);
-		}
-		this->template addParams(nameList,std::index_sequence_for<Types...>());
-	}
-
-	std::string getName() const{
-		return name;
+		this->template addParams(std::index_sequence_for<Types...>());
 	}
 
 	template<size_t N> TypedParameter<NthType<N,Types...>>& getParam(){
@@ -132,8 +124,8 @@ struct UIParameterAction : ParameterAction<Types...>, ParamPack{
 		return this->namedParams;
 	}
 protected:
-	template<size_t... I> void addParams(const std::vector<std::string>& names,std::index_sequence<I...>){
-		variadicForEach(this->template addParam(names.at(I),this->template getOutput<I>()));
+	template<size_t... I> void addParams(std::index_sequence<I...>){
+		variadicForEach(this->template addParam(this->template getOutput<I>()));
 	}
 };
 

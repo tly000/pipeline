@@ -30,7 +30,3 @@ AbstractOutput::AbstractOutput(AbstractPipelineAction* pipeline,std::string name
 AbstractOutput::~AbstractOutput() {
 	eraseFromList(pipeline->outputs,this);
 }
-
-void AbstractOutput::operator >>(AbstractInput& slot) {
-	this->connectTo(slot);
-}

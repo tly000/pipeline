@@ -19,7 +19,7 @@ template<typename Factory,
 		 typename... Inputs,
 		 size_t... Outputs>
 struct KernelAction<Factory,Input(Inputs...),KernelOutput<Outputs...>>
-	: StaticPipelineAction<Input(typename Factory::template Kernel<Inputs...>,Range,Range,Range,Inputs...),Output(NthType<Outputs,Inputs...>...,uint64_t)>{
+	: StaticPipelineAction<Input(typename Factory::template Kernel<Val<Inputs>...>,Range,Range,Range,Val<Inputs>...),Output(NthType<Outputs,Inputs...>...,uint64_t)>{
 
 	KernelAction(){
 		this->getLocalSizeInput().setDefaultValue(Range{1,1,1});
@@ -32,7 +32,7 @@ struct KernelAction<Factory,Input(Inputs...),KernelOutput<Outputs...>>
 		this->executeImpl(std::make_index_sequence<3 + sizeof...(Inputs)>());
 	}
 
-	using KernelType = typename Factory::template Kernel<Inputs...>;
+	using KernelType = typename Factory::template Kernel<Val<Inputs>...>;
 
 	StaticInput<KernelType>& getKernelInput(){
 		return this->template getInput<0>();

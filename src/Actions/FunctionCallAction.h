@@ -12,10 +12,10 @@ template<typename...> struct FunctionCallAction;
 
 template<typename... Inputs,typename O> struct FunctionCallAction<Input(Inputs...),O>
 	: StaticPipelineAction<Input(Inputs...),Output(O)>{
-	FunctionCallAction(std::function<O(const Inputs&...)> func)
+	FunctionCallAction(std::function<Val<O>(const Val<Inputs>&...)> func)
 		:func(func){}
 protected:
-	std::function<O(const Inputs&...)> func;
+	std::function<Val<O>(const Val<Inputs>&...)> func;
 
 	void execute(){
 		this->executeImpl(std::index_sequence_for<Inputs...>());
