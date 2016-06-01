@@ -26,11 +26,12 @@ template<typename Factory,typename T,
 	),Output(
 		KV("positionImage",ComplexImage)
 	)>{
-	PositionAction(Factory& factory)
+	PositionAction(Factory& factory,std::string typeName)
 	  :kernelGeneratorAction(factory){
 		this->template delegateInput("enable multisampling"_c, definesAction.template getInput("MULTISAMPLING_ENABLED"_c));
 		this->template delegateInput("pattern"_c, definesAction.template getInput("MULTISAMPLING_PATTERN"_c));
 
+		definesAction.getInput("Type"_c).setDefaultValue(typeName);
 		definesAction.naturalConnect(kernelGeneratorAction);
 		kernelGeneratorAction.getInput("programName"_c).setDefaultValue("position");
 		kernelGeneratorAction.getInput("kernelName"_c).setDefaultValue("positionKernel");
@@ -49,7 +50,7 @@ template<typename Factory,typename T,
 		this->template delegateOutput<0>(kernelAction.getOutput("positionImage"_c));
 	}
 
-	KernelDefinesAction<KV("MULTISAMPLING_ENABLED",bool),KV("MULTISAMPLING_PATTERN",MultisamplingPattern)> definesAction;
+	KernelDefinesAction<KV("Type",std::string),KV("MULTISAMPLING_ENABLED",bool),KV("MULTISAMPLING_PATTERN",MultisamplingPattern)> definesAction;
 	KernelGeneratorAction<Factory,ComplexImage,T,T,Vec<2,T>> kernelGeneratorAction;
 	KernelAction<Factory,Input(
 		KV("positionImage",ComplexImage),
@@ -62,7 +63,8 @@ template<typename Factory,typename T,
 		KV("scale",T),
 		KV("angle",float)
 	), KV("rotation",Vec<2,T>)> rotationAction{
-		[](const T& scale, const float& angle){
+		[](const T& scale, float angle){
+			angle *= 3.14159 / 180;
 			return Vec<2,T>{
 				tmul(scale,fromFloatToType<T>(cosf(angle))),
 				tmul(scale,fromFloatToType<T>(sinf(angle)))

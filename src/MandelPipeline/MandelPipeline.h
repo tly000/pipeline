@@ -17,7 +17,7 @@
 #include "ColoringAction.h"
 #include "ReductionAction.h"
 
-
+#include "GridbasedCalculationAction.h"
 
 /*
  * MandelPipeline.h
@@ -27,6 +27,9 @@
  */
 
 template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
+	Factory factory;
+	std::string typeName;
+
 	UIParameterAction<
 		KV("width",uint32_t),
 		KV("height",uint32_t)
@@ -94,6 +97,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("iterationImage",FloatImage)
 	)> calcAction;
 
+	using CalcActionType = typename decltype(calcAction)::SlotActionType;
+
 	SlotAction<Input(
 		KV("iterations",uint32_t),
 		KV("iterationImage",FloatImage),
@@ -138,19 +143,50 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 
 	ParserAction parserAction;
 	PositionAction<Factory,T> positionActionImpl;
-	CalculationAction<Factory,T> calculationActionImpl;
 	ColoringAction<Factory,T> coloringActionImpl;
 	ReductionAction<Factory> reductionActionImpl;
 
+	std::map<std::string,std::unique_ptr<CalcActionType>> methodMap;
+	std::map<std::string,std::function<CalcActionType*()>> creationMap{
+		{ "normal", [this]{
+			return new CalculationAction<Factory,T>(factory,typeName);
+		}},
+		{ "grid", [this]{
+			return new GridbasedCalculationAction<Factory,T>(factory,typeName);
+		}},
+		{ "Mariani-Silver", [this]()->CalcActionType*{
+			throw new std::runtime_error("Mariani-Silver not implemented.");
+		}},
+		{ "successive refinement", [this]()->CalcActionType*{
+			throw new std::runtime_error("successive refinement not implemented.");
+		}},
+		{ "successive iteration", [this]()->CalcActionType*{
+			throw new std::runtime_error("successive iteration not implemented.");
+		}},
+	};
+	FunctionCallAction<Input(
+		KV("calculation method",CalculationMethod)
+	),
+		KV("action",CalcActionType*)
+	> methodSelectionAction{
+		[this](const CalculationMethod& method){
+			if(!methodMap.count(method.getString())){
+				methodMap.at(method.getString()).reset(creationMap.at(method.getString())());
+			}
+			return methodMap.at(method.getString()).get();
+		}
+	};
+
 	MandelPipeline(Factory& factory,std::string typeName):
+	  factory(factory),
+	  typeName(typeName),
 	  complexImageGenerator(factory),
 	  floatImageGenerator(factory),
 	  float3ImageGenerator(factory),
 	  rgbaImageGenerator(factory),
-	  positionActionImpl(factory),
-	  calculationActionImpl(factory),
-	  coloringActionImpl(factory),
-	  reductionActionImpl(factory)
+	  positionActionImpl(factory,typeName),
+	  coloringActionImpl(factory,typeName),
+	  reductionActionImpl(factory,typeName)
 	{
 		this->addParam(imageParams);
 		this->addParam(multisampleParams);
@@ -182,7 +218,9 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		imageRangeGenerator.naturalConnect(calcAction);
 		imageRangeGenerator.naturalConnect(floatImageGenerator);
 		floatImageGenerator.template output<0>() >> calcAction.getInput("iterationImage"_c);
-		calcAction.getActionInput().setDefaultValue(&calculationActionImpl);
+
+		calcParams.naturalConnect(methodSelectionAction);
+		methodSelectionAction.naturalConnect(calcAction);
 
 		//connect coloringAction
 		algoParams.naturalConnect(coloringAction);

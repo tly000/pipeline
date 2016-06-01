@@ -162,7 +162,7 @@ MainWindow::MainWindow():
 
 	addPlatform(float,factory,name);
 	addPlatform(double,factory,name);
-	addPlatform(float128,factory,name);
+	//addPlatform(float128,factory,name);
 	addPlatform(Fixed4,factory,name);
 	addPlatform(Fixed8,factory,name);
 	addPlatform(Fixed16,factory,name);
@@ -175,7 +175,7 @@ MainWindow::MainWindow():
 
 		addPlatform(float,factory,name);
 		addPlatform(double,factory,name);
-		addPlatform(float128,factory,name);
+		//addPlatform(float128,factory,name);
 		addPlatform(Fixed4,factory,name);
 		addPlatform(Fixed8,factory,name);
 		addPlatform(Fixed16,factory,name);
@@ -197,7 +197,7 @@ MainWindow::MainWindow():
 	typeBox.append("Fixed4");
 	typeBox.append("Fixed8");
 	typeBox.append("Fixed16");
-	typeBox.append("float128");
+	//typeBox.append("float128");
 	typeBox.append("longdouble");
 	header.pack_start(typeBox);
 

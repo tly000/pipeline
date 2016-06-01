@@ -30,7 +30,7 @@ template<typename Factory,typename T,
 	),Output(
 		KV("iterationImage",FloatImage)
 	)>{
-	CalculationAction(Factory& factory)
+	CalculationAction(Factory& factory,std::string typeName)
 	  :kernelGeneratorAction(factory){
 		this->template delegateInput("processed formula"_c, definesAction.getInput("FORMULA"_c));
 		this->template delegateInput("enable juliamode"_c, definesAction.getInput("JULIAMODE"_c));
@@ -39,6 +39,7 @@ template<typename Factory,typename T,
 		this->template delegateInput("cycle detection"_c, definesAction.template getInput("CYCLE_DETECTION"_c));
 		this->template delegateInput("visualize cycle detection"_c, definesAction.getInput("CYCLE_DETECTION_VISUALIZE"_c));
 
+		definesAction.getInput("Type"_c).setDefaultValue(typeName);
 		definesAction.naturalConnect(kernelGeneratorAction);
 		kernelGeneratorAction.getInput("programName"_c).setDefaultValue("calculation");
 		kernelGeneratorAction.getInput("kernelName"_c).setDefaultValue("mandelbrotKernel");
@@ -56,6 +57,7 @@ template<typename Factory,typename T,
 	}
 
 	KernelDefinesAction<
+		KV("Type",std::string),
 		KV("FORMULA",std::string),
 		KV("JULIAMODE",bool),
 		KV("MAXITER",uint32_t),
@@ -70,8 +72,9 @@ template<typename Factory,typename T,
 		KV("julia c imag",T)
 	), KernelOutput<1>> kernelAction;
 
+	virtual ~CalculationAction() = default;
 protected:
-	void executeImpl(){
+	virtual void executeImpl(){
 		kernelAction.run();
 		_log("[info] calculation: " << kernelAction.template getOutput("time"_c).getValue() << " us.");
 	}

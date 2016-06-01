@@ -22,9 +22,10 @@ template<typename Factory,typename T,
 	),Output(
 		KV("coloredImage",Float3Image)
 	)>{
-	ColoringAction(Factory& factory)
+	ColoringAction(Factory& factory,std::string typeName)
 	  :kernelGeneratorAction(factory){
 		this->template delegateInput("iterations"_c,definesAction.getInput("MAXITER"_c));
+		definesAction.getInput("Type"_c).setDefaultValue(typeName);
 		definesAction.naturalConnect(kernelGeneratorAction);
 
 		kernelGeneratorAction.getInput("programName"_c).setDefaultValue("coloring");
@@ -40,7 +41,7 @@ template<typename Factory,typename T,
 		this->template delegateOutput<0>(kernelAction.getOutput("coloredImage"_c));
 	}
 
-	KernelDefinesAction<KV("MAXITER",uint32_t)> definesAction;
+	KernelDefinesAction<KV("Type",std::string),KV("MAXITER",uint32_t)> definesAction;
 	KernelGeneratorAction<Factory,FloatImage,Float3Image> kernelGeneratorAction;
 	KernelAction<Factory,Input(
 		KV("iterationImage",FloatImage),

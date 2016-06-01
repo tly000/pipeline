@@ -24,11 +24,12 @@ template<typename Factory> struct ReductionAction : BoxedAction<Input(
 	using Float3Image = typename Factory::template Image<Vec<3,float>>;
 	using RGBAImage = typename Factory::template Image<uint32_t>;
 
-	ReductionAction(Factory& factory)
+	ReductionAction(Factory& factory,std::string typeName)
 	  :kernelGeneratorAction(factory){
-		this->template delegateInput<0>(definesAction.template getInput<0>());
-		this->template delegateInput<1>(definesAction.template getInput<1>());
+		this->template delegateInput("enable multisampling"_c, definesAction.template getInput("MULTISAMPLING_ENABLED"_c));
+		this->template delegateInput("size"_c,definesAction.template getInput("MULTISAMPLING_SIZE"_c));
 
+		definesAction.getInput("Type"_c).setDefaultValue(typeName);
 		definesAction.naturalConnect(kernelGeneratorAction);
 		kernelGeneratorAction.getInput("programName"_c).setDefaultValue("reduction");
 		kernelGeneratorAction.getInput("kernelName"_c).setDefaultValue("reductionKernel");
@@ -43,7 +44,7 @@ template<typename Factory> struct ReductionAction : BoxedAction<Input(
 		this->template delegateOutput<0>(kernelAction.getOutput("reducedImage"_c));
 	}
 
-	KernelDefinesAction<KV("MULTISAMPLING_ENABLED",bool),KV("MULTISAMPLING_SIZE",uint32_t)> definesAction;
+	KernelDefinesAction<KV("Type",std::string),KV("MULTISAMPLING_ENABLED",bool),KV("MULTISAMPLING_SIZE",uint32_t)> definesAction;
 	KernelGeneratorAction<Factory,Float3Image,RGBAImage> kernelGeneratorAction;
 	KernelAction<Factory,Input(
 		KV("coloredImage",Float3Image),
