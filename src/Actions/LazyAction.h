@@ -17,10 +17,10 @@ struct LazyAction<Input(Inputs...),Output(Outputs...)> : StaticPipelineAction<In
 	virtual ~LazyAction() = default;
 protected:
 	bool first = true;
-	std::tuple<Inputs...> lastValues;
+	std::tuple<Val<Inputs>...> lastValues;
 
 	virtual void execute(){
-		auto newValues = createInputTuple(std::index_sequence_for<Inputs...>{});
+		auto newValues = createInputTuple(std::index_sequence_for<Val<Inputs>...>{});
 		if(first || lastValues != newValues){
 			this->executeImpl();
 			first = false;
@@ -30,8 +30,8 @@ protected:
 		}
 	}
 
-	template<size_t... N> std::tuple<Inputs...> createInputTuple(std::index_sequence<N...>){
-		return std::tuple<Inputs...>{
+	template<size_t... N> std::tuple<Val<Inputs>...> createInputTuple(std::index_sequence<N...>){
+		return std::tuple<Val<Inputs>...>{
 			this->template getInput<N>().getValue()...
 		};
 	}

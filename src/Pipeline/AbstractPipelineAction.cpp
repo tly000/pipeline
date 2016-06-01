@@ -33,7 +33,7 @@ void AbstractPipelineAction::runImpl() {
 			if(auto* output = input->getOutputSlot()){
 				output->getPipeline()->runImpl();
 			} else if(!input->hasValue()) {
-				_log("[warning] slot " << i << " of action " << demangle(typeid(*this)) << " not connected.");
+				_log("[warning] slot " << i << "( " << input->name << ")" << " of action " << demangle(typeid(*this)) << " not connected.");
 			}
 			i++;
 		}

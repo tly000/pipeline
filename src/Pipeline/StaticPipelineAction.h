@@ -3,11 +3,12 @@
 #include <cstdint>
 #include <set>
 #include <memory>
+
+#include "../Type/StringConstant.h"
 #include "AbstractPipelineAction.h"
 #include "../Utility/NonCopyable.h"
 #include "../Utility/VariadicUtils.h"
 #include "StaticInputOutput.h"
-#include "../Type/MapStruct.h"
 
 /*
  * PipelineAction.h
@@ -37,8 +38,8 @@ template<typename T> using Key = typename UnpackType<T>::key_type;
 template<typename... Inputs,typename... Outputs>
 struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipelineAction, NonCopyable{
 	StaticPipelineAction()
-		:inputSlots{std::make_unique<StaticInput<Val<Inputs>>(this,Key<Inputs>::toString())...},
-		 outputSlots{std::make_unique<StaticOutput<Val<Outputs>>(this,Key<Outputs>::toString())...}{}
+		:inputSlots{std::make_unique<StaticInput<Val<Inputs>>>(this,Key<Inputs>::toString())...},
+		 outputSlots{std::make_unique<StaticOutput<Val<Outputs>>>(this,Key<Outputs>::toString())...}{}
 
 	template<size_t N> auto& getInput(){
 		return *std::get<N>(inputSlots);
@@ -74,9 +75,27 @@ struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipel
 			&this->template getInput<Indices>()...
 		);
 	}
+
+	template<typename Action> void naturalConnect(Action& a){
+		variadicForEach(naturalConnectImpl(a,Key<Outputs>()));
+	}
+
+	template<typename String> struct HasInput{
+		constexpr static bool value = IndexOf<0,String,Key<Inputs>...>::value != -1;
+	};
 protected:
 	std::tuple<std::unique_ptr<StaticInput<Val<Inputs>>>...> inputSlots;
 	std::tuple<std::unique_ptr<StaticOutput<Val<Outputs>>>...> outputSlots;
+private:
+	template<typename Action,typename S>
+	std::enable_if_t<Action::template HasInput<S>::value> naturalConnectImpl(Action& a,const S&){
+		if(S::toString() != "unnamed"){
+			this->template getOutput(S()) >> a.getInput(S());
+		}
+	}
+
+	template<typename Action,typename S>
+	std::enable_if_t<!Action::template HasInput<S>::value> naturalConnectImpl(Action& a,const S&){}
 };
 
 template<typename... T> void operator>>(

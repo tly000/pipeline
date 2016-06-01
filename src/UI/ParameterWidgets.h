@@ -89,12 +89,10 @@ protected:
 	}
 };
 
-template<size_t N, const char* const Strings[N]> struct ParameterWidget<StringEnum<N,Strings>> : Gtk::ComboBoxText{
-	ParameterWidget(TypedParameter<StringEnum<N,Strings>>& param)
+template<typename... Strings> struct ParameterWidget<StringEnum<Strings...>> : Gtk::ComboBoxText{
+	ParameterWidget(TypedParameter<StringEnum<Strings...>>& param)
 		:param(param){
-			for(uint32_t i = 0; i < N; i++){
-				this->append(Strings[i]);
-			}
+			variadicForEach(this->append(Strings::toString()));
 			this->set_active(this->param.getValue().getIndex());
 
 			this->param.registerObserver([this](Parameter*){
@@ -108,6 +106,6 @@ template<size_t N, const char* const Strings[N]> struct ParameterWidget<StringEn
 			});
 		}
 protected:
-	TypedParameter<StringEnum<N,Strings>>& param;
+	TypedParameter<StringEnum<Strings...>>& param;
 };
 

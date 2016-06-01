@@ -10,20 +10,36 @@
 
 template<typename...> struct BoxedAction;
 
-template<typename... Inputs,typename... Outputs> struct BoxedAction
+template<typename... Inputs,typename... Outputs> struct BoxedAction<Input(Inputs...),Output(Outputs...)>
   : StaticPipelineAction<Input(Inputs...),Output(Outputs...)>{
 
 protected:
-	template<size_t N> void delegateInput(decltype(this->getInput<N>())& inputSlot){
-		inputDelegation.at(N) = [&]{
+	template<size_t N> void delegateInput(StaticInput<NthType<N,Val<Inputs>...>>& inputSlot){
+		inputDelegation.emplace(N,[&]{
 			inputSlot.setDefaultValue(this->template getInput<N>().getValue());
-		};
+		});
 	}
 
-	template<size_t N> void delegateOutput(decltype(this->getOutput<N>())& outputSlot){
-		outputDelegation.at(N) = [&]{
+	template<size_t N> void delegateOutput(StaticOutput<NthType<N,Val<Outputs>...>>& outputSlot){
+		outputDelegation.emplace(N,[&]{
 			this->template getOutput<N>().setValue(outputSlot.getValue());
-		};
+		});
+	}
+
+	template<typename String,typename T> void delegateInput(const String&, StaticInput<T>& inputSlot){
+		using Index = IndexOf<0,String,Key<Inputs>...>;
+		static_assert(Index::value != -1, "Input not found.");
+		inputDelegation.emplace(Index::value,[&]{
+			inputSlot.setDefaultValue(this->template getInput(String()).getValue());
+		});
+	}
+
+	template<typename String,typename T> void delegateOutput(const String&,StaticOutput<T>& outputSlot){
+		using Index = IndexOf<0,String,Key<Outputs>...>;
+		static_assert(Index::value != -1, "Output not found.");
+		outputDelegation.emplace(Index::value,[&]{
+			this->template getOutput(String()).setValue(outputSlot.getValue());
+		});
 	}
 
 	void execute(){
@@ -40,7 +56,7 @@ protected:
 
 	virtual ~BoxedAction() = default;
 private:
-	std::map<int,std::function<void()>> inputDelegation;
+	std::multimap<int,std::function<void()>> inputDelegation;
 	std::map<int,std::function<void()>> outputDelegation;
 };
 

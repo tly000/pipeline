@@ -3,7 +3,7 @@
 #include "../Kernel/Type/Fixed4.h"
 #include "../Kernel/Type/Fixed8.h"
 #include "../Kernel/Type/Fixed16.h"
-#include "../MandelPipeline/MandelPipelineWrapper.h"
+#include "../MandelPipeline/MandelPipeline.h"
 
 /*
  * main.cpp
@@ -15,7 +15,7 @@
 symbolexport void pipelineTest(){
 	CLFactory gpu;
 
-	MandelPipelineWrapper<CLFactory,float> gpuPipeline(gpu,"float");
+	MandelPipeline<CLFactory,float> gpuPipeline(gpu,"float");
 	gpuPipeline.run();
 }
 

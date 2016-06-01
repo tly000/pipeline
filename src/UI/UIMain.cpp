@@ -9,7 +9,7 @@
  */
 
 
-void uiMain() {
+symbolexport void uiMain() {
 	BackTracer::registerErrorHandler();
 
 	auto app = Gtk::Application::create("mandelpipeline");

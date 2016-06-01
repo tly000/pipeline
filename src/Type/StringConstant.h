@@ -29,25 +29,4 @@ template<typename A,typename B> struct KeyValuePair{
 	}
 };
 
-#define KV(k,v) KeyValuePair<decltype(k##_c),v>
-
-template<typename...> struct MapStruct{
-	void forEach(...){}
-};
-
-template<typename K,typename V, typename...Rest> struct MapStruct<KeyValuePair<K,V>,Rest...> : MapStruct<Rest...>{
-	KeyValuePair<K,V> pair;
-
-	template<typename Key> auto& at(const Key& k){
-		return MapStruct<Rest...>::template at(k);
-	}
-
-	auto& at(const K&){
-		return this->pair;
-	}
-
-	template<typename F> void forEach(F f){
-		f(this->pair);
-		MapStruct<Rest...>::forEach(f);
-	}
-};
+#define KV(k,...) KeyValuePair<decltype(k##_c), __VA_ARGS__ >

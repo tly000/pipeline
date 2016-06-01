@@ -1,5 +1,5 @@
 #pragma once
-#include "BoxedAction.h"
+#include "../Pipeline/StaticPipelineAction.h"
 
 /*
  * SlotAction.h
@@ -11,9 +11,9 @@
 template<typename...> struct SlotAction;
 
 template<typename... Inputs, typename... Outputs> struct SlotAction<Input(Inputs...),Output(Outputs...)>
-	: BoxedAction<Input(Inputs...),Output(Outputs...)>{
+	: StaticPipelineAction<Input(Inputs...),Output(Outputs...)>{
 
-	SlotAction() : actionInput(this){}
+	SlotAction() : actionInput(this,"actioninput"){}
 
 	auto& getActionInput(){
 		return actionInput;
@@ -28,13 +28,9 @@ protected:
 
 	template<size_t... I, size_t... J> void executeImpl(std::index_sequence<I...>,std::index_sequence<J...>){
 		auto* action = actionInput.getValue();
-		inputDelegation.outputs(I...) >> action->inputs(I...);
-		action->outputs(J...) >> outputDelegation.inputs(I...);
-
-		action->execute();
-
-		variadicForEach(action->getInput<I>().disconnect());
-		variadicForEach(outputDelegation->getInput<I>().disconnect());
+		variadicForEach(action->template getInput<I>().setDefaultValue(this->template getInput<I>().getValue()));
+		action->run();
+		variadicForEach(this->template getOutput<J>().setValue(action->template getOutput<J>().getValue()));
 	}
 };
 

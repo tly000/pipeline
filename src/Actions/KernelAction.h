@@ -19,7 +19,13 @@ template<typename Factory,
 		 typename... Inputs,
 		 size_t... Outputs>
 struct KernelAction<Factory,Input(Inputs...),KernelOutput<Outputs...>>
-	: StaticPipelineAction<Input(typename Factory::template Kernel<Val<Inputs>...>,Range,Range,Range,Val<Inputs>...),Output(NthType<Outputs,Inputs...>...,uint64_t)>{
+	: StaticPipelineAction<Input(
+		KV("kernel",typename Factory::template Kernel<Val<Inputs>...>),
+		KV("globalOffset",Range),
+		KV("globalSize",Range),
+		KV("localSize",Range),
+		Inputs...
+	),Output(NthType<Outputs,Inputs...>...,KV("time",uint64_t))>{
 
 	KernelAction(){
 		this->getLocalSizeInput().setDefaultValue(Range{1,1,1});
@@ -46,11 +52,6 @@ struct KernelAction<Factory,Input(Inputs...),KernelOutput<Outputs...>>
 	}
 	StaticInput<Range>& getLocalSizeInput(){
 		return this->template getInput<3>();
-	}
-
-	template<typename... Indices> InputPack<sizeof...(Indices)> kernelInput(Indices... is){
-		auto addFour = [](int i){ return i+4;};
-		return this->template input(addFour(is)...);
 	}
 private:
 	template<size_t... N> void executeImpl(std::index_sequence<N...>){

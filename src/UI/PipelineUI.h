@@ -14,7 +14,7 @@
 #include "GtkHeader.h"
 
 #include <iostream>
-#include "../MandelPipeline/MandelPipelineWrapper.h"
+#include "../MandelPipeline/MandelPipeline.h"
 #include "../Platform/CL/CLFactory.h"
 #include "../Platform/CPU/CPUFactory.h"
 #include "../UI/PipelineParameterBox.h"

@@ -6,11 +6,22 @@
  */
 
 #include "../Utility/Utils.h"
-#include "../Type/MapStruct.h"
+#include "../Utility/VariadicUtils.h"
+#include "../Type/StringConstantMap.h"
+#include "../Type/EnumClass.h"
 #include <iostream>
 
+EnumClass(TestEnum,
+	"A"_c,
+	"B"_c
+);
+
+template<typename S,typename... Strings> int indexOf(S,Strings...){
+	return IndexOf<0,S,Strings...>::value;
+}
+
 symbolexport void mapstructTest(){
-	MapStruct<
+	StringConstantMap<
 		KV("element1", int),
 		KV("element2", float),
 		KV("test", std::string)
@@ -20,6 +31,12 @@ symbolexport void mapstructTest(){
 	testMap.forEach([](auto& v){
 		std::cout << v.key() << std::endl;
 	});
+
+	TestEnum x = "A";
+	x = "B";
+
+	std::cout << x.getString() << std::endl;
 }
+
 
 

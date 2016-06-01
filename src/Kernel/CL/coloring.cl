@@ -1,13 +1,5 @@
 #include "../Type/StandardTypes.h"
 
-#ifndef MAXITER 
-#define MAXITER 64
-#endif
-
-#ifndef BAILOUT 
-#define BAILOUT 4
-#endif
-
 //see opencl 6.1.5 sizeof(float3)
 kernel void coloringKernel(global read_only float* iterInput,uint32_t w,uint32_t h,global write_only float* colorOutput,uint32_t w2,uint32_t h2) {
 	int2 globalID = {

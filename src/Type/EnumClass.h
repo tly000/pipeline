@@ -1,4 +1,6 @@
 #pragma once
+#include "../Utility/VariadicUtils.h"
+#include "TypeHelper.h"
 
 /*
  * EnumClass.h
@@ -7,7 +9,11 @@
  *      Author: tly
  */
 
-template<size_t N, const char* const Strings[N]> struct StringEnum{
+template<typename... Strings> struct StringEnum{
+	static_assert(sizeof...(Strings) != 0, "StringEnum must have at least 1 element.");
+
+	StringEnum():index(0){}
+
 	StringEnum(const char* s):index(-1){
 		if(!this->setString(s)){
 			throw std::runtime_error("invalid construction of StringEnum");
@@ -15,9 +21,14 @@ template<size_t N, const char* const Strings[N]> struct StringEnum{
 	}
 
 	bool setString(const char* s){
-		auto it = std::find(Strings,Strings+N,s);
-		if(it != Strings+N){
-			this->index = std::distance(Strings,it);
+		int index = -1;
+
+		int i = 0;
+		variadicForEach(
+			index == -1 && Strings::toString() == s ? index = i : ++i
+		);
+		if(index != -1){
+			this->index = index;
 			return true;
 		}else{
 			return false;
@@ -25,7 +36,7 @@ template<size_t N, const char* const Strings[N]> struct StringEnum{
 	}
 
 	std::string getString() const {
-		return Strings[index];
+		return getPossibleStrings()[index];
 	}
 
 	int getIndex() const {
@@ -36,16 +47,26 @@ template<size_t N, const char* const Strings[N]> struct StringEnum{
 		this->index = index;
 	}
 
-	const char* const* getPossibleStrings() const {
-		return Strings;
+	std::vector<std::string> getPossibleStrings() const {
+		static std::string strings[] = {
+			Strings::toString()...
+		};
+		return std::vector<std::string>(strings,strings+sizeof...(Strings));
+	}
+
+	bool operator==(const StringEnum<Strings...>& s) const {
+		return this->index == s.index;
 	}
 protected:
 	int index;
 };
 
+template<typename... Strings> StringEnum<Strings...> makeStringEnum(Strings...){
+	return {};
+}
+
 #define EnumClass(Name,...) \
-constexpr const char* Name##Strings[] = { __VA_ARGS__ }; \
-using Name = StringEnum<sizeof(Name##Strings)/sizeof(const char*), (const char* const*)Name##Strings>; \
+using Name = decltype(makeStringEnum(__VA_ARGS__)); \
 template<> inline Name fromString<Name>(const std::string& s){ return s.c_str(); } \
 template<> inline std::string toString<Name>(const Name& s){ return s.getString(); } \
 

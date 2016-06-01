@@ -45,7 +45,7 @@ protected:
 	}
 };
 
-int main(){
+void test2(){
 	CPUImage<int> testImage(100,100);
 	for(size_t x = 0; x < 100; x++){
 		for(size_t y = 0; y < 100; y++){

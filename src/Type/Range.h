@@ -9,7 +9,7 @@
  */
 
 struct Range{
-	std::uint32_t x,y,z;
+	std::uint32_t x = 1,y = 1,z = 1;
 };
 
 constexpr bool operator==(const Range& a,const Range& b){

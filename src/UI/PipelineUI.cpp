@@ -18,7 +18,7 @@ struct Platform : AbstractPlatform{
 
 	PipelineWrapper& getPipeline(){
 		if(!pipeline){
-			pipeline = std::make_unique<MandelPipelineWrapper<Factory,T>>(factory,typeName);
+			pipeline = std::make_unique<MandelPipeline<Factory,T>>(factory,typeName);
 		}
 		return *pipeline;
 	}
@@ -31,7 +31,7 @@ struct Platform : AbstractPlatform{
 	}
 
 	const CPUImage<unsigned>& getRenderedImage(){
-		auto& renderedImage = pipeline->getRenderedImage();
+		auto& renderedImage = pipeline->reductionAction.getOutput("reducedImage"_c).getValue();
 		if(outputImage.getHeight() != renderedImage.getHeight() ||
 		   outputImage.getWidth() != renderedImage.getWidth()){
 			outputImage = CPUImage<unsigned>(renderedImage.getWidth(),renderedImage.getHeight());
@@ -42,20 +42,20 @@ struct Platform : AbstractPlatform{
 
 	void scale(float factor){
 		//get current scale.
-		auto& param = this->pipeline->getPositionParam();
-		auto scale = param.template getValue<2>();
+		auto& param = this->pipeline->positionParams;
+		auto scale = param.template getValue("scale"_c);
 
-		param.template getParam<2>().setValue(tmul(scale,fromFloatToType<decltype(scale)>(factor)));
+		param.setValue("scale"_c, tmul(scale,fromFloatToType<decltype(scale)>(factor)));
 	}
 
 	//translate by x,y in image space
 	void translate(float x,float y){
 		//get current position and scale.
-		auto& param = this->pipeline->getPositionParam();
-		auto offsetReal = param.template getValue<0>();
-		auto offsetImag = param.template getValue<1>();
-		auto scale = param.template getValue<2>();
-		float rotationAngle = param.template getValue<3>() / 180 * G_PI;
+		auto& param = this->pipeline->positionParams;
+		auto offsetReal = param.template getValue("center real"_c);
+		auto offsetImag = param.template getValue("center imag"_c);
+		auto scale = param.template getValue("scale"_c);
+		float rotationAngle = param.template getValue("angle"_c) / 180 * G_PI;
 
 		auto cosA = fromFloatToType<decltype(scale)>(std::cos(rotationAngle));
 		auto sinA = fromFloatToType<decltype(scale)>(std::sin(rotationAngle));
@@ -64,16 +64,16 @@ struct Platform : AbstractPlatform{
 		auto newX = tsub(tmul(X,cosA),tmul(Y,sinA));
 		auto newY = tadd(tmul(X,sinA),tmul(Y,cosA));
 
-		param.template getParam<0>().setValue(tadd(offsetReal,newX));
-		param.template getParam<1>().setValue(tadd(offsetImag,newY));
+		param.setValue("center real"_c,tadd(offsetReal,newX));
+		param.setValue("center imag"_c,tadd(offsetImag,newY));
 	}
 
 	//translate by x,y in image space
 	void rotate(float angle){
 		//get current position and scale.
-		auto& param = this->pipeline->getPositionParam();
-		float currentAngle = param.template getParam<3>().getValue();
-		param.template  getParam<3>().setValue(currentAngle + angle);
+		auto& param = this->pipeline->positionParams;
+		float currentAngle = param.getValue("angle"_c);
+		param.setValue("angle"_c, currentAngle + angle);
 	}
 
 	std::string getName() const {
@@ -143,7 +143,7 @@ protected:
 	std::string typeName;
 	CPUImage<unsigned> outputImage{1,1};
 	Factory factory;
-	std::unique_ptr<MandelPipelineWrapper<Factory,T>> pipeline = nullptr;
+	std::unique_ptr<MandelPipeline<Factory,T>> pipeline = nullptr;
 	std::unique_ptr<PipelineParameterBox> paramBox = nullptr;
 };
 

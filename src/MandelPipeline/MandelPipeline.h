@@ -1,6 +1,23 @@
 #pragma once
+#include "../Type/StringConstant.h"
+#include "../Type/EnumClass.h"
 #include "../UI/UIParameterAction.h"
 #include "PipelineWrapper.h"
+#include "../Actions/SlotAction.h"
+#include "../Actions/FunctionCallAction.h"
+#include "../Actions/GeneratorAction.h"
+#include "../Actions/ImageGeneratorAction.h"
+#include "../Utility/Timer.h"
+
+#include "Enums.h"
+#include "ParserAction.h"
+
+#include "PositionAction.h"
+#include "CalculationAction.h"
+#include "ColoringAction.h"
+#include "ReductionAction.h"
+
+
 
 /*
  * MandelPipeline.h
@@ -8,19 +25,6 @@
  *  Created on: May 31, 2016
  *      Author: tly
  */
-
-EnumClass(MultisamplingPattern,
-	"UNIFORM_GRID",
-	"JITTERING"
-);
-
-EnumClass(CalculationMethod,
-	"normal",
-	"successive refinement",
-	"Mariani-Silver",
-	"grid",
-	"successive iteration"
-);
 
 template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	UIParameterAction<
@@ -51,7 +55,7 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 
 	UIParameterAction<
 		KV("iterations",uint32_t),
-		KV("bailout",bool),
+		KV("bailout",float),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool)
 	> algoParams{"escape time algorithm"};
@@ -68,29 +72,33 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("angle",float),
 		KV("positionImage",ComplexImage),
 		KV("enable multisampling",bool),
-		KV("pattern",MultisamplingPattern)
+		KV("pattern",MultisamplingPattern),
+		KV("imageRange",Range)
 	),Output(
 		KV("positionImage",ComplexImage)
 	)> positionAction;
 
 	SlotAction<Input(
-		KV("formula",std::string),
+		KV("processed formula",std::string),
 		KV("enable juliamode",bool),
 		KV("julia c real",T),
 		KV("julia c imag",T),
 		KV("iterations",uint32_t),
-		KV("bailout",bool),
+		KV("bailout",float),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool),
 		KV("positionImage",ComplexImage),
-		KV("iterationImage",FloatImage)
+		KV("iterationImage",FloatImage),
+		KV("imageRange",Range)
 	),Output(
-		KV("iterationImage",ComplexImage)
+		KV("iterationImage",FloatImage)
 	)> calcAction;
 
 	SlotAction<Input(
+		KV("iterations",uint32_t),
 		KV("iterationImage",FloatImage),
-		KV("coloredImage",Float3Image)
+		KV("coloredImage",Float3Image),
+		KV("imageRange",Range)
 	),Output(
 		KV("coloredImage",Float3Image)
 	)> coloringAction;
@@ -99,7 +107,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("enable multisampling",bool),
 		KV("size",uint32_t),
 		KV("coloredImage",Float3Image),
-		KV("reducedImage",RGBAImage)
+		KV("reducedImage",RGBAImage),
+		KV("imageRange",Range)
 	),Output(
 		KV("reducedImage",RGBAImage)
 	)> reductionAction;
@@ -110,16 +119,16 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("height",uint32_t),
 		KV("enable multisampling",bool),
 		KV("size",uint32_t)
-	),Output(
+	),
 		KV("imageRange",Range)
-	)> imageRangeGenerator{[](uint32_t w,uint32_t h,bool msEnabled,uint32_t s){
-		return msEnabled ? Range{s * w, s * h} : Range{w,h};
+	> imageRangeGenerator{[](uint32_t w,uint32_t h,bool msEnabled,uint32_t s){
+		return msEnabled ? Range{s * w, s * h,1} : Range{w,h,1};
 	}};
 	GeneratorAction<Input(
 		KV("width",uint32_t),
 		KV("height",uint32_t)
 	),Output(
-		KV("reducedImageRange",Range)
+		KV("imageRange",Range)
 	)> reducedImageRangeGenerator;
 
 	ImageGeneratorAction<Factory,Vec<2,T>> complexImageGenerator;
@@ -127,44 +136,105 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	ImageGeneratorAction<Factory,Vec<3,float>> float3ImageGenerator;
 	ImageGeneratorAction<Factory,uint32_t> rgbaImageGenerator;
 
-	MandelPipeline(Factory& factory):
+	ParserAction parserAction;
+	PositionAction<Factory,T> positionActionImpl;
+	CalculationAction<Factory,T> calculationActionImpl;
+	ColoringAction<Factory,T> coloringActionImpl;
+	ReductionAction<Factory> reductionActionImpl;
+
+	MandelPipeline(Factory& factory,std::string typeName):
 	  complexImageGenerator(factory),
 	  floatImageGenerator(factory),
 	  float3ImageGenerator(factory),
-	  rgbaImageGenerator(factory){
+	  rgbaImageGenerator(factory),
+	  positionActionImpl(factory),
+	  calculationActionImpl(factory),
+	  coloringActionImpl(factory),
+	  reductionActionImpl(factory)
+	{
 		this->addParam(imageParams);
 		this->addParam(multisampleParams);
 		this->addParam(positionParams);
 		this->addParam(calcParams);
 		this->addParam(algoParams);
 
+		imageParams.naturalConnect(imageRangeGenerator);
+		multisampleParams.naturalConnect(imageRangeGenerator);
+		imageParams.naturalConnect(reducedImageRangeGenerator);
+
 		//connect positionaction
 		positionParams.naturalConnect(positionAction);
 		multisampleParams.naturalConnect(positionAction);
 
+		imageRangeGenerator.naturalConnect(positionAction);
 		imageRangeGenerator.naturalConnect(complexImageGenerator);
-		complexImageGenerator.output<0>() >> positionAction.getInput("positionImage"_c);
+		complexImageGenerator.template output<0>() >> positionAction.getInput("positionImage"_c);
+		positionAction.getActionInput().setDefaultValue(&positionActionImpl);
 
 		//connect calcAction
+		calcParams.naturalConnect(parserAction);
+		parserAction.naturalConnect(calcAction);
+
 		calcParams.naturalConnect(calcAction);
 		algoParams.naturalConnect(calcAction);
 		positionAction.naturalConnect(calcAction);
 
+		imageRangeGenerator.naturalConnect(calcAction);
 		imageRangeGenerator.naturalConnect(floatImageGenerator);
-		floatImageGenerator.output<0>() >> calcAction.getInput("iterationImage"_c);
+		floatImageGenerator.template output<0>() >> calcAction.getInput("iterationImage"_c);
+		calcAction.getActionInput().setDefaultValue(&calculationActionImpl);
 
 		//connect coloringAction
+		algoParams.naturalConnect(coloringAction);
 		calcAction.naturalConnect(coloringAction);
 
+		imageRangeGenerator.naturalConnect(coloringAction);
 		imageRangeGenerator.naturalConnect(float3ImageGenerator);
-		float3ImageGenerator.output<0>() >> coloringAction.getInput("coloredImage"_c);
+		float3ImageGenerator.template output<0>() >> coloringAction.getInput("coloredImage"_c);
+		coloringAction.getActionInput().setDefaultValue(&coloringActionImpl);
 
 		//connect reductionAction
 		multisampleParams.naturalConnect(reductionAction);
 		coloringAction.naturalConnect(reductionAction);
 
+		reducedImageRangeGenerator.naturalConnect(reductionAction);
 		reducedImageRangeGenerator.naturalConnect(rgbaImageGenerator);
-		rgbaImageGenerator.output<0>() >> reductionAction.getInput("reducedImage"_c);
+		rgbaImageGenerator.template output<0>() >> reductionAction.getInput("reducedImage"_c);
+		reductionAction.getActionInput().setDefaultValue(&reductionActionImpl);
+
+		//set default values:
+		imageParams.setValue("width"_c,500);
+		imageParams.setValue("height"_c,500);
+
+		multisampleParams.setValue("enable multisampling"_c,false);
+		multisampleParams.setValue("size"_c,2);
+		multisampleParams.setValue("pattern"_c,"UNIFORM_GRID");
+
+		positionParams.setValue("center real"_c,fromString<T>("-0.5"));
+		positionParams.setValue("center imag"_c,fromString<T>("0"));
+		positionParams.setValue("scale"_c,fromString<T>("2"));
+		positionParams.setValue("angle"_c,0);
+
+		calcParams.setValue("formula"_c,"z*z + c");
+		calcParams.setValue("enable juliamode"_c,false);
+		calcParams.setValue("julia c real"_c,fromString<T>("0"));
+		calcParams.setValue("julia c imag"_c,fromString<T>("0"));
+		calcParams.setValue("calculation method"_c,"normal");
+
+		algoParams.setValue("iterations"_c,64);
+		algoParams.setValue("bailout"_c,4);
+		algoParams.setValue("cycle detection"_c,false);
+		algoParams.setValue("visualize cycle detection"_c,false);
+	}
+
+	void run(){
+		_log("[info] running pipeline " + demangle(typeid(*this)));
+		Timer timer;
+
+		timer.start();
+		reductionAction.run();
+		auto fullTime = timer.stop();
+		_log("[info] full: " << fullTime << " us.");
 	}
 };
 

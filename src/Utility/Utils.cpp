@@ -85,9 +85,11 @@ std::string demangle(const char* mangledName){
 		abi::__cxa_demangle(mangledName,nullptr,&length,&error),
 		&std::free
 	);
-	return 	error ?
-			mangledName :
-			std::string((const char*) demangledName.get());
+	if(error){
+		return mangledName;
+	}else{
+		return std::string((const char*) demangledName.get());
+	}
 }
 
 //http://stackoverflow.com/questions/478898/how-to-execute-a-command-and-get-output-of-command-within-c-using-posix
