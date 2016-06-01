@@ -52,8 +52,7 @@ template<typename Factory,typename T,
 		this->template delegateInput("julia c imag"_c, kernelAction.getInput("julia c imag"_c));
 		this->template delegateInput("imageRange"_c, kernelAction.getInput("globalSize"_c));
 
-		//this->template delegateOutput("iterationImage"_c, kernelAction.getOutput("iterationImage"_c));
-		this->template delegateOutput<0>(kernelAction.getOutput("iterationImage"_c));
+		this->template delegateOutput("iterationImage"_c, kernelAction.getOutput("iterationImage"_c));
 	}
 
 	KernelDefinesAction<

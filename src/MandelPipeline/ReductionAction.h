@@ -40,8 +40,7 @@ template<typename Factory> struct ReductionAction : BoxedAction<Input(
 		this->template delegateInput("reducedImage"_c, kernelAction.getInput("reducedImage"_c));
 		this->template delegateInput("imageRange"_c, kernelAction.getInput("globalSize"_c));
 
-		//this->template delegateOutput("reducedImage"_c,kernelAction.getOutput("reducedImage"_c));
-		this->template delegateOutput<0>(kernelAction.getOutput("reducedImage"_c));
+		this->template delegateOutput("reducedImage"_c,kernelAction.getOutput("reducedImage"_c));
 	}
 
 	KernelDefinesAction<KV("Type",std::string),KV("MULTISAMPLING_ENABLED",bool),KV("MULTISAMPLING_SIZE",uint32_t)> definesAction;

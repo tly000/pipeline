@@ -37,8 +37,7 @@ template<typename Factory,typename T,
 		this->template delegateInput("coloredImage"_c, kernelAction.getInput("coloredImage"_c));
 		this->template delegateInput("imageRange"_c, kernelAction.getInput("globalSize"_c));
 
-		//this->template delegateOutput("coloredImage"_c, kernelAction.getOutput("coloredImage"_c));
-		this->template delegateOutput<0>(kernelAction.getOutput("coloredImage"_c));
+		this->template delegateOutput("coloredImage"_c, kernelAction.getOutput("coloredImage"_c));
 	}
 
 	KernelDefinesAction<KV("Type",std::string),KV("MAXITER",uint32_t)> definesAction;

@@ -46,8 +46,7 @@ template<typename Factory,typename T,
 		this->template delegateInput("center imag"_c, kernelAction.getInput("center imag"_c));
 		this->template delegateInput("imageRange"_c, kernelAction.getInput("globalSize"_c));
 
-		//this->template delegateOutput("positionImage"_c, kernelAction.getOutput("positionImage"_c));
-		this->template delegateOutput<0>(kernelAction.getOutput("positionImage"_c));
+		this->template delegateOutput("positionImage"_c, kernelAction.getOutput("positionImage"_c));
 	}
 
 	KernelDefinesAction<KV("Type",std::string),KV("MULTISAMPLING_ENABLED",bool),KV("MULTISAMPLING_PATTERN",MultisamplingPattern)> definesAction;
