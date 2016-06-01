@@ -33,16 +33,17 @@ inline void tupleForEach(Tuple&& t, F&& f) {
 template<typename T,size_t I> using JustT = T;
 template<typename A,typename B> using Just= A;
 
-template<int,typename,typename...> struct IndexOf{
-	static constexpr int value = -1;
+template<typename... Rest> struct IndexOf{
+	enum{ value = -1 };
 };
 
-template<int I,typename T,typename... Rest> struct IndexOf<I,T,T,Rest...>{
-	static constexpr int value = I;
+template<typename T,typename... Rest> struct IndexOf<T,T,Rest...>{
+	enum{ value = 0 };
 };
 
-template<int I,typename T,typename U,typename... Rest> struct IndexOf<I,T,U,Rest...>{
-	static constexpr int value = IndexOf<I+1,T,Rest...>::value;
+template<typename T,typename U,typename... Rest> struct IndexOf<T,U,Rest...>{
+	enum{ value =
+		IndexOf<T,Rest...>::value == -1 ? -1 : 1 + IndexOf<T,Rest...>::value };
 };
 
 

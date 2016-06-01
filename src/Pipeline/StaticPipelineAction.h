@@ -49,12 +49,12 @@ struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipel
 	}
 
 	template<typename String> auto& getInput(const String&){
-		using Index = IndexOf<0,String,Key<Inputs>...>;
+		using Index = IndexOf<String,Key<Inputs>...>;
 		static_assert(Index::value != -1, "Input not found.");
 		return this->getInput<Index::value>();
 	}
 	template<typename String> auto& getOutput(const String&){
-		using Index = IndexOf<0,String,Key<Outputs>...>;
+		using Index = IndexOf<String,Key<Outputs>...>;
 		static_assert(Index::value != -1, "Output not found.");
 		return this->getOutput<Index::value>();
 	}
@@ -81,7 +81,7 @@ struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipel
 	}
 
 	template<typename String> struct HasInput{
-		constexpr static bool value = IndexOf<0,String,Key<Inputs>...>::value != -1;
+		constexpr static bool value = IndexOf<String,Key<Inputs>...>::value != -1;
 	};
 protected:
 	std::tuple<std::unique_ptr<StaticInput<Val<Inputs>>>...> inputSlots;

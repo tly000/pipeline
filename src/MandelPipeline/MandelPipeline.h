@@ -147,21 +147,21 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	ReductionAction<Factory> reductionActionImpl;
 
 	std::map<std::string,std::unique_ptr<CalcActionType>> methodMap;
-	std::map<std::string,std::function<CalcActionType*()>> creationMap{
+	std::map<std::string,std::function<std::unique_ptr<CalcActionType>()>> creationMap{
 		{ "normal", [this]{
-			return new CalculationAction<Factory,T>(factory,typeName);
+			return std::make_unique<CalculationAction<Factory,T>>(factory,typeName);
 		}},
 		{ "grid", [this]{
-			return new GridbasedCalculationAction<Factory,T>(factory,typeName);
+			return std::make_unique<GridbasedCalculationAction<Factory,T>>(factory,typeName);
 		}},
-		{ "Mariani-Silver", [this]()->CalcActionType*{
-			throw new std::runtime_error("Mariani-Silver not implemented.");
+		{ "Mariani-Silver", [this]()->std::unique_ptr<CalcActionType>{
+			throw std::runtime_error("Mariani-Silver not implemented.");
 		}},
-		{ "successive refinement", [this]()->CalcActionType*{
-			throw new std::runtime_error("successive refinement not implemented.");
+		{ "successive refinement", [this]()->std::unique_ptr<CalcActionType>{
+			throw std::runtime_error("successive refinement not implemented.");
 		}},
-		{ "successive iteration", [this]()->CalcActionType*{
-			throw new std::runtime_error("successive iteration not implemented.");
+		{ "successive iteration", [this]()->std::unique_ptr<CalcActionType>{
+			throw std::runtime_error("successive iteration not implemented.");
 		}},
 	};
 	FunctionCallAction<Input(
@@ -170,8 +170,9 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("action",CalcActionType*)
 	> methodSelectionAction{
 		[this](const CalculationMethod& method){
-			if(!methodMap.count(method.getString())){
-				methodMap.at(method.getString()).reset(creationMap.at(method.getString())());
+			std::string s = method.getString();
+			if(!methodMap.count(s)){
+				methodMap.emplace(s,creationMap.at(s)());
 			}
 			return methodMap.at(method.getString()).get();
 		}

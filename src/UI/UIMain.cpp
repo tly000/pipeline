@@ -1,5 +1,4 @@
 #include "PipelineUI.h"
-#include <BackTracer.h>
 
 /*
  * guitest.cpp
@@ -9,9 +8,7 @@
  */
 
 
-symbolexport void uiMain() {
-	BackTracer::registerErrorHandler();
-
+symbolexport int main() {
 	auto app = Gtk::Application::create("mandelpipeline");
 	auto settings = Gtk::Settings::get_default();
 	settings->set_property<Glib::ustring>("gtk-font-name","Sans 10");

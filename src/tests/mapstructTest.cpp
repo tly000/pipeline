@@ -17,7 +17,7 @@ EnumClass(TestEnum,
 );
 
 template<typename S,typename... Strings> int indexOf(S,Strings...){
-	return IndexOf<0,S,Strings...>::value;
+	return IndexOf<S,Strings...>::value;
 }
 
 symbolexport void mapstructTest(){

@@ -27,7 +27,7 @@ protected:
 	}
 
 	template<typename String,typename T> void delegateInput(const String&, StaticInput<T>& inputSlot){
-		using Index = IndexOf<0,String,Key<Inputs>...>;
+		using Index = IndexOf<String,Key<Inputs>...>;
 		static_assert(Index::value != -1, "Input not found.");
 		inputDelegation.emplace(Index::value,[&]{
 			inputSlot.setDefaultValue(this->template getInput(String()).getValue());
@@ -35,7 +35,7 @@ protected:
 	}
 
 	template<typename String,typename T> void delegateOutput(const String&,StaticOutput<T>& outputSlot){
-		using Index = IndexOf<0,String,Key<Outputs>...>;
+		using Index = IndexOf<String,Key<Outputs>...>;
 		static_assert(Index::value != -1, "Output not found.");
 		outputDelegation.emplace(Index::value,[&]{
 			this->template getOutput(String()).setValue(outputSlot.getValue());
