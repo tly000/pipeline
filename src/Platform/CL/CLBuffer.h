@@ -32,6 +32,13 @@ template<typename T> struct CLBuffer : Buffer<T>{
 		queue.enqueueReadBuffer(bufferHandle,true,0,this->elemCount * sizeof(T),buffer.data());
 		queue.finish();
 	}
+
+	void copyFromBuffer(const std::vector<T>& buffer, size_t offset, size_t n){
+		assertOrThrow(buffer.size() >= offset + n);
+		assertOrThrow(this->elemCount >= n);
+		queue.enqueueWriteBuffer(bufferHandle,true,0,n * sizeof(T),buffer.data() + offset);
+		queue.finish();
+	}
 protected:
 	cl::CommandQueue queue;
 	cl::Buffer bufferHandle;

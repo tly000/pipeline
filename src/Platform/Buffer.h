@@ -22,6 +22,7 @@ struct Buffer{
 	virtual const T* getDataPointer() const = 0;
 
 	virtual void copyToBuffer(std::vector<T>& buffer) const = 0;
+	virtual void copyFromBuffer(const std::vector<T>& buffer,size_t offset, size_t n) = 0;
 
 	virtual ~Buffer() = default;
 protected:

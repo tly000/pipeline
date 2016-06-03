@@ -65,7 +65,7 @@ struct CLFactory{
 		std::string source = fileToString(preprocessedFilePath);
 		cl::Program program(context,source);
 		try{
-			program.build();
+			program.build("-cl-mad-enable -cl-no-signed-zeros -cl-unsafe-math-optimizations -cl-finite-math-only -cl-fast-relaxed-math");
 			_log("[info] success building program \"" << progName << "\".");
 		}catch(const std::exception& err){
 			throw std::runtime_error(

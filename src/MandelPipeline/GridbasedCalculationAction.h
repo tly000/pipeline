@@ -1,5 +1,5 @@
 #pragma once
-#include "CalculationAction.h"
+#include "CalculationActionBase.h"
 
 /*
  * GridbasedCalculationAction.h
@@ -8,26 +8,38 @@
  *      Author: tly
  */
 
-template<typename Factory,typename T> struct GridbasedCalculationAction : CalculationAction<Factory,T>{
-	using CalculationAction<Factory,T>::CalculationAction;
+template<typename Factory,typename T> struct GridbasedCalculationAction : CalculationActionBase<Factory,T>{
+	using CalculationActionBase<Factory,T>::CalculationActionBase;
 protected:
-	void executeImpl(){
-		const uint32_t gridSize = 50;
-		Range imageRange = this->getInput("imageRange"_c).getValue();
+	uint32_t currentPosX = 0, currentPosY = 0;
+	const uint32_t gridSize = 50;
 
-		Timer t;
-		t.start();
-		for(uint32_t i = 0; i < imageRange.x; i += gridSize){
-			uint32_t remainingPixelsX = std::min(gridSize,imageRange.x - i);
-			for(uint32_t j = 0; j < imageRange.y; j += gridSize){
-				uint32_t remainingPixelsY = std::min(gridSize,imageRange.y - j);
-				this->kernelAction.getInput("globalOffset"_c).setDefaultValue(Range{i,j,0});
-				this->kernelAction.getInput("globalSize"_c).setDefaultValue(Range{remainingPixelsX,remainingPixelsY,1});
-				this->kernelAction.run();
+	bool step(){
+		Range imageRange = this->getInput("imageRange"_c).getValue();
+		if(currentPosY < imageRange.y){
+			uint32_t nextPixelsX = std::min(gridSize,imageRange.x - currentPosX);
+			uint32_t nextPixelsY = std::min(gridSize,imageRange.y - currentPosY);
+
+			this->kernelAction.getInput("globalOffset"_c).setDefaultValue(Range{currentPosX,currentPosY,0});
+			this->kernelAction.getInput("globalSize"_c).setDefaultValue(Range{nextPixelsX,nextPixelsY,1});
+			this->kernelAction.run();
+
+			currentPosX += gridSize;
+			if(currentPosX >= imageRange.x){
+				currentPosX = 0;
+				currentPosY += gridSize;
 			}
+			return false;
+		}else{
+			currentPosX = 0;
+			currentPosY = 0;
+			return true;
 		}
-		uint64_t time = t.stop();
-		_log("[info] gridbased calculation: " << time << " us.");
+	}
+
+	void reset(){
+		currentPosX = 0;
+		currentPosY = 0;
 	}
 };
 

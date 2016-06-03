@@ -53,7 +53,6 @@ template<typename Factory> struct ReductionAction : BoxedAction<Input(
 protected:
 	void executeImpl(){
 		kernelAction.run();
-		_log("[info] reduction: " << kernelAction.template getOutput("time"_c).getValue() << " us.");
 	}
 };
 

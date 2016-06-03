@@ -27,8 +27,8 @@ protected:
 	friend AbstractInput;
 	friend AbstractOutput;
 
-	virtual void reset();
-	virtual void runImpl();
+	void reset();
+	void runImpl();
 
 	bool isDone = true;
 };

@@ -19,12 +19,7 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow* window)
 	this->add(image);
 	this->add_overlay(drawArea);
 
-	drawArea.add_events(
-		Gdk::EventMask::BUTTON_MOTION_MASK |
-		Gdk::EventMask::BUTTON_PRESS_MASK |
-		Gdk::EventMask::BUTTON_RELEASE_MASK |
-		Gdk::EventMask::POINTER_MOTION_MASK
-	);
+	this->set_sensitive(true);
 
 	drawArea.signal_button_press_event().connect([this](GdkEventButton* e){
 		if(this->mousePositionInRectangle()){
@@ -185,6 +180,9 @@ void MandelbrotImageView::updateView(const CPUImage<unsigned>& cpuImage) {
 		pixBuf = pix;
 	}
 	this->image.set(pixBuf);
+	while(Gtk::Main::events_pending()){
+		Gtk::Main::iteration(false);
+	}
 }
 
 bool MandelbrotImageView::mousePositionInRectangle() {
@@ -210,4 +208,23 @@ bool MandelbrotImageView::mousePositionOnRectangleBorder(int borderSize) {
 			   (abs(mx - this->w / 2) <= borderSize || abs(my - this->h / 2) <= borderSize);
 	}
 	return false;
+}
+
+void MandelbrotImageView::set_sensitive(bool s) {
+	if(s){
+		drawArea.add_events(
+			Gdk::EventMask::BUTTON_MOTION_MASK |
+			Gdk::EventMask::BUTTON_PRESS_MASK |
+			Gdk::EventMask::BUTTON_RELEASE_MASK |
+			Gdk::EventMask::POINTER_MOTION_MASK
+		);
+	}else{
+		drawArea.set_events(
+			drawArea.get_events() & ~(
+			Gdk::EventMask::BUTTON_MOTION_MASK |
+			Gdk::EventMask::BUTTON_PRESS_MASK |
+			Gdk::EventMask::BUTTON_RELEASE_MASK |
+			Gdk::EventMask::POINTER_MOTION_MASK)
+		);
+	}
 }

@@ -2,6 +2,7 @@
 #include "../Buffer.h"
 #include <vector>
 #include <memory>
+#include <cstring>
 
 /*
  * CPUBuffer.h
@@ -23,12 +24,26 @@ template<typename T> struct CPUBuffer : Buffer<T>{
 		buffer.insert(buffer.begin(),data->begin(),data->end());
 	}
 
+	void copyFromBuffer(const std::vector<T>& buffer,size_t offset, size_t n){
+		assertOrThrow(buffer.size() >= offset + n);
+		assertOrThrow(this->data->size() >= n);
+		std::memcpy(this->getDataPointer(), buffer.data() + offset, n * sizeof(T));
+	}
+
 	std::vector<T>& getDataBuffer(){
 		return *data;
 	}
 
 	std::vector<T>& getDataBuffer() const{
 		return *data;
+	}
+
+	T& at(size_t x){
+		return this->data->at(x);
+	}
+
+	const T& at(size_t x) const {
+		return this->data->at(x);
 	}
 protected:
 	std::shared_ptr<std::vector<T>> data;

@@ -33,7 +33,7 @@ template<typename... Inputs> struct CLKernel : Kernel<Inputs...>{
 		cl::NDRange offset(globalOffset.x,globalOffset.y,globalOffset.z);
 		cl::NDRange global(globalSize.x,globalSize.y,globalSize.z);
 		cl::NDRange local(localSize.x,localSize.y,localSize.z);
-		queue.enqueueNDRangeKernel(kernel,offset,global,local);
+		queue.enqueueNDRangeKernel(kernel,offset,global/*,local*/);
 		queue.finish();
 	}
 protected:

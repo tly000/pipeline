@@ -14,15 +14,10 @@ inline Complex f(const Complex z,const Complex c){
 	return FORMULA;
 }
 
-kernel void mandelbrotKernel(
-	global read_only Complex* positionInput,uint32_t w,uint32_t h,
+void doCalculation(const int2 position,global read_only Complex* positionInput,uint32_t w,uint32_t h,
 	global write_only float* iterOutput,uint32_t w2,uint32_t h2,const Type cReal,const Type cImag){
-	int2 globalID = {
-		get_global_id(0),
-		get_global_id(1)
-	};
 	
-	int bufferIndex = globalID.x + w * globalID.y; 
+	int bufferIndex = position.x + w * position.y; 
 
 	const Complex juliaC = {
 		cReal, cImag
@@ -49,4 +44,26 @@ kernel void mandelbrotKernel(
 		i++;
 	}
 	iterOutput[bufferIndex] = i;
+}
+
+kernel void mandelbrotKernel(
+	global read_only Complex* positionInput,uint32_t w,uint32_t h,
+	global write_only float* iterOutput,uint32_t w2,uint32_t h2,const Type cReal,const Type cImag){
+	int2 globalPosition = { 
+		get_global_id(0), 
+		get_global_id(1)
+	};
+	doCalculation(globalPosition, positionInput, w,h, iterOutput, w2, h2, cReal,cImag);
+}
+
+kernel void successiveRefinementKernel(
+	global read_only Complex* positionInput,uint32_t w,uint32_t h,
+	global write_only float* iterOutput,uint32_t w2,uint32_t h2,
+	const Type cReal,const Type cImag,
+	const uint32_t stepSize, const uint32_t offsetX,const uint32_t offsetY){
+	int2 globalPosition = {
+		get_global_id(0) * stepSize + offsetX * stepSize/2 ,
+		get_global_id(1) * stepSize + offsetY * stepSize/2
+	};
+	doCalculation(globalPosition, positionInput, w,h, iterOutput, w2, h2, cReal,cImag);
 }

@@ -50,6 +50,5 @@ template<typename Factory,typename T,
 protected:
 	void executeImpl(){
 		kernelAction.run();
-		_log("[info] coloring: " << kernelAction.template getOutput("time"_c).getValue() << " us.");
 	}
 };

@@ -8,16 +8,18 @@
 #include "../Actions/GeneratorAction.h"
 #include "../Actions/ImageGeneratorAction.h"
 #include "../Utility/Timer.h"
+#include "CalculationActionBase.h"
 
 #include "Enums.h"
 #include "ParserAction.h"
 
 #include "PositionAction.h"
-#include "CalculationAction.h"
 #include "ColoringAction.h"
 #include "ReductionAction.h"
 
+#include "NormalCalculationAction.h"
 #include "GridbasedCalculationAction.h"
+#include "SuccessiveRefinmentAction.h"
 
 /*
  * MandelPipeline.h
@@ -53,7 +55,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("enable juliamode",bool),
 		KV("julia c real",T),
 		KV("julia c imag",T),
-		KV("calculation method",CalculationMethod)
+		KV("calculation method",CalculationMethod),
+		KV("visualize steps",bool)
 	> calcParams{"calculation"};
 
 	UIParameterAction<
@@ -82,6 +85,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	)> positionAction;
 
 	SlotAction<Input(
+		KV("visualize steps",bool),
+		KV("reset calculation",bool),
 		KV("processed formula",std::string),
 		KV("enable juliamode",bool),
 		KV("julia c real",T),
@@ -94,7 +99,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("iterationImage",FloatImage),
 		KV("imageRange",Range)
 	),Output(
-		KV("iterationImage",FloatImage)
+		KV("iterationImage",FloatImage),
+		KV("done",bool)
 	)> calcAction;
 
 	using CalcActionType = typename decltype(calcAction)::SlotActionType;
@@ -149,16 +155,16 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	std::map<std::string,std::unique_ptr<CalcActionType>> methodMap;
 	std::map<std::string,std::function<std::unique_ptr<CalcActionType>()>> creationMap{
 		{ "normal", [this]{
-			return std::make_unique<CalculationAction<Factory,T>>(factory,typeName);
+			return std::make_unique<NormalCalculationAction<Factory,T>>(factory,typeName);
 		}},
 		{ "grid", [this]{
 			return std::make_unique<GridbasedCalculationAction<Factory,T>>(factory,typeName);
 		}},
+		{ "successive refinement", [this]{
+			return std::make_unique<SuccessiveRefinementAction<Factory,T>>(factory,typeName);
+		}},
 		{ "Mariani-Silver", [this]()->std::unique_ptr<CalcActionType>{
 			throw std::runtime_error("Mariani-Silver not implemented.");
-		}},
-		{ "successive refinement", [this]()->std::unique_ptr<CalcActionType>{
-			throw std::runtime_error("successive refinement not implemented.");
 		}},
 		{ "successive iteration", [this]()->std::unique_ptr<CalcActionType>{
 			throw std::runtime_error("successive iteration not implemented.");
@@ -222,6 +228,7 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 
 		calcParams.naturalConnect(methodSelectionAction);
 		methodSelectionAction.naturalConnect(calcAction);
+		calcAction.getInput("reset calculation"_c).setDefaultValue(true);
 
 		//connect coloringAction
 		algoParams.naturalConnect(coloringAction);
@@ -259,6 +266,7 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		calcParams.setValue("julia c real"_c,fromString<T>("0"));
 		calcParams.setValue("julia c imag"_c,fromString<T>("0"));
 		calcParams.setValue("calculation method"_c,"normal");
+		calcParams.setValue("visualize steps"_c,false);
 
 		algoParams.setValue("iterations"_c,64);
 		algoParams.setValue("bailout"_c,4);
@@ -267,9 +275,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	}
 
 	void run(){
-		_log("[info] running pipeline " + demangle(typeid(*this)));
+		_logDebug("[info] running pipeline " + demangle(typeid(*this)));
 		Timer timer;
-
 		timer.start();
 		reductionAction.run();
 		auto fullTime = timer.stop();

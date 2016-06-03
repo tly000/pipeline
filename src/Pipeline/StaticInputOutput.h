@@ -59,7 +59,7 @@ inline T& StaticInput<T>::getValue() const {
 	}else if(defaultValue){
 		return *defaultValue;
 	}else{
-		throw std::runtime_error("slot not connected.");
+		throw std::runtime_error("slot \"" + this->name + "\" not connected.");
 	}
 }
 
@@ -68,7 +68,7 @@ inline const T& StaticOutput<T>::getValue() const {
 	if(data.get()){
 		return *data;
 	} else {
-		throw std::runtime_error("output contains no value.");
+		throw std::runtime_error("output \"" + this->name + "\" contains no value.");
 	}
 }
 
@@ -82,7 +82,7 @@ inline T& StaticOutput<T>::getValue() {
 	if(data.get()){
 		return *data;
 	} else {
-		throw std::runtime_error("output contains no value.");
+		throw std::runtime_error("output \"" + this->name + "\" contains no value.");
 	}
 }
 

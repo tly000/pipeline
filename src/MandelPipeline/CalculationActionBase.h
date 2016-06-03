@@ -12,10 +12,13 @@
  *      Author: tly
  */
 
-template<typename Factory,typename T,
-         typename ComplexImage = typename Factory::template Image<Vec<2,T>>,
-		 typename FloatImage = typename Factory::template Image<float>> struct CalculationAction :
+template<typename Factory,typename T> using ComplexImage = typename Factory::template Image<Vec<2,T>>;
+template<typename Factory> using FloatImage = typename Factory::template Image<float>;
+
+template<typename Factory,typename T,typename... AdditionalKernelParams> struct CalculationActionBase :
 	BoxedAction<Input(
+		KV("visualize steps",bool),
+		KV("reset calculation",bool),
 		KV("processed formula",std::string),
 		KV("enable juliamode",bool),
 		KV("julia c real",T),
@@ -24,13 +27,14 @@ template<typename Factory,typename T,
 		KV("bailout",float),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool),
-		KV("positionImage",ComplexImage),
-		KV("iterationImage",FloatImage),
+		KV("positionImage",ComplexImage<Factory,T>),
+		KV("iterationImage",FloatImage<Factory>),
 		KV("imageRange",Range)
 	),Output(
-		KV("iterationImage",FloatImage)
+		KV("iterationImage",FloatImage<Factory>),
+		KV("done",bool)
 	)>{
-	CalculationAction(Factory& factory,std::string typeName)
+		CalculationActionBase(Factory& factory,std::string typeName)
 	  :kernelGeneratorAction(factory){
 		this->template delegateInput("processed formula"_c, definesAction.getInput("FORMULA"_c));
 		this->template delegateInput("enable juliamode"_c, definesAction.getInput("JULIAMODE"_c));
@@ -63,19 +67,31 @@ template<typename Factory,typename T,
 		KV("BAILOUT",float),
 		KV("CYCLE_DETECTION",bool),
 		KV("CYCLE_DETECTION_VISUALIZE",bool)> definesAction;
-	KernelGeneratorAction<Factory,ComplexImage,FloatImage,T,T> kernelGeneratorAction;
+	KernelGeneratorAction<Factory,ComplexImage<Factory,T>,FloatImage<Factory>,T,T,AdditionalKernelParams...> kernelGeneratorAction;
 	KernelAction<Factory,Input(
-		KV("positionImage",ComplexImage),
-		KV("iterationImage",FloatImage),
+		KV("positionImage",ComplexImage<Factory,T>),
+		KV("iterationImage",FloatImage<Factory>),
 		KV("julia c real",T),
-		KV("julia c imag",T)
+		KV("julia c imag",T),
+		AdditionalKernelParams...
 	), KernelOutput<1>> kernelAction;
 
-	virtual ~CalculationAction() = default;
+	virtual ~CalculationActionBase() = default;
 protected:
-	virtual void executeImpl(){
-		kernelAction.run();
-		_log("[info] calculation: " << kernelAction.template getOutput("time"_c).getValue() << " us.");
+	virtual bool step() = 0;
+	virtual void reset()= 0;
+
+	void executeImpl(){
+		if(this->getInput("visualize steps"_c).getValue()){
+			if(this->getInput("reset calculation"_c).getValue()){
+				this->reset();
+			}
+			this->getOutput("done"_c).setValue(this->step());
+		}else{
+			this->reset();
+			while(!this->step());
+			this->getOutput("done"_c).setValue(true);
+		}
 	}
 };
 

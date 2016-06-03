@@ -14,6 +14,8 @@ struct MandelbrotImageView : Gtk::Overlay{
 	MandelbrotImageView(struct MainWindow* window);
 
 	void updateView(const CPUImage<unsigned>& cpuImage);
+
+	void set_sensitive(bool s);
 protected:
 	Glib::RefPtr<Gdk::Pixbuf> pixBuf;
 	Gtk::Image image;

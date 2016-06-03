@@ -9,7 +9,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-int main(){
+int main2(){
 	auto h = GetModuleHandle(nullptr);
 
 	std::cout << "insert function name" << std::endl;
