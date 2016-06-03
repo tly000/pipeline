@@ -50,7 +50,7 @@ struct CLFactory{
 		return CLImage<T>(context,queue,CL_MEM_READ_WRITE,width,height);
 	}
 	template<typename T> Buffer<T> createBuffer(uint32_t elemCount){
-		return CLBuffer<T>(elemCount);
+		return CLBuffer<T>(context,queue,CL_MEM_READ_WRITE,elemCount);
 	}
 	template<typename... Inputs> Kernel<Inputs...> createKernel(const std::string& progName,const std::string& kernelName,const std::string& compilerParams){
 		std::string filePath = "src/Kernel/CL/" + progName + ".cl";

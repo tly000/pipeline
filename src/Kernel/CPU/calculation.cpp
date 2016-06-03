@@ -2,6 +2,7 @@
 #include "../../Platform/CPU/CPUImage.h"
 #include "../Multisampling.h"
 #include "../Type/Complex.h"
+#include "../../Type/Vec.h"
 #include <iostream>
 
 /*
@@ -61,17 +62,6 @@ extern "C" void mandelbrotKernel(
 	doCalculation(globalID,image,iterOutput,cReal,cImag);
 }
 
-extern "C" void successiveRefinementKernelBase(
-	const Range& globalID, const Range& localID,
-	CPUImage<Complex>& image, CPUImage<float>& iterOutput,const Type& cReal, const Type& cImag, const uint32_t& stepSize) {
-	Range globalPosition = {
-		globalID.x * stepSize,
-		globalID.y * stepSize,
-		0
-	};
-	doCalculation(globalPosition,image,iterOutput,cReal,cImag);
-}
-
 extern "C" void successiveRefinementKernel(
 	const Range& globalID, const Range& localID,
 	CPUImage<Complex>& image, CPUImage<float>& iterOutput,
@@ -86,10 +76,9 @@ extern "C" void successiveRefinementKernel(
 }
 
 extern "C" void successiveRefinementFilter(
-	const Range& globalID, const Range& localID, const CPUImage<float>& iterOutput, const uint32_t& stepSize,
-	const CPUBuffer<Vec<2,uint32_t>>& positionBuffer, CPUBuffer<uint32_t>& filterBuffer) {
+	const Range& globalID, const Range& localID, CPUImage<float>& iterOutput, const uint32_t& stepSize,
+	const CPUBuffer<Vec<2,uint32_t>>& positionBuffer, CPUBuffer<uint8_t>& filterBuffer) {
 	Vec<2,uint32_t> pos = positionBuffer.at(3 * globalID.x + 2);
-
 	float fiter = iterOutput.at(pos[0],pos[1]);
 	int iter = fiter;
 	bool equal =
@@ -103,5 +92,12 @@ extern "C" void successiveRefinementFilter(
 		iter == iterOutput.at(pos[0], pos[1] + stepSize);
 
 	filterBuffer.at(globalID.x) = equal;
+	if(equal){
+		for(int i = -stepSize; i < int(stepSize); i++){
+			for(int j = -stepSize; j < int(stepSize); j++){
+				iterOutput.at(i + pos[0],j + pos[1]) = 0;
+			}
+		}
+	}
 }
 

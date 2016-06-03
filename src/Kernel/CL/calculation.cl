@@ -57,13 +57,34 @@ kernel void mandelbrotKernel(
 }
 
 kernel void successiveRefinementKernel(
-	global read_only Complex* positionInput,uint32_t w,uint32_t h,
-	global write_only float* iterOutput,uint32_t w2,uint32_t h2,
-	const Type cReal,const Type cImag,
-	const uint32_t stepSize, const uint32_t offsetX,const uint32_t offsetY){
-	int2 globalPosition = {
-		get_global_id(0) * stepSize + offsetX * stepSize/2 ,
-		get_global_id(1) * stepSize + offsetY * stepSize/2
-	};
-	doCalculation(globalPosition, positionInput, w,h, iterOutput, w2, h2, cReal,cImag);
+	global Complex* positionInput,uint32_t w,uint32_t h,
+	global float* iterOutput,uint32_t w2,uint32_t h2,const Type cReal,const Type cImag,
+	global int2* positionBuffer) {
+	doCalculation(positionBuffer[get_global_id(0)],positionInput,w,h,iterOutput,w,h,cReal,cImag);
+}
+
+kernel void successiveRefinementFilter(
+	global float* iterOutput, int w, int h, uint stepSize,
+	global uint2* positionBuffer, global uchar* filterBuffer) {
+	uint2 pos = positionBuffer[3 * get_global_id(0) + 2];
+	float fiter = iterOutput[pos.x + w * pos.y];
+	int iter = fiter;
+	bool equal =
+		iter == iterOutput[pos.x - stepSize + w * (pos.y - stepSize)] &&
+		iter == iterOutput[pos.x + stepSize + w * (pos.y - stepSize)] &&
+		iter == iterOutput[pos.x - stepSize + w * (pos.y + stepSize)] &&
+		iter == iterOutput[pos.x + stepSize + w * (pos.y + stepSize)] &&
+		iter == iterOutput[pos.x - stepSize + w * (pos.y)] &&
+		iter == iterOutput[pos.x + stepSize + w * (pos.y)] &&
+		iter == iterOutput[pos.x + w * ( pos.y - stepSize)] &&
+		iter == iterOutput[pos.x + w * ( pos.y + stepSize)];
+
+	filterBuffer[get_global_id(0)] = equal;
+	if(equal){
+		for(int i = -stepSize; i < (int)(stepSize); i++){
+			for(int j = -stepSize; j < (int)(stepSize); j++){
+				iterOutput[i + pos[0] + w * (j + pos[1])] = fiter;
+			}
+		}
+	}
 }
