@@ -12,9 +12,9 @@
 template<typename Factory,typename T> struct ImageGeneratorAction
 	: LazyAction<Input(KV("imageRange",Range)),Output(typename Factory::template Image<T>)>{
 
-	ImageGeneratorAction(Factory factory) : factory(factory){}
+	ImageGeneratorAction(Factory& factory) : factory(factory){}
 protected:
-	Factory factory;
+	Factory& factory;
 
 	void executeImpl(){
 		uint32_t width = this->template getInput<0>().getValue().x;

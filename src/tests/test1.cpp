@@ -24,9 +24,9 @@ void test1(){
 		KV("p1",int),
 		KV("p2",int),
 		KV("p3",int)> param;
-	param.getOutput("p1"_c).setValue(11);
-	param.getOutput("p2"_c).setValue(22);
-	param.getOutput("p3"_c).setValue(33);
+	param.setValue("p1"_c,11);
+	param.setValue("p2"_c,22);
+	param.setValue("p3"_c,33);
 
 	SumAction sumAction;
 	param.output<0,1,2>() >> sumAction.input<0,1,2>();

@@ -24,7 +24,7 @@ inline Complex f(const Complex z,const Complex c){
 	return FORMULA;
 }
 
-void doCalculation(const Range& position, CPUImage<Complex>& image, CPUImage<float>& iterOutput,const Type& cReal, const Type& cImag){
+void doCalculation(const Range& position, CPUImage<Complex>& image, CPUImage<float>& iterOutput, CPUImage<Complex>& processedPositionImage,const Type& cReal, const Type& cImag){
 	const Complex juliaC = {
 		cReal, cImag
 	};
@@ -54,25 +54,27 @@ void doCalculation(const Range& position, CPUImage<Complex>& image, CPUImage<flo
 	}
 
 	iterOutput.at(position.x,position.y) = i;
+	processedPositionImage.at(position.x,position.y) = z;
 }
 
 extern "C" void mandelbrotKernel(
 	const Range& globalID, const Range& localID,
-	CPUImage<Complex>& image, CPUImage<float>& iterOutput,const Type& cReal, const Type& cImag) {
-	doCalculation(globalID,image,iterOutput,cReal,cImag);
+	CPUImage<Complex>& image, CPUImage<float>& iterOutput, CPUImage<Complex>& processedPositionImage, const Type& cReal, const Type& cImag) {
+	doCalculation(globalID,image,iterOutput,processedPositionImage,cReal,cImag);
 }
 
 extern "C" void successiveRefinementKernel(
 	const Range& globalID, const Range& localID,
-	CPUImage<Complex>& image, CPUImage<float>& iterOutput,
+	CPUImage<Complex>& image, CPUImage<float>& iterOutput,  CPUImage<Complex>& processedPositionImage,
 	const Type& cReal, const Type& cImag,
-	const CPUBuffer<Vec<2,uint32_t>>& positionBuffer) {
+	const CPUBuffer<Vec<2,uint32_t>>& positionBuffer, const uint32_t& stepSize) {
 	Vec<2,uint32_t> pos = positionBuffer.at(globalID.x);
 	Range globalPosition = {
 		pos[0],
 		pos[1]
 	};
-	doCalculation(globalPosition,image,iterOutput,cReal,cImag);
+	doCalculation(globalPosition,image,iterOutput,processedPositionImage,cReal,cImag);
+	float fiter = iterOutput.at(pos[0],pos[1]);
 }
 
 extern "C" void successiveRefinementFilter(
@@ -93,11 +95,64 @@ extern "C" void successiveRefinementFilter(
 
 	filterBuffer.at(globalID.x) = equal;
 	if(equal){
-		for(int i = -stepSize; i < int(stepSize); i++){
-			for(int j = -stepSize; j < int(stepSize); j++){
-				iterOutput.at(i + pos[0],j + pos[1]) = 0;
+		int step = stepSize;
+		for(int i = -step; i <= step; i++){
+			for(int j = -step; j <= step; j++){
+				iterOutput.at(i + pos[0],j + pos[1]) = fiter;
 			}
 		}
 	}
+}
+
+extern "C" void successiveIterationKernel(
+	const Range& globalID, const Range& localID,
+	CPUImage<Complex>& image, CPUImage<float>& iterOutput,  CPUImage<Complex>& processedPositionImage,
+	const Type& cReal, const Type& cImag,
+	const CPUBuffer<Vec<2,uint32_t>>& positionBuffer,
+	CPUBuffer<uint8_t>& filterBuffer, const uint8_t& first) {
+	using std::min;
+
+
+	Vec<2,uint32_t> position = positionBuffer.at(globalID.x);
+	const Complex juliaC = {
+		cReal, cImag
+	};
+	const Complex c = JULIAMODE ? juliaC : image.at(position[0],position[1]);
+	Complex z = !first ? processedPositionImage.at(position[0],position[1]) :
+			JULIAMODE ? image.at(position[0],position[0]) :
+			(Complex){floatToType(0),floatToType(0)};
+	Complex fastZ = z;
+
+	if(first){
+		iterOutput.at(position[0],position[1]) = 0;
+	}
+
+	unsigned i = 0;
+	float l = 0;
+	while(i < 100 && (l = tofloat(cabs2(z))) <= BAILOUT){
+		z = f(z,c);
+		if(CYCLE_DETECTION){
+			fastZ = f(f(fastZ,c),c);
+			if(tofloat(cabs2(csub(fastZ,z))) < 1e-10){
+				if(!CYCLE_DETECTION_VISUALIZE){
+					i = 100;
+				}
+				break;
+			}
+		}
+		i++;
+	}
+
+	filterBuffer.at(globalID.x) = i != 100;
+	iterOutput.at(position[0],position[1]) = min<float>(iterOutput.at(position[0],position[1]) + i,MAXITER);
+	processedPositionImage.at(position[0],position[1]) = z;
+}
+
+extern "C" void successiveIterationFill(
+	const Range& globalID, const Range& localID,
+	CPUImage<float>& iterOutput, const CPUBuffer<Vec<2,uint32_t>>& positionBuffer) {
+
+	Vec<2,uint32_t> position = positionBuffer.at(globalID.x);
+	iterOutput.at(position[0],position[1]) = MAXITER;
 }
 

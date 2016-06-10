@@ -31,8 +31,6 @@ protected:
 			}
 			return false;
 		}else{
-			currentPosX = 0;
-			currentPosY = 0;
 			return true;
 		}
 	}

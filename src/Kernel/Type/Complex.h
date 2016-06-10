@@ -25,17 +25,14 @@ typedef struct{
 
 inline Type cabs2(const Complex a){
 	return tadd(tmul(a.real,a.real),tmul(a.imag,a.imag));
+	//return tofloat(tabs(a.real)) < tofloat(tabs(a.imag)) ? tabs(a.real) : tabs(a.imag);
+	//return tadd(tmul(tmul(a.real,a.real),a.real),tmul(tmul(a.imag,a.imag),a.imag));
+	//return tadd(tabs(a.real),tabs(a.imag));
+	//return tabs(a.real);
 }
 
 inline Type cabs(const Complex a){
 	return tsqrt(cabs2(a));
-}
-
-inline float cfabs2(const Complex a){
-	//float r = tofloat(a.real);
-	//float i = tofloat(a.imag);
-	//return r*r + i*i;
-	return tofloat(cabs2(a));
 }
 
 inline Complex cadd(const Complex a,const Complex b){

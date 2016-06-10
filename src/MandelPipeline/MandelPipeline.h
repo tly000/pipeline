@@ -19,7 +19,8 @@
 
 #include "NormalCalculationAction.h"
 #include "GridbasedCalculationAction.h"
-#include "SuccessiveRefinmentAction.h"
+#include "SuccessiveRefinementAction.h"
+#include "SuccessiveIterationAction.h"
 
 /*
  * MandelPipeline.h
@@ -66,22 +67,17 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("visualize cycle detection",bool)
 	> algoParams{"escape time algorithm"};
 
-	using FloatImage = typename Factory::template Image<float>;
-	using ComplexImage = typename Factory::template Image<Vec<2,T>>;
-	using Float3Image = typename Factory::template Image<Vec<3,float>>;
-	using RGBAImage = typename Factory::template Image<uint32_t>;
-
 	SlotAction<Input(
 		KV("center real",T),
 		KV("center imag",T),
 		KV("scale",T),
 		KV("angle",float),
-		KV("positionImage",ComplexImage),
+		KV("positionImage",ComplexImage<Factory,T>),
 		KV("enable multisampling",bool),
 		KV("pattern",MultisamplingPattern),
 		KV("imageRange",Range)
 	),Output(
-		KV("positionImage",ComplexImage)
+		KV("positionImage",ComplexImage<Factory,T>)
 	)> positionAction;
 
 	SlotAction<Input(
@@ -95,11 +91,13 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("bailout",float),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool),
-		KV("positionImage",ComplexImage),
-		KV("iterationImage",FloatImage),
+		KV("positionImage",ComplexImage<Factory,T>),
+		KV("iterationImage",FloatImage<Factory>),
+		KV("processedPositionImage",ComplexImage<Factory,T>),
 		KV("imageRange",Range)
 	),Output(
-		KV("iterationImage",FloatImage),
+		KV("iterationImage",FloatImage<Factory>),
+		KV("processedPositionImage",ComplexImage<Factory,T>),
 		KV("done",bool)
 	)> calcAction;
 
@@ -107,21 +105,21 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 
 	SlotAction<Input(
 		KV("iterations",uint32_t),
-		KV("iterationImage",FloatImage),
-		KV("coloredImage",Float3Image),
+		KV("iterationImage",FloatImage<Factory>),
+		KV("coloredImage",Float3Image<Factory>),
 		KV("imageRange",Range)
 	),Output(
-		KV("coloredImage",Float3Image)
+		KV("coloredImage",Float3Image<Factory>)
 	)> coloringAction;
 
 	SlotAction<Input(
 		KV("enable multisampling",bool),
 		KV("size",uint32_t),
-		KV("coloredImage",Float3Image),
-		KV("reducedImage",RGBAImage),
+		KV("coloredImage",Float3Image<Factory>),
+		KV("reducedImage",RGBAImage<Factory>),
 		KV("imageRange",Range)
 	),Output(
-		KV("reducedImage",RGBAImage)
+		KV("reducedImage",RGBAImage<Factory>)
 	)> reductionAction;
 
 	//image generators
@@ -142,7 +140,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("imageRange",Range)
 	)> reducedImageRangeGenerator;
 
-	ImageGeneratorAction<Factory,Vec<2,T>> complexImageGenerator;
+	ImageGeneratorAction<Factory,Vec<2,T>> complexImageGeneratorA;
+	ImageGeneratorAction<Factory,Vec<2,T>> complexImageGeneratorB;
 	ImageGeneratorAction<Factory,float> floatImageGenerator;
 	ImageGeneratorAction<Factory,Vec<3,float>> float3ImageGenerator;
 	ImageGeneratorAction<Factory,uint32_t> rgbaImageGenerator;
@@ -166,8 +165,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		{ "Mariani-Silver", [this]()->std::unique_ptr<CalcActionType>{
 			throw std::runtime_error("Mariani-Silver not implemented.");
 		}},
-		{ "successive iteration", [this]()->std::unique_ptr<CalcActionType>{
-			throw std::runtime_error("successive iteration not implemented.");
+		{ "successive iteration", [this]{
+			return std::make_unique<SuccessiveIterationAction<Factory,T>>(factory,typeName);
 		}},
 	};
 	FunctionCallAction<Input(
@@ -187,7 +186,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	MandelPipeline(Factory& factory,std::string typeName):
 	  factory(factory),
 	  typeName(typeName),
-	  complexImageGenerator(factory),
+	  complexImageGeneratorA{factory},
+	  complexImageGeneratorB{factory},
 	  floatImageGenerator(factory),
 	  float3ImageGenerator(factory),
 	  rgbaImageGenerator(factory),
@@ -210,8 +210,10 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		multisampleParams.naturalConnect(positionAction);
 
 		imageRangeGenerator.naturalConnect(positionAction);
-		imageRangeGenerator.naturalConnect(complexImageGenerator);
-		complexImageGenerator.template output<0>() >> positionAction.getInput("positionImage"_c);
+		imageRangeGenerator.naturalConnect(complexImageGeneratorA);
+		imageRangeGenerator.naturalConnect(complexImageGeneratorB);
+
+		complexImageGeneratorA.template output<0>() >> positionAction.getInput("positionImage"_c);
 		positionAction.getActionInput().setDefaultValue(&positionActionImpl);
 
 		//connect calcAction
@@ -225,6 +227,7 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		imageRangeGenerator.naturalConnect(calcAction);
 		imageRangeGenerator.naturalConnect(floatImageGenerator);
 		floatImageGenerator.template output<0>() >> calcAction.getInput("iterationImage"_c);
+		complexImageGeneratorB.template output<0>() >> calcAction.getInput("processedPositionImage"_c);
 
 		calcParams.naturalConnect(methodSelectionAction);
 		methodSelectionAction.naturalConnect(calcAction);
@@ -249,8 +252,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		reductionAction.getActionInput().setDefaultValue(&reductionActionImpl);
 
 		//set default values:
-		imageParams.setValue("width"_c,500);
-		imageParams.setValue("height"_c,500);
+		imageParams.setValue("width"_c,512);
+		imageParams.setValue("height"_c,512);
 
 		multisampleParams.setValue("enable multisampling"_c,false);
 		multisampleParams.setValue("size"_c,2);

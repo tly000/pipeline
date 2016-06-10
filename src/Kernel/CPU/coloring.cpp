@@ -28,7 +28,8 @@ extern "C" void coloringKernel(
 	if(iter == MAXITER){
 		colorOutput.at(globalID.x,globalID.y) = { 1,1,1};
 	}else{
-		float val = fabs(fmod(iter / 100,2)-1);
-		colorOutput.at(globalID.x,globalID.y) ={ 0, val * 0.7f , val };
+		//float val = fabs(fmod(iter / 100,2)-1);
+		float val = int(iter) % 2;
+		colorOutput.at(globalID.x,globalID.y) = {0, val * 0.7f , val };
 	}
 }

@@ -179,14 +179,16 @@ protected:
 
 extern template struct Platform<CPUFactory,float>;
 extern template struct Platform<CPUFactory,double>;
-//extern template struct Platform<CPUFactory,longdouble>;
+extern template struct Platform<CPUFactory,longdouble>;
+#ifdef QUADMATH_H
 extern template struct Platform<CPUFactory,float128>;
+#endif
 extern template struct Platform<CPUFactory,Fixed4>;
 extern template struct Platform<CPUFactory,Fixed8>;
-//extern template struct Platform<CPUFactory,Fixed16>;
+extern template struct Platform<CPUFactory,Fixed16>;
 
 extern template struct Platform<CLFactory,float>;
 extern template struct Platform<CLFactory,double>;
 extern template struct Platform<CLFactory,Fixed4>;
 extern template struct Platform<CLFactory,Fixed8>;
-//extern template struct Platform<CLFactory,Fixed16>;
+extern template struct Platform<CLFactory,Fixed16>;

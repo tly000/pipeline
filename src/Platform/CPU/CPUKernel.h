@@ -26,13 +26,7 @@ struct CPUKernel : Kernel<Inputs...>{
 		for(auto i = globalOffset.x; i < globalOffset.x + globalSize.x; i++){
 			for(auto j = globalOffset.y; j < globalOffset.y + globalSize.y; j++){
 				for(auto k = globalOffset.z; k < globalOffset.z + globalSize.z; k++){
-					for(unsigned l = 0; l < localSize.x; l++){
-						for(unsigned m = 0; m < localSize.y; m++){
-							for(unsigned n = 0; n < localSize.z; n++){
-								kernelFunc(Range{i,j,k},Range{l,m,n},inputs...);
-							}
-						}
-					}
+					kernelFunc(Range{i,j,k},Range{0,0,0},inputs...);
 				}
 			}
 		}

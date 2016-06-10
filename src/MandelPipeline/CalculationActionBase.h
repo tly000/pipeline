@@ -12,8 +12,13 @@
  *      Author: tly
  */
 
+template<typename Factory> using UInt2Buffer = typename Factory::template Buffer<Vec<2,uint32_t>>;
+template<typename Factory> using UIntBuffer = typename Factory::template Buffer<uint32_t>;
+template<typename Factory> using UCharBuffer = typename Factory::template Buffer<uint8_t>;
 template<typename Factory,typename T> using ComplexImage = typename Factory::template Image<Vec<2,T>>;
 template<typename Factory> using FloatImage = typename Factory::template Image<float>;
+template<typename Factory> using Float3Image = typename Factory::template Image<Vec<3,float>>;
+template<typename Factory> using RGBAImage = typename Factory::template Image<uint32_t>;
 
 template<typename Factory,typename T,typename... AdditionalKernelParams> struct CalculationActionBase :
 	BoxedAction<Input(
@@ -29,9 +34,11 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		KV("visualize cycle detection",bool),
 		KV("positionImage",ComplexImage<Factory,T>),
 		KV("iterationImage",FloatImage<Factory>),
+		KV("processedPositionImage",ComplexImage<Factory,T>),
 		KV("imageRange",Range)
 	),Output(
 		KV("iterationImage",FloatImage<Factory>),
+		KV("processedPositionImage",ComplexImage<Factory,T>),
 		KV("done",bool)
 	)>{
 		CalculationActionBase(Factory& factory,std::string typeName)
@@ -52,11 +59,13 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 
 		this->template delegateInput("positionImage"_c,kernelAction.getInput("positionImage"_c));
 		this->template delegateInput("iterationImage"_c, kernelAction.getInput("iterationImage"_c));
+		this->template delegateInput("processedPositionImage"_c, kernelAction.getInput("processedPositionImage"_c));
 		this->template delegateInput("julia c real"_c, kernelAction.getInput("julia c real"_c));
 		this->template delegateInput("julia c imag"_c, kernelAction.getInput("julia c imag"_c));
 		this->template delegateInput("imageRange"_c, kernelAction.getInput("globalSize"_c));
 
 		this->template delegateOutput("iterationImage"_c, kernelAction.getOutput("iterationImage"_c));
+		this->template delegateOutput("processedPositionImage"_c, kernelAction.getOutput("processedPositionImage"_c));
 	}
 
 	KernelDefinesAction<
@@ -67,14 +76,15 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		KV("BAILOUT",float),
 		KV("CYCLE_DETECTION",bool),
 		KV("CYCLE_DETECTION_VISUALIZE",bool)> definesAction;
-	KernelGeneratorAction<Factory,ComplexImage<Factory,T>,FloatImage<Factory>,T,T,AdditionalKernelParams...> kernelGeneratorAction;
+	KernelGeneratorAction<Factory,ComplexImage<Factory,T>,FloatImage<Factory>,ComplexImage<Factory,T>,T,T,AdditionalKernelParams...> kernelGeneratorAction;
 	KernelAction<Factory,Input(
 		KV("positionImage",ComplexImage<Factory,T>),
 		KV("iterationImage",FloatImage<Factory>),
+		KV("processedPositionImage",ComplexImage<Factory,T>),
 		KV("julia c real",T),
 		KV("julia c imag",T),
 		AdditionalKernelParams...
-	), KernelOutput<1>> kernelAction;
+	), KernelOutput<1,2>> kernelAction;
 
 	virtual ~CalculationActionBase() = default;
 protected:

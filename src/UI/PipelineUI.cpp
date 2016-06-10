@@ -28,7 +28,7 @@ MainWindow::MainWindow():
 
 	addPlatform(float,factory,name);
 	addPlatform(double,factory,name);
-	addPlatform(float128,factory,name);
+	//addPlatform(float128,factory,name);
 	addPlatform(Fixed4,factory,name);
 	addPlatform(Fixed8,factory,name);
 
@@ -284,7 +284,7 @@ void MainWindow::calculateNow() {
 
 				this->selectedPlatform->setReset(false);
 			}while(!this->selectedPlatform->isDone());
-		}catch(std::exception& e){
+		}catch(const std::exception& e){
 			*error = e.what();
 		}
 		*done = true;

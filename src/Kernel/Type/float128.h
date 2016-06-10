@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * __float128128.h
+ * float128.h
  *
  *  Created on: 27.05.2016
  *      Author: tly
