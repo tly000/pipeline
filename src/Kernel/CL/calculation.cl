@@ -117,9 +117,10 @@ kernel void successiveRefinementBuildPositionBuffer(
 	if(get_local_id(0) == 0){
 		localSize = 0;
 	}
+	barrier(CLK_LOCAL_MEM_FENCE);
 
 	int offset = -1;
-	if(!filterBuffer[3 * get_global_id(0) + 2]){
+	if(!filterBuffer[get_global_id(0)]){
 		offset = atomic_inc(&localSize);
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
@@ -225,51 +226,51 @@ kernel void successiveIterationBuildPositionBuffer(
 	}
 }
 
-//kernel void marianiSilverKernel(
-//	global Complex* positionInput,uint32_t w,uint32_t h,
-//	global float* iterOutput,uint32_t w2,uint32_t h2,
-//	global Complex* processedPositionOutput,uint32_t w3,uint32_t h3,
-//	const Type cReal,const Type cImag,
-//	global int2* positionBuffer) {
-//	int2 pos = positionBuffer[get_global_id(0)];
-//	doCalculation(pos,
-//		positionInput,w,h,
-//		iterOutput,w,h,
-//		processedPositionOutput,w,h,
-//		cReal,cImag
-//	);
-//}
-//
-//kernel void marianiSilverFilter(
-//	global float* iterOutput,uint32_t w2,uint32_t h2,
-//	global uint4* rectangleBuffer, local uchar* filterBuffer) {	
-//	
-//	uint rectangleIndex = get_global_id(2);
-//	uint sideIndex = get_global_id(1);
-//	uint posIndex = get_global_id(0);
-//	
-//	uint4 rectangle = rectangleBuffer[rectangleIndex];
-//	uint2 offset = {
-//		sizeIndex % 2 ? (sizeIndex & 2 ? 0 : get_local_size(0)) : posIndex,
-//		sizeIndex % 2 ? posIndex : (sizeIndex & 2 ? 0 : get_local_size(0)),
-//	};
-//	
-//	float iter = iterOutput[rectangle.x + offset.x + w * (rectangle.y + offset.y)];
-//	float compareIter = iterOutput[rectangle.x + w * rectangle.y];
-//	
-//	int localSize = get_local_size(0) * 4;
-//	int localIndex = get_local_size(0) * sideIndex + posIndex;
-//	filterBuffer[localIndex] = iter == compareIter;
-//	
-//	//http://www.fz-juelich.de/SharedDocs/Downloads/IAS/JSC/EN/slides/advanced-gpu/adv-gpu-opencl-reduction.pdf?__blob=publicationFile
-//	barrier(CLK_LOCAL_MEM_FENCE);
-//	for(int offset = localSize / 2; offset > 0; offset >>= 1) {
-//	    if (localIndex < offset) {
-//	    	filterBuffer[localIndex] &= filterBuffer[localIndex + offset];
-//	    }
-//	    barrier(CLK_LOCAL_MEM_FENCE);
-//	}
-//	if(localIndex == 0){
-//		filterBuffer[rectangleIndex] = same;
-//	}
-//}
+kernel void marianiSilverKernel(
+	global Complex* positionInput,uint32_t w,uint32_t h,
+	global float* iterOutput,uint32_t w2,uint32_t h2,
+	global Complex* processedPositionOutput,uint32_t w3,uint32_t h3,
+	const Type cReal,const Type cImag,
+	global int2* positionBuffer) {
+	int2 pos = positionBuffer[get_global_id(0)];
+	doCalculation(pos,
+		positionInput,w,h,
+		iterOutput,w,h,
+		processedPositionOutput,w,h,
+		cReal,cImag
+	);
+}
+
+kernel void marianiSilverFilter(
+	global float* iterOutput,uint32_t w2,uint32_t h2,
+	global uint4* rectangleBuffer, local uchar* filterBuffer) {	
+	
+	uint rectangleIndex = get_global_id(2);
+	uint sideIndex = get_global_id(1);
+	uint posIndex = get_global_id(0);
+	
+	uint4 rectangle = rectangleBuffer[rectangleIndex];
+	uint2 offset = {
+		sizeIndex % 2 ? (sizeIndex & 2 ? 0 : get_local_size(0)) : posIndex,
+		sizeIndex % 2 ? posIndex : (sizeIndex & 2 ? 0 : get_local_size(0)),
+	};
+	
+	float iter = iterOutput[rectangle.x + offset.x + w * (rectangle.y + offset.y)];
+	float compareIter = iterOutput[rectangle.x + w * rectangle.y];
+	
+	int localSize = get_local_size(0) * 4;
+	int localIndex = get_local_size(0) * sideIndex + posIndex;
+	filterBuffer[localIndex] = iter == compareIter;
+	
+	//http://www.fz-juelich.de/SharedDocs/Downloads/IAS/JSC/EN/slides/advanced-gpu/adv-gpu-opencl-reduction.pdf?__blob=publicationFile
+	barrier(CLK_LOCAL_MEM_FENCE);
+	for(int offset = localSize / 2; offset > 0; offset >>= 1) {
+	    if (localIndex < offset) {
+	    	filterBuffer[localIndex] &= filterBuffer[localIndex + offset];
+	    }
+	    barrier(CLK_LOCAL_MEM_FENCE);
+	}
+	if(localIndex == 0){
+		filterBuffer[rectangleIndex] = same;
+	}
+}
