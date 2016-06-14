@@ -1,5 +1,7 @@
 #pragma once
 #include <type_traits>
+#include <cstdint>
+#include <cstring>
 
 /*
  * Vec.h
@@ -31,33 +33,33 @@ template<unsigned N,typename T> struct Vec{
 #define binaryOp(op,opEq) \
 	template<unsigned N,typename T,typename U> Vec<N,std::common_type_t<T,U>> operator op(const Vec<N,T>& a,const Vec<N,U>& b){ \
 		Vec<N,std::common_type_t<T,U>> result{}; \
-		for(uint32_t i = 0; i < N; i++){ \
+		for(std::uint32_t i = 0; i < N; i++){ \
 			result.data[i] = a.data[i] op b.data[i]; \
 		} \
 		return result; \
 	}\
 	template<unsigned N,typename T,typename U> Vec<N,std::common_type_t<T,U>> operator op(const U& a,const Vec<N,T>& b){ \
 		Vec<N,std::common_type_t<T,U>> result{}; \
-		for(uint32_t i = 0; i < N; i++){ \
+		for(std::uint32_t i = 0; i < N; i++){ \
 			result.data[i] = a op b.data[i]; \
 		} \
 		return result; \
 	}\
 	template<unsigned N,typename T,typename U> Vec<N,std::common_type_t<T,U>> operator op(const Vec<N,T>& a,const U& b){ \
 		Vec<N,std::common_type_t<T,U>> result{}; \
-		for(uint32_t i = 0; i < N; i++){ \
+		for(std::uint32_t i = 0; i < N; i++){ \
 			result.data[i] = a.data[i] op b; \
 		} \
 		return result; \
 	}\
 	template<unsigned N,typename T,typename U> Vec<N,T>& operator opEq(Vec<N,T>& a,const Vec<N,U>& b){ \
-		for(uint32_t i = 0; i < N; i++){ \
+		for(std::uint32_t i = 0; i < N; i++){ \
 			a.data[i] opEq b.data[i]; \
 		} \
 		return a; \
 	}\
 	template<unsigned N,typename T,typename U> Vec<N,T>& operator opEq(Vec<N,T>& a,const U& b){ \
-		for(uint32_t i = 0; i < N; i++){ \
+		for(std::uint32_t i = 0; i < N; i++){ \
 			a.data[i] opEq b; \
 		} \
 		return a; \
@@ -74,3 +76,10 @@ binaryOp(&,&=)
 binaryOp(|,|=)
 binaryOp(^,^=)
 
+template<unsigned N,typename T> bool operator==(const Vec<N,T>& a,const Vec<N,T>& b){
+	return std::memcmp(&a,&b,sizeof(a)) == 0;
+}
+
+template<unsigned N,typename T> bool operator!=(const Vec<N,T>& a,const Vec<N,T>& b){
+	return !(a == b);
+}

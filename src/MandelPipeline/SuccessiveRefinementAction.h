@@ -35,6 +35,7 @@ template<typename Factory,typename T> struct SuccessiveRefinementAction :
 
 		this->delegateInput("imageRange"_c, bufferRangeAction.getInput("imageRange"_c));
 		this->delegateInput("iterationImage"_c,filterKernelAction.getInput("iterationImage"_c));
+		this->delegateInput("processedPositionImage"_c,filterKernelAction.getInput("processedPositionImage"_c));
 
 		this->bufferRangeAction.naturalConnect(this->positionBufferGenerator1);
 		this->bufferRangeAction.naturalConnect(this->positionBufferGenerator2);
@@ -56,9 +57,10 @@ protected:
 		}
 	};
 
-	KernelGeneratorAction<Factory,FloatImage<Factory>,uint32_t,UInt2Buffer<Factory>,UCharBuffer<Factory>> filterKernelGenerator;
+	KernelGeneratorAction<Factory,FloatImage<Factory>,ComplexImage<Factory,T>,uint32_t,UInt2Buffer<Factory>,UCharBuffer<Factory>> filterKernelGenerator;
 	KernelAction<Factory,Input(
 		KV("iterationImage",FloatImage<Factory>),
+		KV("processedPositionImage",ComplexImage<Factory,T>),
 		KV("stepSize",uint32_t),
 		KV("positionBuffer",UInt2Buffer<Factory>),
 		KV("filterBuffer",UCharBuffer<Factory>)

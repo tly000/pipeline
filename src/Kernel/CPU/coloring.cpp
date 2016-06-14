@@ -3,6 +3,9 @@
 #include <iostream>
 #include <cmath>
 #include "../../Type/Vec.h"
+#include "../Type/Complex.h"
+
+const static float PI = 3.1415926;
 
 /*
  * coloring.cpp
@@ -11,25 +14,100 @@
  *      Author: tly
  */
 
-#ifndef MAXITER
-#define MAXITER 64
-#endif
+float3 gradientSample(const CPUBuffer<float3>& gradient, float t){
+	t *= gradient.getElemCount() - 1;
+	float fT = fmod(t,1);
+	int iT = floor(t);
 
-#ifndef BAILOUT
-#define BAILOUT 4
-#endif
+	if(iT >= gradient.getElemCount() - 1){
+		return gradient.at(gradient.getElemCount() - 1);
+	}else{
+		return (1-fT) * gradient.at(iT) + fT * gradient.at(iT+1);
+	}
+}
 
+extern "C" void iterationGradient(
+	const Range& globalID, const Range& localID,
+	const CPUImage<float>& iterInput,
+	const CPUImage<Complex>& processedPositionImage,
+	CPUImage<float3>& colorOutput,
+	const CPUBuffer<float3>& gradientA,
+	const CPUBuffer<float3>& gradientB) {
+	float iter = iterInput.at(globalID.x,globalID.y);
+	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,iter / float(MAXITER));
+}
+
+extern "C" void angleGradient(
+	const Range& globalID, const Range& localID,
+	const CPUImage<float>& iterInput,
+	const CPUImage<Complex>& processedPositionImage,
+	CPUImage<float3>& colorOutput,
+	const CPUBuffer<float3>& gradientA,
+	const CPUBuffer<float3>& gradientB) {
+	Complex p = processedPositionImage.at(globalID.x,globalID.y);
+	float angle = atan2(tofloat(p.imag),tofloat(p.real));
+	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,fmod((angle+PI)/(2*PI),1));
+}
+
+extern "C" void flatColor(
+	const Range& globalID, const Range& localID,
+	const CPUImage<float>& iterInput,
+	const CPUImage<Complex>& processedPositionImage,
+	CPUImage<float3>& colorOutput,
+	const CPUBuffer<float3>& gradientA,
+	const CPUBuffer<float3>& gradientB) {
+	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,0);
+}
+
+extern "C" void lengthGradient(
+	const Range& globalID, const Range& localID,
+	const CPUImage<float>& iterInput,
+	const CPUImage<Complex>& processedPositionImage,
+	CPUImage<float3>& colorOutput,
+	const CPUBuffer<float3>& gradientA,
+	const CPUBuffer<float3>& gradientB) {
+
+	Complex p = processedPositionImage.at(globalID.x,globalID.y);
+	float length = tofloat(sqrtf(cabs2(p)) / sqrtf(BAILOUT));
+	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,length > 1 ? 1/length : length);
+}
+
+extern "C" void anglePlusLengthGradient(
+	const Range& globalID, const Range& localID,
+	const CPUImage<float>& iterInput,
+	const CPUImage<Complex>& processedPositionImage,
+	CPUImage<float3>& colorOutput,
+	const CPUBuffer<float3>& gradientA,
+	const CPUBuffer<float3>& gradientB) {
+	Complex p = processedPositionImage.at(globalID.x,globalID.y);
+	float angle = atan2(tofloat(p.imag),tofloat(p.real));
+
+	float length = tofloat(sqrtf(cabs2(p)) / sqrtf(BAILOUT));
+	colorOutput.at(globalID.x,globalID.y) =
+		gradientSample(gradientA,fmod(angle/(2*PI),1)) *
+		gradientSample(gradientB,length > 1 ? 1/length : length);
+}
 
 extern "C" void coloringKernel(
 	const Range& globalID, const Range& localID,
-	CPUImage<float>& iterInput, CPUImage<Vec<3,float>>& colorOutput) {
+	CPUImage<float>& iterInput,
+	const CPUImage<Complex>& processedPositionImage,
+	CPUImage<Vec<3,float>>& colorOutput,
+	const CPUBuffer<float3>& gradientA,
+	const CPUBuffer<float3>& gradientB) {
 
-	float iter = iterInput.at(globalID.x,globalID.y);
+	float& iter = iterInput.at(globalID.x,globalID.y);
+	const Complex& p = processedPositionImage.at(globalID.x,globalID.y);
+
+	if(SMOOTH_MODE && iter != MAXITER){
+		iter -= log(log(tofloat(cabs2(p)))/log((float)MAXITER)) / log((float)SMOOTH_EXP);
+	}
 	if(iter == MAXITER){
-		colorOutput.at(globalID.x,globalID.y) = { 1,1,1};
+		INSIDE_COLORING_KERNEL(globalID,localID,iterInput,processedPositionImage,colorOutput,gradientB,gradientA);
 	}else{
-		//float val = fabs(fmod(iter / 100,2)-1);
-		float val = int(iter) % 2;
-		colorOutput.at(globalID.x,globalID.y) = {0, val * 0.7f , val };
+		OUTSIDE_COLORING_KERNEL(globalID,localID,iterInput,processedPositionImage,colorOutput,gradientA,gradientB);
 	}
 }
+
+
+

@@ -1,6 +1,7 @@
 #pragma once
 #include "../Type/StringConstant.h"
 #include "../Type/EnumClass.h"
+#include "../Type/Gradient.h"
 #include "../UI/UIParameterAction.h"
 #include "PipelineWrapper.h"
 #include "../Actions/SlotAction.h"
@@ -63,9 +64,19 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	UIParameterAction<
 		KV("iterations",uint32_t),
 		KV("bailout",float),
+		KV("disable bailout",bool),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool)
 	> algoParams{"escape time algorithm"};
+
+	UIParameterAction<
+		KV("smooth iteration count",bool),
+		KV("leading polynomial exponent",float),
+		KV("outer gradient",Gradient),
+		KV("outer coloring method",std::string),
+		KV("inner gradient",Gradient),
+		KV("inner coloring method",std::string)
+	> colorParams{"coloring"};
 
 	SlotAction<Input(
 		KV("center real",T),
@@ -89,6 +100,7 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("julia c imag",T),
 		KV("iterations",uint32_t),
 		KV("bailout",float),
+		KV("disable bailout",bool),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool),
 		KV("positionImage",ComplexImage<Factory,T>),
@@ -104,8 +116,17 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	using CalcActionType = typename decltype(calcAction)::SlotActionType;
 
 	SlotAction<Input(
+		KV("smooth iteration count",bool),
+		KV("leading polynomial exponent",float),
+		KV("outer gradient",Gradient),
+		KV("outer coloring method",std::string),
+		KV("inner gradient",Gradient),
+		KV("inner coloring method",std::string),
 		KV("iterations",uint32_t),
+		KV("bailout",float),
+		KV("enable juliamode",bool),
 		KV("iterationImage",FloatImage<Factory>),
+		KV("processedPositionImage",ComplexImage<Factory,T>),
 		KV("coloredImage",Float3Image<Factory>),
 		KV("imageRange",Range)
 	),Output(
@@ -200,6 +221,7 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		this->addParam(positionParams);
 		this->addParam(calcParams);
 		this->addParam(algoParams);
+		this->addParam(colorParams);
 
 		imageParams.naturalConnect(imageRangeGenerator);
 		multisampleParams.naturalConnect(imageRangeGenerator);
@@ -235,7 +257,9 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 
 		//connect coloringAction
 		algoParams.naturalConnect(coloringAction);
+		calcParams.naturalConnect(coloringAction);
 		calcAction.naturalConnect(coloringAction);
+		colorParams.naturalConnect(coloringAction);
 
 		imageRangeGenerator.naturalConnect(coloringAction);
 		imageRangeGenerator.naturalConnect(float3ImageGenerator);
@@ -272,9 +296,17 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		calcParams.setValue("visualize steps"_c,false);
 
 		algoParams.setValue("iterations"_c,64);
-		algoParams.setValue("bailout"_c,4);
+		algoParams.setValue("bailout"_c,16);
+		algoParams.setValue("disable bailout"_c,false);
 		algoParams.setValue("cycle detection"_c,false);
 		algoParams.setValue("visualize cycle detection"_c,false);
+
+		colorParams.setValue("smooth iteration count"_c,false);
+		colorParams.setValue("leading polynomial exponent"_c,2);
+		colorParams.setValue("outer gradient"_c,Gradient{{0.0f,0.0f,0.0f},{0.0f,0.7f,1.0f}});
+		colorParams.setValue("outer coloring method"_c,"iterationGradient");
+		colorParams.setValue("inner gradient"_c,Gradient{{0.0f,0.0f,0.0f}});
+		colorParams.setValue("inner coloring method"_c,"flatColor");
 	}
 
 	void run(){

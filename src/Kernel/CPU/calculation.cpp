@@ -4,6 +4,8 @@
 #include "../Type/Complex.h"
 #include "../../Type/Vec.h"
 #include <iostream>
+#include <atomic>
+using std::min;
 
 /*
  * calculation.cpp
@@ -11,14 +13,6 @@
  *  Created on: 16.04.2016
  *      Author: tly
  */
-
-#ifndef MAXITER
-#define MAXITER 64
-#endif
-
-#ifndef BAILOUT
-#define BAILOUT 4
-#endif
 
 inline Complex f(const Complex z,const Complex c){
 	return FORMULA;
@@ -37,9 +31,7 @@ void doCalculation(const Range& position, CPUImage<Complex>& image, CPUImage<flo
 
 	unsigned i = 0;
 
-	float l = 0;
-
-	while(i < MAXITER && (l = tofloat(cabs2(z))) <= BAILOUT){
+	while(i < MAXITER && (DISABLE_BAILOUT || tofloat(cabs2(z)) <= BAILOUT)){
 		z = f(z,c);
 		if(CYCLE_DETECTION){
 			fastZ = f(f(fastZ,c),c);
@@ -78,7 +70,9 @@ extern "C" void successiveRefinementKernel(
 }
 
 extern "C" void successiveRefinementFilter(
-	const Range& globalID, const Range& localID, CPUImage<float>& iterOutput, const uint32_t& stepSize,
+	const Range& globalID, const Range& localID, CPUImage<float>& iterOutput,
+	CPUImage<Complex>& processedPositionInput,
+	const uint32_t& stepSize,
 	const CPUBuffer<Vec<2,uint32_t>>& positionBuffer, CPUBuffer<uint8_t>& filterBuffer) {
 	Vec<2,uint32_t> pos = positionBuffer.at(3 * globalID.x + 2);
 	float fiter = iterOutput.at(pos[0],pos[1]);
@@ -94,11 +88,68 @@ extern "C" void successiveRefinementFilter(
 		iter == iterOutput.at(pos[0], pos[1] + stepSize);
 
 	filterBuffer.at(globalID.x) = equal;
+
+	Complex p[3][3] = {
+		{
+			processedPositionInput.at(pos[0] - stepSize,(pos[1] - stepSize)),
+			processedPositionInput.at(pos[0],( pos[1] - stepSize)),
+			processedPositionInput.at(pos[0] + stepSize,(pos[1] - stepSize))
+		},{
+			processedPositionInput.at(pos[0] - stepSize,(pos[1])),
+			processedPositionInput.at(pos[0] ,(pos[1])),
+			processedPositionInput.at(pos[0] + stepSize ,(pos[1]))
+		},{
+			processedPositionInput.at(pos[0] - stepSize ,(pos[1] + stepSize)),
+			processedPositionInput.at(pos[0] ,( pos[1] + stepSize)),
+			processedPositionInput.at(pos[0] + stepSize ,(pos[1] + stepSize))
+		}
+	};
 	if(equal){
 		int step = stepSize;
 		for(int i = -step; i <= step; i++){
 			for(int j = -step; j <= step; j++){
 				iterOutput.at(i + pos[0],j + pos[1]) = fiter;
+
+				//linear interpolation of z-values
+
+				Vec<2,uint32_t> iPos = {
+					min((i + step) / step, 1), min((j + step) / step,1)
+				};
+				Vec<2,float> tPos = Vec<2,float>{
+					i + step - step * iPos[0], j + step - step * iPos[1]
+				} / float(step);
+				//tPos =  smoothstep(0.0f,1.0f,tPos);
+				Complex result = cmix(
+					cmix(p[iPos[1]][iPos[0]],p[iPos[0]][iPos[0]+1],floatToType(tPos[0])),
+					cmix(p[iPos[1]+1][iPos[0]],p[iPos[1]+1][iPos[0]+1],floatToType(tPos[0])),
+					floatToType(tPos[1])
+				);
+				processedPositionInput.at(i + pos[0], j + pos[1]) = result;
+			}
+		}
+	}
+}
+
+extern "C" void successiveRefinementBuildPositionBuffer(
+		const Range& globalID, const Range& localID,
+		CPUBuffer<Vec<2,int32_t>>& positionBuffer,
+		const CPUBuffer<uint8_t>& filterBuffer,
+		CPUBuffer<Vec<2,int32_t>>& newPositionBuffer,
+		CPUBuffer<uint32_t>& atomicIndexBuffer,
+		const uint32_t& stepSize) {
+	auto& atomicIndex = reinterpret_cast<std::atomic_uint&>(atomicIndexBuffer.at(0));
+
+	if(!filterBuffer.at(globalID.x)){
+		uint32_t startOffset = atomicIndex.fetch_add(12);
+		auto p = positionBuffer.at(3 * globalID.x + 2);
+
+		for(int i = 0; i < 2; i++){
+			for(int j = 0; j < 2; j++){
+				auto point = p - Vec<2,int32_t>{i,j} * int(stepSize);
+
+				newPositionBuffer.at(startOffset + 6 * i + 3 * j + 0) = point + Vec<2,int32_t>{stepSize/2,0};
+				newPositionBuffer.at(startOffset + 6 * i + 3 * j + 1) = point + Vec<2,int32_t>{0,stepSize/2};
+				newPositionBuffer.at(startOffset + 6 * i + 3 * j + 2) = point + Vec<2,int32_t>{stepSize/2,stepSize/2};
 			}
 		}
 	}
@@ -110,8 +161,6 @@ extern "C" void successiveIterationKernel(
 	const Type& cReal, const Type& cImag,
 	const CPUBuffer<Vec<2,uint32_t>>& positionBuffer,
 	CPUBuffer<uint8_t>& filterBuffer, const uint8_t& first) {
-	using std::min;
-
 
 	Vec<2,uint32_t> position = positionBuffer.at(globalID.x);
 	const Complex juliaC = {
@@ -128,8 +177,7 @@ extern "C" void successiveIterationKernel(
 	}
 
 	unsigned i = 0;
-	float l = 0;
-	while(i < 100 && (l = tofloat(cabs2(z))) <= BAILOUT){
+	while(i < 100 && (DISABLE_BAILOUT || tofloat(cabs2(z)) <= BAILOUT)){
 		z = f(z,c);
 		if(CYCLE_DETECTION){
 			fastZ = f(f(fastZ,c),c);
@@ -154,5 +202,17 @@ extern "C" void successiveIterationFill(
 
 	Vec<2,uint32_t> position = positionBuffer.at(globalID.x);
 	iterOutput.at(position[0],position[1]) = MAXITER;
+}
+
+extern "C" void successiveIterationBuildPositionBuffer(
+		const Range& globalID, const Range& localID,
+		CPUBuffer<Vec<2,int32_t>>& positionBuffer,
+		const CPUBuffer<uint8_t>& filterBuffer,
+		CPUBuffer<Vec<2,int32_t>>& newPositionBuffer,
+		CPUBuffer<uint32_t>& atomicIndexBuffer) {
+	auto& atomicIndex = reinterpret_cast<std::atomic_uint&>(atomicIndexBuffer.at(0));
+	if(!filterBuffer.at(globalID.x)){
+		newPositionBuffer.at(atomicIndex++) = positionBuffer.at(globalID.x);
+	}
 }
 

@@ -22,6 +22,11 @@ typedef unsigned long uint64_t;
 #include <math.h>
 #include <stdlib.h>
 #include <limits.h>
+#include "../../Type/Vec.h"
+
+using float3 = Vec<3,float>;
+using int2 = Vec<2,int32_t>;
+
 #else
 #error "system not supported"
 #endif

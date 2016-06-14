@@ -1,5 +1,6 @@
 #pragma once
 #include "CalculationActionBase.h"
+#include "../Actions/BufferGeneratorAction.h"
 
 /*
  * MarianiSilverAction.h
@@ -9,43 +10,50 @@
  */
 
 template<typename Factory,typename T> struct MarianiSilverAction :
-	CalculationActionBase<Factory,T,
-		KV("positionBuffer",UInt2Buffer<Factory>)>{
+	CalculationActionBase<Factory,T,KV("positionBuffer",UInt2Buffer<Factory>)>{
 
 	MarianiSilverAction(Factory& f, std::string typeName)
 	  :CalculationActionBase<Factory,T,KV("positionBuffer",UInt2Buffer<Factory>)>(f,typeName),
 	   factory(f),
-	   finalActionGenerator(f),
 	   positionBufferGenerator(f),
-	   filterBufferGenerator(f){
+	   rectangleBufferGenerator1(f),
+	   rectangleBufferGenerator2(f),
+	   filterBufferGenerator(f),
+	   filterKernelGenerator(f),
+	   buildBufferActionGenerator(f),
+	   atomicIndexBuffer(f.template createBuffer<uint32_t>(2)){
 		this->kernelGeneratorAction.getInput("kernelName"_c).setDefaultValue("marianiSilverKernel");
 
-		this->finalActionGenerator.getInput("programName"_c).setDefaultValue("calculation");
-		this->finalActionGenerator.getInput("kernelName"_c).setDefaultValue("successiveIterationFill");
-		this->definesAction.naturalConnect(this->finalActionGenerator);
-		this->finalActionGenerator.naturalConnect(this->finalAction);
+		this->definesAction.naturalConnect(this->filterKernelGenerator);
+		this->filterKernelGenerator.getInput("kernelName"_c).setDefaultValue("marianiSilverFilter");
+		this->filterKernelGenerator.getInput("programName"_c).setDefaultValue("calculation");
+		this->filterKernelGenerator.naturalConnect(filterKernelAction);
+
+		this->buildBufferActionGenerator.getInput("programName"_c).setDefaultValue("calculation");
+		this->buildBufferActionGenerator.getInput("kernelName"_c).setDefaultValue("marianiSilverBuildBuffers");
+		this->definesAction.naturalConnect(this->buildBufferActionGenerator);
+		this->buildBufferActionGenerator.naturalConnect(this->buildBufferAction);
 
 		this->delegateInput("imageRange"_c, bufferRangeAction.getInput("imageRange"_c));
-		this->delegateInput("iterationImage"_c, finalAction.getInput("iterationImage"_c));
+		this->delegateInput("iterationImage"_c,filterKernelAction.getInput("iterationImage"_c));
 
 		this->bufferRangeAction.naturalConnect(this->positionBufferGenerator);
+		this->bufferRangeAction.naturalConnect(this->rectangleBufferGenerator1);
+		this->bufferRangeAction.naturalConnect(this->rectangleBufferGenerator2);
 		this->bufferRangeAction.naturalConnect(this->filterBufferGenerator);
 
+		this->filterBufferGenerator.template output<0>() >> this->filterKernelAction.getInput("filterBuffer"_c);
+		this->filterBufferGenerator.template output<0>() >> this->buildBufferAction.getInput("filterBuffer"_c);
+		this->positionBufferGenerator.template output<0>() >> this->buildBufferAction.getInput("positionBuffer"_c);
 		this->positionBufferGenerator.template output<0>() >> this->kernelAction.getInput("positionBuffer"_c);
-		this->positionBufferGenerator.template output<0>() >> this->finalAction.getInput("positionBuffer"_c);
 	}
 protected:
-	KernelGeneratorAction<Factory,FloatImage<Factory>,UInt2Buffer<Factory>> finalActionGenerator;
-	KernelAction<Factory,Input(
-		KV("iterationImage",FloatImage<Factory>),
-		KV("positionBuffer",UInt2Buffer<Factory>)
-	),KernelOutput<>> finalAction;
-
 	Factory& factory;
 
 	BufferGeneratorAction<Factory,Vec<2,uint32_t>> positionBufferGenerator;
+	BufferGeneratorAction<Factory,Vec<2,uint32_t>> rectangleBufferGenerator1;
+	BufferGeneratorAction<Factory,Vec<2,uint32_t>> rectangleBufferGenerator2;
 	BufferGeneratorAction<Factory,uint8_t> filterBufferGenerator;
-	BufferGeneratorAction<Factory,Vec<4,uint32_t>> rectangleBufferGenerator;
 
 	FunctionCallAction<Input(KV("imageRange",Range)),KV("elemCount",uint32_t)> bufferRangeAction{
 		[](const Range& r){
@@ -53,72 +61,101 @@ protected:
 		}
 	};
 
-	int32_t currentSquareSize = -1;
-	std::vector<Vec<4,uint32_t>> currentRectangles;
-	std::vector<Vec<2,uint32_t>> currentPositionVector;
+	KernelGeneratorAction<Factory,FloatImage<Factory>,UInt2Buffer<Factory>,UCharBuffer<Factory>> filterKernelGenerator;
+	KernelAction<Factory,Input(
+		KV("iterationImage",FloatImage<Factory>),
+		KV("rectangleBuffer",UInt2Buffer<Factory>),
+		KV("filterBuffer",UCharBuffer<Factory>)
+	),KernelOutput<3>> filterKernelAction;
+
+	KernelGeneratorAction<Factory,UInt2Buffer<Factory>,UCharBuffer<Factory>,UInt2Buffer<Factory>,UIntBuffer<Factory>,uint32_t> buildBufferActionGenerator;
+	KernelAction<Factory,Input(
+		KV("positionBuffer",UInt2Buffer<Factory>),
+		KV("rectangleBuffer",UInt2Buffer<Factory>),
+		KV("newRectangleBuffer",UInt2Buffer<Factory>),
+		KV("filterBuffer",UCharBuffer<Factory>),
+		KV("atomicIndex",UIntBuffer<Factory>),
+		KV("stepSize",uint32_t)
+	),KernelOutput<>> buildBufferAction;
+
+	UIntBuffer<Factory> atomicIndexBuffer;
+	UInt2Buffer<Factory>* rectBuffer1 = nullptr, *rectBuffer2 = nullptr;
+
+	uint32_t currentStepSize = 512;
+	uint32_t currentRange = 0;
 
 	void reset(){
-		currentSquareSize = -1;
-		currentSquares.clear();
-		currentPositionVector.clear();
+		currentStepSize = 512;
+		currentRange = 0;
 	}
 
 	bool step(){
 		Range imageRange = this->getInput("imageRange"_c).getValue();
-		uint32_t maxIter = this->getInput("iterations"_c).getValue();
-
-		assertOrThrow(imageRange.x == imageRange.y);
-
-		if(currentSquareSize == -1){
-			currentSquareSize = imageRange.x;
-			currentRectangles.push_back({0,0,imageRange.x,imageRange.y});
+		uint32_t filterRange = 0;
+		if(currentStepSize == 512){
+			std::vector<Vec<2,uint32_t>> currentPositionVector;
 			currentPositionVector.reserve(4 * imageRange.x);
-			for(int i = 0; i < imageRange.x; i++){
+			for(uint32_t i = 0; i < imageRange.x; i ++){
 				currentPositionVector.push_back({i,0});
-				if(i != 0){
+				currentPositionVector.push_back({i,imageRange.y-1});
+				if(i != 0 && i != imageRange.x - 1){
 					currentPositionVector.push_back({0,i});
-					currentPositionVector.push_back({i,imageRange.x - 1});
-					if(i != imageRange.x - 1){
-						currentPositionVector.push_back({imageRange.x - 1,i});
-					}
+					currentPositionVector.push_back({imageRange.x-1,i});
 				}
 			}
+			currentRange = currentPositionVector.size();
+
+			this->positionBufferGenerator.run();
+			this->rectangleBufferGenerator1.run();
+			this->rectangleBufferGenerator2.run();
+
+			this->rectBuffer1 = &this->rectangleBufferGenerator1.template getOutput<0>().getValue();
+			this->rectBuffer2 = &this->rectangleBufferGenerator2.template getOutput<0>().getValue();
+			auto& positionBuffer = this->positionBufferGenerator.template getOutput<0>().getValue();
+			positionBuffer.copyFromBuffer(currentPositionVector,0,currentRange);
+		}else{
+			filterRange = currentRange / 3;
 		}
 
-		uint32_t currentRange = this->currentPositionVector.size();
-
-		this->positionBufferGenerator.run();
-		auto& positionBuffer = this->positionBufferGenerator.template getOutput<0>().getValue();
-		positionBuffer.copyFromBuffer(currentPositionVector,0,currentRange);
-
+		this->kernelAction.getInput("positionBuffer"_c).setDefaultValue(*this->positionBuffer1);
+		this->kernelAction.getInput("stepSize"_c).setDefaultValue(currentStepSize);
 		this->kernelAction.getInput("globalSize"_c).setDefaultValue(Range{currentRange,1,1});
 		this->kernelAction.run();
+		std::cout << "kernel done" << std::endl;
 
-		std::vector<uint8_t> filterVector;
-		auto& filterBuffer = this->kernelAction.getInput("filterBuffer"_c).getValue();
-		filterBuffer.copyToBuffer(filterVector);
-
-		static std::vector<Vec<2,uint32_t>> newPositionVector;
-		newPositionVector.clear();
-		for(uint32_t i = 0; i < currentRange; i++){
-			if(!filterVector.at(i)){
-				newPositionVector.push_back(this->currentPositionVector.at(i));
-			}
-		}
-
-		if(!decreasingPointCount){
-			decreasingPointCount = this->currentPositionVector.size() > newPositionVector.size();
-		}else if(decreasingPointCount && this->currentPositionVector.size() - newPositionVector.size() < 10){
-			this->finalAction.getInput("globalSize"_c).setDefaultValue(Range{uint32_t(this->currentPositionVector.size()),1,1});
-			this->finalAction.run();
+		if(this->currentStepSize == 1){
 			return true;
+		}else{
+			this->filterKernelAction.getInput("positionBuffer"_c).setDefaultValue(*this->positionBuffer1);
+			this->filterKernelAction.getInput("stepSize"_c).setDefaultValue(currentStepSize);
+			this->filterKernelAction.getInput("globalSize"_c).setDefaultValue(Range{filterRange,1,1});
+			this->filterKernelAction.run();
+
+			std::cout << "filter done" << std::endl;
+
+			this->atomicIndexBuffer.copyFromBuffer({0},0,1);
+			this->buildBufferAction.getInput("positionBuffer"_c).setDefaultValue(*this->positionBuffer1);
+			this->buildBufferAction.getInput("newPositionBuffer"_c).setDefaultValue(*this->positionBuffer2);
+			this->buildBufferAction.getInput("atomicIndex"_c).setDefaultValue(this->atomicIndexBuffer);
+			this->buildBufferAction.getInput("globalSize"_c).setDefaultValue(Range{filterRange,1,1});
+			this->buildBufferAction.getInput("stepSize"_c).setDefaultValue(currentStepSize);
+			this->buildBufferAction.run();
+
+			std::cout << "build buffer done" << std::endl;
+
+			std::vector<uint32_t> atomicIndexVector;
+			this->atomicIndexBuffer.copyToBuffer(atomicIndexVector);
+			uint32_t newRange = atomicIndexVector.front();
+
+			std::swap(this->positionBuffer1,this->positionBuffer2);
+			this->currentRange = newRange;
+			this->currentStepSize /= 2;
+			return false;
 		}
-
-		this->currentPositionVector = newPositionVector;
-		this->currentIter += 100;
-
-		return this->currentIter >= maxIter;
 	}
 };
+
+
+
 
 

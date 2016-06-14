@@ -15,6 +15,7 @@
 template<typename Factory> using UInt2Buffer = typename Factory::template Buffer<Vec<2,uint32_t>>;
 template<typename Factory> using UIntBuffer = typename Factory::template Buffer<uint32_t>;
 template<typename Factory> using UCharBuffer = typename Factory::template Buffer<uint8_t>;
+template<typename Factory> using Float3Buffer = typename Factory::template Buffer<Vec<3,float>>;
 template<typename Factory,typename T> using ComplexImage = typename Factory::template Image<Vec<2,T>>;
 template<typename Factory> using FloatImage = typename Factory::template Image<float>;
 template<typename Factory> using Float3Image = typename Factory::template Image<Vec<3,float>>;
@@ -30,6 +31,7 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		KV("julia c imag",T),
 		KV("iterations",uint32_t),
 		KV("bailout",float),
+		KV("disable bailout",bool),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool),
 		KV("positionImage",ComplexImage<Factory,T>),
@@ -47,6 +49,7 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		this->template delegateInput("enable juliamode"_c, definesAction.getInput("JULIAMODE"_c));
 		this->template delegateInput("iterations"_c, definesAction.getInput("MAXITER"_c));
 		this->template delegateInput("bailout"_c, definesAction.getInput("BAILOUT"_c));
+		this->template delegateInput("disable bailout"_c, definesAction.getInput("DISABLE_BAILOUT"_c));
 		this->template delegateInput("cycle detection"_c, definesAction.template getInput("CYCLE_DETECTION"_c));
 		this->template delegateInput("visualize cycle detection"_c, definesAction.getInput("CYCLE_DETECTION_VISUALIZE"_c));
 
@@ -74,6 +77,7 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		KV("JULIAMODE",bool),
 		KV("MAXITER",uint32_t),
 		KV("BAILOUT",float),
+		KV("DISABLE_BAILOUT",bool),
 		KV("CYCLE_DETECTION",bool),
 		KV("CYCLE_DETECTION_VISUALIZE",bool)> definesAction;
 	KernelGeneratorAction<Factory,ComplexImage<Factory,T>,FloatImage<Factory>,ComplexImage<Factory,T>,T,T,AdditionalKernelParams...> kernelGeneratorAction;

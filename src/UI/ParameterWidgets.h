@@ -109,3 +109,74 @@ protected:
 	TypedParameter<StringEnum<Strings...>>& param;
 };
 
+#include "../Type/Gradient.h"
+
+template<> struct ParameterWidget<Gradient> : Gtk::FlowBox{
+	ParameterWidget(TypedParameter<Gradient>& param)
+		:param(param){
+			param.registerObserver([this](Parameter*){
+				this->loadChange();
+			});
+			this->loadChange();
+		}
+protected:
+	TypedParameter<Gradient>& param;
+
+	void saveChange(){
+		Gradient g;
+		for(auto* child : this->get_children()){
+			if(auto* flowboxChild = dynamic_cast<Gtk::FlowBoxChild*>(child)){
+				if(auto* colorButton = dynamic_cast<Gtk::ColorButton*>(flowboxChild->get_child())){
+					auto c = colorButton->get_color();
+					g.push_back({
+						c.get_red_p(),c.get_green_p(),c.get_blue_p()
+					});
+				}
+			}
+		}
+		param.setValue(g);
+	}
+
+	void loadChange(){
+		for(auto* child : this->get_children()){
+			this->remove(*child);
+		}
+		for(auto& color : this->param.getValue()){
+			Gdk::Color c;
+			c.set_rgb_p(color[0],color[1],color[2]);
+			auto colorButton = Gtk::manage(new Gtk::ColorButton(c));
+			this->add(*colorButton);
+			colorButton->signal_color_set().connect([this]{
+				this->saveChange();
+			});
+		}
+		auto removeButton = Gtk::manage(new Gtk::Button());
+		removeButton->set_image_from_icon_name("list-remove-symbolic");
+		removeButton->signal_clicked().connect([this](){
+			if(this->get_children().size() > 2){
+				this->removeColor();
+			}
+		});
+		this->add(*removeButton);
+		auto addButton = Gtk::manage(new Gtk::Button());
+		addButton->set_image_from_icon_name("list-add-symbolic");
+		addButton->signal_clicked().connect([this](){
+			this->addColor();
+		});
+		this->add(*addButton);
+		this->show_all();
+	}
+
+	void addColor(){
+		Gradient g = this->param.getValue();
+		g.push_back({1,1,1});
+		this->param.setValue(g);
+	}
+
+	void removeColor(){
+		Gradient g = this->param.getValue();
+		g.pop_back();
+		this->param.setValue(g);
+	}
+};
+

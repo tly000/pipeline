@@ -78,6 +78,13 @@ inline Complex conj(const Complex a){
 	};
 }
 
+inline Complex cmix(const Complex a, const Complex b, Type t){
+	return (Complex){
+		tadd(a.real, tmul(t,tsub(b.real,a.real))),
+		tadd(a.imag, tmul(t,tsub(b.imag,a.imag))),
+	};
+}
+
 #define cpow(N) \
 inline Complex cpow##N(const Complex a){ \
 	Complex r = a; \
