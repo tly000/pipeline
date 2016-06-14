@@ -39,6 +39,7 @@ template<> Gradient fromString<Gradient>(const std::string& s){
 			col[i] = fromString<float>(component.children.front().elementName);
 			i++;
 		}
+		g.push_back(col);
 	}
 	return g;
 }

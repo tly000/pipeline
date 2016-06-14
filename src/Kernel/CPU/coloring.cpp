@@ -68,11 +68,12 @@ extern "C" void lengthGradient(
 	const CPUBuffer<float3>& gradientB) {
 
 	Complex p = processedPositionImage.at(globalID.x,globalID.y);
-	float length = tofloat(sqrtf(cabs2(p)) / sqrtf(BAILOUT));
+	float length = sqrtf(tofloat(cabs2(p)));
+	length = std::min(length,1.0f);
 	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,length > 1 ? 1/length : length);
 }
 
-extern "C" void anglePlusLengthGradient(
+extern "C" void angleMixGradient(
 	const Range& globalID, const Range& localID,
 	const CPUImage<float>& iterInput,
 	const CPUImage<Complex>& processedPositionImage,
@@ -80,12 +81,13 @@ extern "C" void anglePlusLengthGradient(
 	const CPUBuffer<float3>& gradientA,
 	const CPUBuffer<float3>& gradientB) {
 	Complex p = processedPositionImage.at(globalID.x,globalID.y);
-	float angle = atan2(tofloat(p.imag),tofloat(p.real));
 
-	float length = tofloat(sqrtf(cabs2(p)) / sqrtf(BAILOUT));
+	float angle = atan2(tofloat(p.imag),tofloat(p.real));
+	float length = sqrtf(tofloat(cabs2(p))) / sqrtf(BAILOUT);
+	length = length > 1 ? 1/length : length;
 	colorOutput.at(globalID.x,globalID.y) =
-		gradientSample(gradientA,fmod(angle/(2*PI),1)) *
-		gradientSample(gradientB,length > 1 ? 1/length : length);
+		(1-length) * gradientSample(gradientA,fmod((angle+PI)/(2*PI),1)) +
+		length * gradientSample(gradientB,gradientB.getElemCount()-1);
 }
 
 extern "C" void coloringKernel(

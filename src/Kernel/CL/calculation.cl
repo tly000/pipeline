@@ -64,7 +64,8 @@ kernel void successiveRefinementKernel(
 	global float* iterOutput,uint32_t w2,uint32_t h2,
 	global Complex* processedPositionOutput,uint32_t w3,uint32_t h3,
 	const Type cReal,const Type cImag,
-	global int2* positionBuffer, uint32_t stepSize) {
+	global int2* positionBuffer, uint32_t bufferSize, 
+	uint32_t stepSize) {
 	int2 pos = positionBuffer[get_global_id(0)];
 	doCalculation(pos,
 		positionInput,w,h,
@@ -78,7 +79,8 @@ kernel void successiveRefinementFilter(
 	global float* iterOutput, int w, int h,
 	global Complex* processedPositionInput, int w2, int h2, 
 	uint stepSize,
-	global uint2* positionBuffer, global uchar* filterBuffer) {
+	global uint2* positionBuffer, uint32_t bufferSize, 
+	global uchar* filterBuffer, uint32_t bufferSize2) {
 	uint2 pos = positionBuffer[3 * get_global_id(0) + 2];
 	float fiter = iterOutput[pos.x + w * pos.y];
 	int iter = fiter;
@@ -131,8 +133,11 @@ kernel void successiveRefinementFilter(
 }
 
 kernel void successiveRefinementBuildPositionBuffer(
-		global int2* positionBuffer, global uchar* filterBuffer,
-		global int2* newPositionBuffer, global uint* atomicIndex, uint stepSize) {
+		global int2* positionBuffer, uint32_t s1, 
+		global uchar* filterBuffer, uint32_t s2,
+		global int2* newPositionBuffer, uint32_t s3,
+		global uint* atomicIndex, uint32_t s4,
+		uint32_t stepSize) {
 	
 	local uint localSize;
 	if(get_local_id(0) == 0){
@@ -173,7 +178,9 @@ kernel void successiveIterationKernel(
 		global float* iterOutput,uint32_t w2,uint32_t h2,
 		global Complex* processedPositionOutput,uint32_t w3,uint32_t h3,
 		const Type cReal,const Type cImag, 
-		global int2* positionBuffer, global uchar* filterBuffer, uchar first) {
+		global int2* positionBuffer, uint32_t s1, 
+		global uchar* filterBuffer, uint32_t s2,
+		uchar first) {
 	
 	int2 position = positionBuffer[get_global_id(0)];
 	int bufferIndex = position.x + w * position.y; 
@@ -214,7 +221,7 @@ kernel void successiveIterationKernel(
 
 kernel void successiveIterationFill(
 		global float* iterOutput,uint32_t w,uint32_t h,
-		global int2* positionBuffer) {
+		global int2* positionBuffer,uint32_t s) {
 	
 	int2 position = positionBuffer[get_global_id(0)];
 	int bufferIndex = position.x + w * position.y; 
@@ -222,8 +229,10 @@ kernel void successiveIterationFill(
 }
 
 kernel void successiveIterationBuildPositionBuffer(
-		global int2* positionBuffer, global uchar* filterBuffer,
-		global int2* newPositionBuffer, global uint* atomicIndex) {
+		global int2* positionBuffer, uint32_t s1, 
+		global uchar* filterBuffer, uint32_t s2,
+		global int2* newPositionBuffer, uint32_t s3,
+		global uint* atomicIndex, uint32_t s4) {
 	
 	local uint localSize;
 	if(get_local_id(0) == 0){

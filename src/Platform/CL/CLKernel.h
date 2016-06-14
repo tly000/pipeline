@@ -10,13 +10,6 @@
  *      Author: tly
  */
 
-template<typename T,typename...> struct CLArgumentForwarder{
-	static void forward(cl::Kernel& k,int& i,T& ref){
-		k.setArg(i,ref);
-		i++;
-	}
-};
-
 template<typename... Inputs> struct CLKernel : Kernel<Inputs...>{
 	CLKernel(cl::CommandQueue queue,cl::Kernel kernel)
 		:queue(queue),
@@ -52,19 +45,13 @@ protected:
 	template<typename T> void forward(int& i,CLBuffer<T>& buffer){
 		kernel.setArg(i,buffer.getHandle());
 		i++;
+		kernel.setArg(i,uint32_t(buffer.getElemCount()));
+		i++;
 	}
 
 	template<typename T> void forward(int& i,T& obj){
 		kernel.setArg(i,obj);
 		i++;
 	}
-};
-
-template<typename T> struct CLArgumentForwarder<CLImage<T>>{
-
-};
-
-template<typename T> struct CLArgumentForwarder<CLBuffer<T>>{
-
 };
 
