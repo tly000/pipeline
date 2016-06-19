@@ -4,6 +4,7 @@
 #include <cmath>
 #include "../../Type/Vec.h"
 #include "../Type/Complex.h"
+#include "../Type/CurveSegment.h"
 
 const static float PI = 3.1415926;
 
@@ -30,32 +31,58 @@ extern "C" void iterationGradient(
 	const Range& globalID, const Range& localID,
 	const CPUImage<float>& iterInput,
 	const CPUImage<Complex>& processedPositionImage,
+	const CPUImage<float4>& statsImage,
 	CPUImage<float3>& colorOutput,
 	const CPUBuffer<float3>& gradientA,
-	const CPUBuffer<float3>& gradientB) {
+	const CPUBuffer<float3>& gradientB,
+	const CPUBuffer<CurveSegment>& curveA,
+	const CPUBuffer<CurveSegment>& curveB) {
 	float iter = iterInput.at(globalID.x,globalID.y);
-	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,iter / float(MAXITER));
+	float t = curveSample(curveA.getDataPointer(),curveA.getElemCount(),iter / float(MAXITER));
+	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,t);
+}
+
+extern "C" void expSmoothingGradient(
+	const Range& globalID, const Range& localID,
+	const CPUImage<float>& iterInput,
+	const CPUImage<Complex>& processedPositionImage,
+	const CPUImage<float4>& statsImage,
+	CPUImage<float3>& colorOutput,
+	const CPUBuffer<float3>& gradientA,
+	const CPUBuffer<float3>& gradientB,
+	const CPUBuffer<CurveSegment>& curveA,
+	const CPUBuffer<CurveSegment>& curveB) {
+	float iter = statsImage.at(globalID.x,globalID.y)[0];
+	float t = curveSample(curveA.getDataPointer(),curveA.getElemCount(),iter / float(MAXITER));
+	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,t);
 }
 
 extern "C" void angleGradient(
 	const Range& globalID, const Range& localID,
 	const CPUImage<float>& iterInput,
 	const CPUImage<Complex>& processedPositionImage,
+	const CPUImage<float4>& statsImage,
 	CPUImage<float3>& colorOutput,
 	const CPUBuffer<float3>& gradientA,
-	const CPUBuffer<float3>& gradientB) {
+	const CPUBuffer<float3>& gradientB,
+	const CPUBuffer<CurveSegment>& curveA,
+	const CPUBuffer<CurveSegment>& curveB) {
 	Complex p = processedPositionImage.at(globalID.x,globalID.y);
 	float angle = atan2(tofloat(p.imag),tofloat(p.real));
-	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,fmod((angle+PI)/(2*PI),1));
+	float t = curveSample(curveA.getDataPointer(),curveA.getElemCount(),(angle+PI)/(2*PI));
+	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,t);
 }
 
 extern "C" void flatColor(
 	const Range& globalID, const Range& localID,
 	const CPUImage<float>& iterInput,
 	const CPUImage<Complex>& processedPositionImage,
+	const CPUImage<float4>& statsImage,
 	CPUImage<float3>& colorOutput,
 	const CPUBuffer<float3>& gradientA,
-	const CPUBuffer<float3>& gradientB) {
+	const CPUBuffer<float3>& gradientB,
+	const CPUBuffer<CurveSegment>& curveA,
+	const CPUBuffer<CurveSegment>& curveB) {
 	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,0);
 }
 
@@ -63,40 +90,29 @@ extern "C" void lengthGradient(
 	const Range& globalID, const Range& localID,
 	const CPUImage<float>& iterInput,
 	const CPUImage<Complex>& processedPositionImage,
+	const CPUImage<float4>& statsImage,
 	CPUImage<float3>& colorOutput,
 	const CPUBuffer<float3>& gradientA,
-	const CPUBuffer<float3>& gradientB) {
+	const CPUBuffer<float3>& gradientB,
+	const CPUBuffer<CurveSegment>& curveA,
+	const CPUBuffer<CurveSegment>& curveB) {
 
 	Complex p = processedPositionImage.at(globalID.x,globalID.y);
-	float length = sqrtf(tofloat(cabs2(p)));
-	length = std::min(length,1.0f);
-	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,length > 1 ? 1/length : length);
-}
-
-extern "C" void angleMixGradient(
-	const Range& globalID, const Range& localID,
-	const CPUImage<float>& iterInput,
-	const CPUImage<Complex>& processedPositionImage,
-	CPUImage<float3>& colorOutput,
-	const CPUBuffer<float3>& gradientA,
-	const CPUBuffer<float3>& gradientB) {
-	Complex p = processedPositionImage.at(globalID.x,globalID.y);
-
-	float angle = atan2(tofloat(p.imag),tofloat(p.real));
 	float length = sqrtf(tofloat(cabs2(p))) / sqrtf(BAILOUT);
-	length = length > 1 ? 1/length : length;
-	colorOutput.at(globalID.x,globalID.y) =
-		(1-length) * gradientSample(gradientA,fmod((angle+PI)/(2*PI),1)) +
-		length * gradientSample(gradientB,gradientB.getElemCount()-1);
+	float t = curveSample(curveA.getDataPointer(),curveA.getElemCount(),length > 1 ? 1/length : length);
+	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,t);
 }
 
 extern "C" void coloringKernel(
 	const Range& globalID, const Range& localID,
 	CPUImage<float>& iterInput,
 	const CPUImage<Complex>& processedPositionImage,
+	const CPUImage<float4>& statsImage,
 	CPUImage<Vec<3,float>>& colorOutput,
 	const CPUBuffer<float3>& gradientA,
-	const CPUBuffer<float3>& gradientB) {
+	const CPUBuffer<float3>& gradientB,
+	const CPUBuffer<CurveSegment>& curveA,
+	const CPUBuffer<CurveSegment>& curveB) {
 
 	float& iter = iterInput.at(globalID.x,globalID.y);
 	const Complex& p = processedPositionImage.at(globalID.x,globalID.y);
@@ -105,9 +121,9 @@ extern "C" void coloringKernel(
 		iter -= log(log(tofloat(cabs2(p)))/log((float)MAXITER)) / log((float)SMOOTH_EXP);
 	}
 	if(iter == MAXITER){
-		INSIDE_COLORING_KERNEL(globalID,localID,iterInput,processedPositionImage,colorOutput,gradientB,gradientA);
+		INSIDE_COLORING_KERNEL(globalID,localID,iterInput,processedPositionImage,statsImage,colorOutput,gradientB,gradientA,curveB,curveA);
 	}else{
-		OUTSIDE_COLORING_KERNEL(globalID,localID,iterInput,processedPositionImage,colorOutput,gradientA,gradientB);
+		OUTSIDE_COLORING_KERNEL(globalID,localID,iterInput,processedPositionImage,statsImage,colorOutput,gradientA,gradientB,curveA,curveB);
 	}
 }
 

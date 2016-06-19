@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "../Utility/Utils.h"
 #include "Vec.h"
 #include "TypeHelper.h"
 
@@ -15,4 +16,4 @@ using Gradient = std::vector<Vec<3,float>>;
 template<> std::string toString<Gradient>(const Gradient& g);
 template<> Gradient fromString<Gradient>(const std::string& s);
 
-bool operator==(const Gradient&,const Gradient&);
+float3 gradientSample(const Gradient& gradient, float t);

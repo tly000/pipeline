@@ -125,7 +125,7 @@ struct Platform : AbstractPlatform{
 					firstParam = false;
 				}
 				Parameter& param = p.getParam(paramName);
-				str << "\t\t\"" << param.name << "\"" << " : " << "\"" << param.getValueAsString() << "\"";
+				str << "\t\t\"" << param.name << "\"" << " : " << quote(param.getValueAsString());
 			}
 			str << "\n\t}";
 		}
@@ -136,9 +136,6 @@ struct Platform : AbstractPlatform{
 	void paramsFromJson(const std::string& jsonObj){
 		ParseTree obj = JsonParser::parseJson(jsonObj);
 		_log("[info] json: " << printTree(obj));
-		auto unquote = [](const std::string& s){
-			return s.substr(1,s.size()-2);
-		};
 
 		assertOrThrow(obj.elementName == "object");
 		for(auto& child : obj.children){
@@ -179,13 +176,13 @@ protected:
 
 extern template struct Platform<CPUFactory,float>;
 extern template struct Platform<CPUFactory,double>;
-extern template struct Platform<CPUFactory,longdouble>;
-#ifdef QUADMATH_H
-extern template struct Platform<CPUFactory,float128>;
-#endif
+//extern template struct Platform<CPUFactory,longdouble>;
+//#ifdef QUADMATH_H
+//extern template struct Platform<CPUFactory,float128>;
+//#endif
 extern template struct Platform<CPUFactory,Fixed4>;
-extern template struct Platform<CPUFactory,Fixed8>;
-extern template struct Platform<CPUFactory,Fixed16>;
+//extern template struct Platform<CPUFactory,Fixed8>;
+//extern template struct Platform<CPUFactory,Fixed16>;
 
 extern template struct Platform<CLFactory,float>;
 extern template struct Platform<CLFactory,double>;

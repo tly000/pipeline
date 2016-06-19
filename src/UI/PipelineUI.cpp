@@ -28,7 +28,6 @@ MainWindow::MainWindow():
 
 	addPlatform(float,factory,name);
 	addPlatform(double,factory,name);
-	//addPlatform(float128,factory,name);
 	addPlatform(Fixed4,factory,name);
 	addPlatform(Fixed8,factory,name);
 
@@ -57,7 +56,6 @@ MainWindow::MainWindow():
 	typeBox.append("double");
 	typeBox.append("Fixed4");
 	typeBox.append("Fixed8");
-	typeBox.append("float128");
 	header.pack_start(typeBox);
 
 	auto openButton = Gtk::manage(new Gtk::Button());

@@ -25,7 +25,20 @@ typedef unsigned long uint64_t;
 #include "../../Type/Vec.h"
 
 using float3 = Vec<3,float>;
+using float4 = Vec<4,float>;
 using int2 = Vec<2,int32_t>;
+
+struct float2 {
+	float x, y;
+};
+
+template<typename T> T mix(T a,T b,T t){
+	return (1-t) * a + t * b;
+}
+
+template<typename T> T clamp(T a,T lo,T hi){
+	return a < lo ? lo : a > hi ? hi : a;
+}
 
 #else
 #error "system not supported"

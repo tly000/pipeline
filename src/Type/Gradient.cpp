@@ -44,15 +44,16 @@ template<> Gradient fromString<Gradient>(const std::string& s){
 	return g;
 }
 
-bool operator==(const Gradient& a,const Gradient& b){
-	if(a.size() == b.size()){
-		for(int i = 0; i < a.size(); i++){
-			if(a.at(i) != b.at(i)) return false;
-		}
-		return true;
-	}
-	return false;
-}
+float3 gradientSample(const Gradient& gradient, float t){
+	t *= gradient.size() - 1;
+	float fT = fmod(t,1);
+	int iT = floor(t);
 
+	if(iT >= gradient.size() - 1){
+		return gradient.at(gradient.size() - 1);
+	}else{
+		return (1-fT) * gradient.at(iT) + fT * gradient.at(iT+1);
+	}
+}
 
 

@@ -180,3 +180,41 @@ protected:
 	}
 };
 
+#include "CurveEditor.h"
+
+template<> struct ParameterWidget<Curve> : Gtk::Box{
+	ParameterWidget(TypedParameter<Curve>& param)
+		:param(param){
+			auto button = Gtk::manage(new Gtk::Button("edit curve"));
+			this->add(*button);
+			button->signal_clicked().connect([this]{
+				CurveEditor editor;
+				editor.setCurve(this->param.getValue());
+				Gradient g;
+				if(this->param.name == "outer curve"){
+					auto& gradParam = this->param.getParamPack().getParam("outer gradient");
+					g = dynamic_cast<TypedParameter<Gradient>&>(gradParam).getValue();
+				}else if(this->param.name == "inner curve"){
+					auto& gradParam = this->param.getParamPack().getParam("inner gradient");
+					g = dynamic_cast<TypedParameter<Gradient>&>(gradParam).getValue();
+				}else{
+					g = {
+						{1,0,0},{1,1,0},{0,1,0},{0,1,1},{0,0,1},{1,0,1},{1,0,0}
+					};
+				}
+				editor.setGradient(g);
+
+				Gtk::Dialog curveDialog("edit curve",*(Gtk::Window*)this->get_toplevel());
+				curveDialog.get_content_area()->add(editor);
+				curveDialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+				curveDialog.add_button("_Ok", Gtk::RESPONSE_ACCEPT);
+				curveDialog.show_all_children();
+				if(curveDialog.run() == Gtk::RESPONSE_ACCEPT){
+					this->param.setValue(editor.getCurve());
+				}
+			});
+		}
+protected:
+	TypedParameter<Curve>& param;
+};
+

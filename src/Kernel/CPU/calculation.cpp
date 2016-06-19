@@ -18,7 +18,25 @@ inline Complex f(const Complex z,const Complex c){
 	return FORMULA;
 }
 
-void doCalculation(const Range& position, CPUImage<Complex>& image, CPUImage<float>& iterOutput, CPUImage<Complex>& processedPositionImage,const Type& cReal, const Type& cImag){
+float4 noStats(float4 current,unsigned i,Complex z){
+	return current;
+}
+
+float4 expSmoothing(float4 current,unsigned i,Complex z){
+	return current + (float4){exp(-tofloat(cabs2(z))),0,0,0};
+}
+
+float4 recipSmoothing(float4 current,unsigned i,Complex z){
+	return current + (float4){1/(tofloat(cabs2(z)) + 1),0,0,0};
+}
+
+void doCalculation(
+	const Range& position,
+	CPUImage<Complex>& image,
+	CPUImage<float>& iterOutput,
+	CPUImage<Complex>& processedPositionImage,
+	CPUImage<float4>& statsImage,
+	const Type& cReal, const Type& cImag){
 	const Complex juliaC = {
 		cReal, cImag
 	};
@@ -28,11 +46,14 @@ void doCalculation(const Range& position, CPUImage<Complex>& image, CPUImage<flo
 		floatToType(0)
 	};
 	Complex fastZ = z;
+	float4 stats{};
 
 	unsigned i = 0;
 
 	while(i < MAXITER && (DISABLE_BAILOUT || tofloat(cabs2(z)) <= BAILOUT)){
 		z = f(z,c);
+		stats = STAT_FUNCTION(stats,i,z);
+
 		if(CYCLE_DETECTION){
 			fastZ = f(f(fastZ,c),c);
 			if(tofloat(cabs2(csub(fastZ,z))) < 1e-10){
@@ -47,17 +68,21 @@ void doCalculation(const Range& position, CPUImage<Complex>& image, CPUImage<flo
 
 	iterOutput.at(position.x,position.y) = i;
 	processedPositionImage.at(position.x,position.y) = z;
+	statsImage.at(position.x,position.y) = stats;
 }
 
 extern "C" void mandelbrotKernel(
 	const Range& globalID, const Range& localID,
-	CPUImage<Complex>& image, CPUImage<float>& iterOutput, CPUImage<Complex>& processedPositionImage, const Type& cReal, const Type& cImag) {
-	doCalculation(globalID,image,iterOutput,processedPositionImage,cReal,cImag);
+	CPUImage<Complex>& image, CPUImage<float>& iterOutput,
+	CPUImage<Complex>& processedPositionImage, CPUImage<float4>& statsImage,
+	const Type& cReal, const Type& cImag) {
+	doCalculation(globalID,image,iterOutput,processedPositionImage,statsImage,cReal,cImag);
 }
 
 extern "C" void successiveRefinementKernel(
 	const Range& globalID, const Range& localID,
-	CPUImage<Complex>& image, CPUImage<float>& iterOutput,  CPUImage<Complex>& processedPositionImage,
+	CPUImage<Complex>& image, CPUImage<float>& iterOutput,
+	CPUImage<Complex>& processedPositionImage, CPUImage<float4>& statsImage,
 	const Type& cReal, const Type& cImag,
 	const CPUBuffer<Vec<2,uint32_t>>& positionBuffer, const uint32_t& stepSize) {
 	Vec<2,uint32_t> pos = positionBuffer.at(globalID.x);
@@ -65,7 +90,7 @@ extern "C" void successiveRefinementKernel(
 		pos[0],
 		pos[1]
 	};
-	doCalculation(globalPosition,image,iterOutput,processedPositionImage,cReal,cImag);
+	doCalculation(globalPosition,image,iterOutput,processedPositionImage,statsImage,cReal,cImag);
 	float fiter = iterOutput.at(pos[0],pos[1]);
 }
 
@@ -157,7 +182,7 @@ extern "C" void successiveRefinementBuildPositionBuffer(
 
 extern "C" void successiveIterationKernel(
 	const Range& globalID, const Range& localID,
-	CPUImage<Complex>& image, CPUImage<float>& iterOutput,  CPUImage<Complex>& processedPositionImage,
+	CPUImage<Complex>& image, CPUImage<float>& iterOutput,  CPUImage<Complex>& processedPositionImage, CPUImage<float4>& statsImage,
 	const Type& cReal, const Type& cImag,
 	const CPUBuffer<Vec<2,uint32_t>>& positionBuffer,
 	CPUBuffer<uint8_t>& filterBuffer, const uint8_t& first) {
@@ -172,13 +197,17 @@ extern "C" void successiveIterationKernel(
 			(Complex){floatToType(0),floatToType(0)};
 	Complex fastZ = z;
 
+	float4 stats = statsImage.at(position[0],position[0]);
 	if(first){
 		iterOutput.at(position[0],position[1]) = 0;
+		stats = {0,0,0,0};
 	}
 
 	unsigned i = 0;
 	while(i < 100 && (DISABLE_BAILOUT || tofloat(cabs2(z)) <= BAILOUT)){
 		z = f(z,c);
+		stats = STAT_FUNCTION(stats,i,z);
+
 		if(CYCLE_DETECTION){
 			fastZ = f(f(fastZ,c),c);
 			if(tofloat(cabs2(csub(fastZ,z))) < 1e-10){
@@ -194,6 +223,7 @@ extern "C" void successiveIterationKernel(
 	filterBuffer.at(globalID.x) = i != 100;
 	iterOutput.at(position[0],position[1]) = min<float>(iterOutput.at(position[0],position[1]) + i,MAXITER);
 	processedPositionImage.at(position[0],position[1]) = z;
+	statsImage.at(position[0],position[1]) = stats;
 }
 
 extern "C" void successiveIterationFill(

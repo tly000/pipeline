@@ -4,6 +4,7 @@
 #include "../Actions/KernelGeneratorAction.h"
 #include "../Actions/KernelDefinesAction.h"
 #include "../Actions/BufferGeneratorAction.h"
+#include "../Type/Curve.h"
 
 /*
  * ColoringAction.h
@@ -17,14 +18,17 @@ template<typename Factory,typename T> struct ColoringAction :
 		KV("smooth iteration count",bool),
 		KV("leading polynomial exponent",float),
 		KV("outer gradient",Gradient),
+		KV("outer curve",Curve),
 		KV("outer coloring method",std::string),
 		KV("inner gradient",Gradient),
+		KV("inner curve",Curve),
 		KV("inner coloring method",std::string),
 		KV("iterations",uint32_t),
 		KV("bailout",float),
 		KV("enable juliamode",bool),
 		KV("iterationImage",FloatImage<Factory>),
 		KV("processedPositionImage",ComplexImage<Factory,T>),
+		KV("statsImage",Float4Image<Factory>),
 		KV("coloredImage",Float3Image<Factory>),
 		KV("imageRange",Range)
 	),Output(
@@ -34,9 +38,14 @@ template<typename Factory,typename T> struct ColoringAction :
 	  :factory(factory),
 	   gradientBufferGenerator1(factory),
 	   gradientBufferGenerator2(factory),
+	   curveBufferGenerator1(factory),
+	   curveBufferGenerator2(factory),
 	   kernelGeneratorAction(factory){
 		this->template delegateInput("outer gradient"_c,this->gradientBufferGenerator1.getInput("data"_c));
 		this->template delegateInput("inner gradient"_c,this->gradientBufferGenerator2.getInput("data"_c));
+
+		this->template delegateInput("outer curve"_c,this->curveBufferGenerator1.getInput("data"_c));
+		this->template delegateInput("inner curve"_c,this->curveBufferGenerator2.getInput("data"_c));
 
 		this->template delegateInput("smooth iteration count"_c,this->definesAction.getInput("SMOOTH_MODE"_c));
 		this->template delegateInput("leading polynomial exponent"_c,this->definesAction.getInput("SMOOTH_EXP"_c));
@@ -55,10 +64,13 @@ template<typename Factory,typename T> struct ColoringAction :
 
 		this->template delegateInput("iterationImage"_c,kernelAction.getInput("iterationImage"_c));
 		this->template delegateInput("processedPositionImage"_c,kernelAction.getInput("processedPositionImage"_c));
+		this->template delegateInput("statsImage"_c,kernelAction.getInput("statsImage"_c));
 		this->template delegateInput("coloredImage"_c, kernelAction.getInput("coloredImage"_c));
 		this->template delegateInput("imageRange"_c, kernelAction.getInput("globalSize"_c));
 		this->gradientBufferGenerator1.template output<0>() >> this->kernelAction.getInput("gradientA"_c);
 		this->gradientBufferGenerator2.template output<0>() >> this->kernelAction.getInput("gradientB"_c);
+		this->curveBufferGenerator1.template output<0>() >> this->kernelAction.getInput("curveA"_c);
+		this->curveBufferGenerator2.template output<0>() >> this->kernelAction.getInput("curveB"_c);
 
 		this->template delegateOutput("coloredImage"_c, kernelAction.getOutput("coloredImage"_c));
 
@@ -70,6 +82,10 @@ template<typename Factory,typename T> struct ColoringAction :
 	FilledBufferGeneratorAction<Factory,Vec<3,float>>
 		gradientBufferGenerator1,
 		gradientBufferGenerator2;
+
+	FilledBufferGeneratorAction<Factory,CurveSegment>
+		curveBufferGenerator1,
+		curveBufferGenerator2;
 
 	KernelDefinesAction<
 		KV("Type",std::string),
@@ -84,16 +100,22 @@ template<typename Factory,typename T> struct ColoringAction :
 	KernelGeneratorAction<Factory,
 		FloatImage<Factory>,
 		ComplexImage<Factory,T>,
+		Float4Image<Factory>,
 		Float3Image<Factory>,
 		Float3Buffer<Factory>,
-		Float3Buffer<Factory>> kernelGeneratorAction;
+		Float3Buffer<Factory>,
+		typename Factory::template Buffer<CurveSegment>,
+		typename Factory::template Buffer<CurveSegment>> kernelGeneratorAction;
 	KernelAction<Factory,Input(
 		KV("iterationImage",FloatImage<Factory>),
 		KV("processedPositionImage",ComplexImage<Factory,T>),
+		KV("statsImage",Float4Image<Factory>),
 		KV("coloredImage",Float3Image<Factory>),
 		KV("gradientA",Float3Buffer<Factory>),
-		KV("gradientB",Float3Buffer<Factory>)
-	), KernelOutput<2>> kernelAction;
+		KV("gradientB",Float3Buffer<Factory>),
+		KV("curveA",typename Factory::template Buffer<CurveSegment>),
+		KV("curveB",typename Factory::template Buffer<CurveSegment>)
+	), KernelOutput<3>> kernelAction;
 
 protected:
 	void executeImpl(){

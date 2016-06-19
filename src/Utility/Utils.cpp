@@ -1,6 +1,8 @@
 #include "Utils.h"
 #include <fstream>
 #include <memory>
+#include <map>
+#include <sstream>
 
 /*
  * Utils.cpp
@@ -144,4 +146,55 @@ std::pair<int,std::string> systemCommand(const std::string& command) {
 bool fileExists(const std::string& fileName) {
 	std::ifstream file(fileName);
 	return bool(file);
+}
+
+std::string quote(const std::string& s){
+	std::stringstream ss;
+	static std::map<char,std::string> escapeMap{
+		{'\\',"\\\\"},
+		{'"',"\\\""},
+		{'/',"\\/"},
+		{'\b',"\\b"},
+		{'\f',"\\f"},
+		{'\r',"\\r"},
+		{'\n',"\\n"},
+		{'\t',"\\t"},
+	};
+
+	ss << "\"";
+	for(char c : s){
+		if(escapeMap.count(c)){
+			ss << escapeMap.at(c);
+		}else{
+			ss << c;
+		}
+	}
+	ss << "\"";
+	return ss.str();
+}
+
+std::string unquote(const std::string& s){
+	std::stringstream ss;
+	assertOrThrow(s.size() >= 2);
+	assertOrThrow(s.front() == '"' && s.back() == '"');
+	static std::map<char,char> unescapeMap{
+		{'\\','\\'},
+		{'"','"'},
+		{'/','/'},
+		{'b','\b'},
+		{'f','\f'},
+		{'r','\r'},
+		{'n','\n'},
+		{'t','\t'},
+	};
+
+	for(uint32_t i = 1; i < s.size()-1; i++){
+		if(s.at(i) == '\\'){
+			i++;
+			ss << unescapeMap.at(s.at(i));
+		}else{
+			ss << s.at(i);
+		}
+	}
+	return ss.str();
 }

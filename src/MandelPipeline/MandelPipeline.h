@@ -10,6 +10,7 @@
 #include "../Actions/ImageGeneratorAction.h"
 #include "../Utility/Timer.h"
 #include "CalculationActionBase.h"
+#include "../Type/Curve.h"
 
 #include "Enums.h"
 #include "ParserAction.h"
@@ -66,15 +67,18 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("bailout",float),
 		KV("disable bailout",bool),
 		KV("cycle detection",bool),
-		KV("visualize cycle detection",bool)
+		KV("visualize cycle detection",bool),
+		KV("statistic function",std::string)
 	> algoParams{"escape time algorithm"};
 
 	UIParameterAction<
 		KV("smooth iteration count",bool),
 		KV("leading polynomial exponent",float),
 		KV("outer gradient",Gradient),
+		KV("outer curve",Curve),
 		KV("outer coloring method",std::string),
 		KV("inner gradient",Gradient),
+		KV("inner curve",Curve),
 		KV("inner coloring method",std::string)
 	> colorParams{"coloring"};
 
@@ -103,13 +107,16 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("disable bailout",bool),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool),
+		KV("statistic function",std::string),
 		KV("positionImage",ComplexImage<Factory,T>),
 		KV("iterationImage",FloatImage<Factory>),
 		KV("processedPositionImage",ComplexImage<Factory,T>),
+		KV("statsImage",Float4Image<Factory>),
 		KV("imageRange",Range)
 	),Output(
 		KV("iterationImage",FloatImage<Factory>),
 		KV("processedPositionImage",ComplexImage<Factory,T>),
+		KV("statsImage",Float4Image<Factory>),
 		KV("done",bool)
 	)> calcAction;
 
@@ -119,14 +126,17 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("smooth iteration count",bool),
 		KV("leading polynomial exponent",float),
 		KV("outer gradient",Gradient),
+		KV("outer curve",Curve),
 		KV("outer coloring method",std::string),
 		KV("inner gradient",Gradient),
+		KV("inner curve",Curve),
 		KV("inner coloring method",std::string),
 		KV("iterations",uint32_t),
 		KV("bailout",float),
 		KV("enable juliamode",bool),
 		KV("iterationImage",FloatImage<Factory>),
 		KV("processedPositionImage",ComplexImage<Factory,T>),
+		KV("statsImage",Float4Image<Factory>),
 		KV("coloredImage",Float3Image<Factory>),
 		KV("imageRange",Range)
 	),Output(
@@ -165,6 +175,7 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	ImageGeneratorAction<Factory,Vec<2,T>> complexImageGeneratorB;
 	ImageGeneratorAction<Factory,float> floatImageGenerator;
 	ImageGeneratorAction<Factory,Vec<3,float>> float3ImageGenerator;
+	ImageGeneratorAction<Factory,Vec<4,float>> float4ImageGenerator;
 	ImageGeneratorAction<Factory,uint32_t> rgbaImageGenerator;
 
 	ParserAction parserAction;
@@ -211,6 +222,7 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	  complexImageGeneratorB{factory},
 	  floatImageGenerator(factory),
 	  float3ImageGenerator(factory),
+	  float4ImageGenerator(factory),
 	  rgbaImageGenerator(factory),
 	  positionActionImpl(factory,typeName),
 	  coloringActionImpl(factory,typeName),
@@ -248,7 +260,9 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 
 		imageRangeGenerator.naturalConnect(calcAction);
 		imageRangeGenerator.naturalConnect(floatImageGenerator);
+		imageRangeGenerator.naturalConnect(float4ImageGenerator);
 		floatImageGenerator.template output<0>() >> calcAction.getInput("iterationImage"_c);
+		float4ImageGenerator.template output<0>() >> calcAction.getInput("statsImage"_c);
 		complexImageGeneratorB.template output<0>() >> calcAction.getInput("processedPositionImage"_c);
 
 		calcParams.naturalConnect(methodSelectionAction);
@@ -300,12 +314,19 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		algoParams.setValue("disable bailout"_c,false);
 		algoParams.setValue("cycle detection"_c,false);
 		algoParams.setValue("visualize cycle detection"_c,false);
+		algoParams.setValue("statistic function"_c,"noStats");
 
 		colorParams.setValue("smooth iteration count"_c,false);
 		colorParams.setValue("leading polynomial exponent"_c,2);
 		colorParams.setValue("outer gradient"_c,Gradient{{0.0f,0.0f,0.0f},{0.0f,0.7f,1.0f}});
+		colorParams.setValue("outer curve"_c,Curve{CurveSegment{
+			{0,0},{1,1},1,1
+		}});
 		colorParams.setValue("outer coloring method"_c,"iterationGradient");
 		colorParams.setValue("inner gradient"_c,Gradient{{0.0f,0.0f,0.0f}});
+		colorParams.setValue("inner curve"_c,Curve{CurveSegment{
+			{0,0},{1,1},1,1
+		}});
 		colorParams.setValue("inner coloring method"_c,"flatColor");
 	}
 

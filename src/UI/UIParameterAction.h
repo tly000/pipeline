@@ -25,6 +25,8 @@ struct Parameter{
 	}
 
 	virtual Gtk::Widget* createParameterWidget() = 0;
+
+	virtual struct ParamPack& getParamPack() = 0;
 protected:
 	void fireChangeEvent(){
 		for(auto& o : observers){
@@ -74,6 +76,8 @@ struct TypedParameter : Parameter{
 	Gtk::Widget* createParameterWidget(){
 		return Gtk::manage(new ParameterWidget<T>(*this));
 	}
+
+	struct ParamPack& getParamPack();
 protected:
 	StaticOutput<T>& output;
 };
@@ -128,5 +132,9 @@ protected:
 		variadicForEach(this->template addParam(this->template getOutput<I>()));
 	}
 };
+
+template<typename T> ParamPack& TypedParameter<T>::getParamPack(){
+	return *dynamic_cast<ParamPack*>(this->output.getPipeline());
+}
 
 #include "ParameterWidgets.h"

@@ -6,10 +6,39 @@ inline Complex f(const Complex z,const Complex c){
 	return FORMULA;
 }
 
+float4 noStats(float4 current,unsigned i,Complex z){
+	return current;
+}
+
+float4 expSmoothing(float4 current,unsigned i,Complex z){
+	return current + (float4){exp(-tofloat(cabs2(z))),0,0,0};
+}
+
+float4 recipSmoothing(float4 current,unsigned i,Complex z){
+	return current + (float4){1/(tofloat(cabs2(z)) + 1),0,0,0};
+}
+
+//https://www.shadertoy.com/view/4dfGRn
+float4 orbitTraps(float4 current, unsigned i, Complex z){
+	float2 zf = {
+		tofloat(z.real), tofloat(z.imag)
+	};
+	return min(
+		current, 
+		(float4){
+			fabs(0.0+zf.y + 0.5*sin(zf.x)), 
+			fabs(1.0+zf.x + 0.5*sin(zf.y)), 
+			dot(zf,zf),
+			length(zf-floor(zf)-0.5f)
+		}
+	);
+}
+
 void doCalculation(const int2 position,
 	global Complex* positionInput,uint32_t w,uint32_t h,
 	global float* iterOutput,uint32_t w2,uint32_t h2,
 	global Complex* processedPositionOutput,uint32_t w3,uint32_t h3,
+	global float4* statsOutput,uint32_t w4,uint32_t h4,
 	const Type cReal,const Type cImag){
 	
 	int bufferIndex = position.x + w * position.y; 
@@ -24,9 +53,12 @@ void doCalculation(const int2 position,
 	};
 	Complex fastZ = z;
 
+	float4 stats = {};
 	unsigned i = 0;
 	while(i < MAXITER && (DISABLE_BAILOUT || tofloat(cabs2(z)) <= BAILOUT)){
 		z = f(z,c);
+		stats = STAT_FUNCTION(stats, i, z);
+		
 		if(CYCLE_DETECTION){
 			fastZ = f(f(fastZ,c),c);
 			if(tofloat(cabs2(csub(fastZ,z))) < 1e-10){
@@ -40,12 +72,14 @@ void doCalculation(const int2 position,
 	}
 	iterOutput[bufferIndex] = i;
 	processedPositionOutput[bufferIndex] = z;
+	statsOutput[bufferIndex] = stats;
 }
 
 kernel void mandelbrotKernel(
 	global read_only Complex* positionInput,uint32_t w,uint32_t h,
 	global write_only float* iterOutput,uint32_t w2,uint32_t h2,
 	global Complex* processedPositionOutput,uint32_t w3,uint32_t h3,
+	global float4* statsOutput,uint32_t w4,uint32_t h4,
 	const Type cReal,const Type cImag){
 	int2 globalPosition = { 
 		get_global_id(0), 
@@ -55,6 +89,7 @@ kernel void mandelbrotKernel(
 		positionInput, w,h, 
 		iterOutput, w2, h2,
 		processedPositionOutput,w3,h3,
+		statsOutput,w4,h4,
 		cReal,cImag
 	);
 }
@@ -63,6 +98,7 @@ kernel void successiveRefinementKernel(
 	global Complex* positionInput,uint32_t w,uint32_t h,
 	global float* iterOutput,uint32_t w2,uint32_t h2,
 	global Complex* processedPositionOutput,uint32_t w3,uint32_t h3,
+	global float4* statsOutput,uint32_t w4,uint32_t h4,
 	const Type cReal,const Type cImag,
 	global int2* positionBuffer, uint32_t bufferSize, 
 	uint32_t stepSize) {
@@ -71,6 +107,7 @@ kernel void successiveRefinementKernel(
 		positionInput,w,h,
 		iterOutput,w,h,
 		processedPositionOutput,w,h,
+		statsOutput,w,h,
 		cReal,cImag
 	);
 }
@@ -177,6 +214,7 @@ kernel void successiveIterationKernel(
 		global Complex* positionInput,uint32_t w,uint32_t h,
 		global float* iterOutput,uint32_t w2,uint32_t h2,
 		global Complex* processedPositionOutput,uint32_t w3,uint32_t h3,
+		global float4* statsOutput,uint32_t w4,uint32_t h4,
 		const Type cReal,const Type cImag, 
 		global int2* positionBuffer, uint32_t s1, 
 		global uchar* filterBuffer, uint32_t s2,
@@ -195,13 +233,17 @@ kernel void successiveIterationKernel(
 		(Complex){floatToType(0),floatToType(0)};
 	Complex fastZ = z;
 
+	float4 stats = statsOutput[bufferIndex];
 	if(first){
 		iterOutput[bufferIndex] = 0;
+		stats = (float4){0,0,0,0};
 	}
 	
 	unsigned i = 0;
 	while(i < 100 && (DISABLE_BAILOUT || tofloat(cabs2(z)) <= BAILOUT)){
 		z = f(z,c);
+		stats = STAT_FUNCTION(stats, i, z);
+		
 		if(CYCLE_DETECTION){
 			fastZ = f(f(fastZ,c),c);
 			if(tofloat(cabs2(csub(fastZ,z))) < 1e-10){
@@ -217,8 +259,9 @@ kernel void successiveIterationKernel(
 	filterBuffer[get_global_id(0)] = i != 100;
 	iterOutput[bufferIndex] = min(i + iterOutput[bufferIndex], (float)MAXITER);
 	processedPositionOutput[bufferIndex] = z;
+	statsOutput[bufferIndex] = stats;
 }
-
+/*
 kernel void successiveIterationFill(
 		global float* iterOutput,uint32_t w,uint32_t h,
 		global int2* positionBuffer,uint32_t s) {

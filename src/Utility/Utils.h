@@ -5,6 +5,7 @@
 #include <set>
 #include <typeinfo>
 #include <iostream>
+#include <vector>
 
 /*
  * Utils.h
@@ -55,3 +56,20 @@ std::string getCurrentWorkingDirectory();
 #endif
 
 #define assertOrThrow(b) { if(!(b)) throw std::runtime_error("assertion failed: " #b); }
+
+template<typename T> bool operator==(const std::vector<T>& a, const std::vector<T>& b){
+	if(a.size() == b.size()){
+		for(uint32_t i = 0; i < a.size(); i++){
+			if(a.at(i) != b.at(i)) return false;
+		}
+		return true;
+	}
+	return false;
+}
+
+template<typename T> bool operator!=(const std::vector<T>& a, const std::vector<T>& b){
+	return !(a == b);
+}
+
+std::string quote(const std::string& s);
+std::string unquote(const std::string& s);
