@@ -126,6 +126,9 @@ protected:
 
 			if(!decreasingPointCount){
 				decreasingPointCount = currentRange > newRange;
+			}
+			if(newRange == 0){
+				return true;
 			}else if(decreasingPointCount && currentRange - newRange < 10){
 				this->finalAction.getInput("positionBuffer"_c).setDefaultValue(*this->positionBuffer1);
 				this->finalAction.getInput("globalSize"_c).setDefaultValue(Range{newRange,1,1});

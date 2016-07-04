@@ -132,7 +132,6 @@ protected:
 		this->kernelAction.getInput("stepSize"_c).setDefaultValue(currentStepSize);
 		this->kernelAction.getInput("globalSize"_c).setDefaultValue(Range{currentRange,1,1});
 		this->kernelAction.run();
-		std::cout << "kernel done" << std::endl;
 
 		if(this->currentStepSize == 1){
 			return true;
@@ -142,8 +141,6 @@ protected:
 			this->filterKernelAction.getInput("globalSize"_c).setDefaultValue(Range{filterRange,1,1});
 			this->filterKernelAction.run();
 
-			std::cout << "filter done" << std::endl;
-
 			this->atomicIndexBuffer.copyFromBuffer({0},0,1);
 			this->buildBufferAction.getInput("positionBuffer"_c).setDefaultValue(*this->positionBuffer1);
 			this->buildBufferAction.getInput("newPositionBuffer"_c).setDefaultValue(*this->positionBuffer2);
@@ -152,8 +149,6 @@ protected:
 			this->buildBufferAction.getInput("stepSize"_c).setDefaultValue(currentStepSize);
 			this->buildBufferAction.run();
 
-			std::cout << "build buffer done" << std::endl;
-
 			std::vector<uint32_t> atomicIndexVector;
 			this->atomicIndexBuffer.copyToBuffer(atomicIndexVector);
 			uint32_t newRange = atomicIndexVector.front();
@@ -161,7 +156,7 @@ protected:
 			std::swap(this->positionBuffer1,this->positionBuffer2);
 			this->currentRange = newRange;
 			this->currentStepSize /= 2;
-			return false;
+			return this->currentRange == 0;
 		}
 	}
 };

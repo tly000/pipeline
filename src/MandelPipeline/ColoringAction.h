@@ -15,8 +15,6 @@
 
 template<typename Factory,typename T> struct ColoringAction :
 	BoxedAction<Input(
-		KV("smooth iteration count",bool),
-		KV("leading polynomial exponent",float),
 		KV("outer gradient",Gradient),
 		KV("outer curve",Curve),
 		KV("outer coloring method",std::string),
@@ -47,8 +45,6 @@ template<typename Factory,typename T> struct ColoringAction :
 		this->template delegateInput("outer curve"_c,this->curveBufferGenerator1.getInput("data"_c));
 		this->template delegateInput("inner curve"_c,this->curveBufferGenerator2.getInput("data"_c));
 
-		this->template delegateInput("smooth iteration count"_c,this->definesAction.getInput("SMOOTH_MODE"_c));
-		this->template delegateInput("leading polynomial exponent"_c,this->definesAction.getInput("SMOOTH_EXP"_c));
 		this->template delegateInput("outer coloring method"_c,this->definesAction.getInput("OUTSIDE_COLORING_KERNEL"_c));
 		this->template delegateInput("inner coloring method"_c,this->definesAction.getInput("INSIDE_COLORING_KERNEL"_c));
 		this->template delegateInput("bailout"_c,this->definesAction.getInput("BAILOUT"_c));
@@ -73,8 +69,6 @@ template<typename Factory,typename T> struct ColoringAction :
 		this->curveBufferGenerator2.template output<0>() >> this->kernelAction.getInput("curveB"_c);
 
 		this->template delegateOutput("coloredImage"_c, kernelAction.getOutput("coloredImage"_c));
-
-		this->definesAction.getInput("SMOOTH_MODE"_c).setDefaultValue(1);
 	}
 
 	Factory& factory;
@@ -92,8 +86,6 @@ template<typename Factory,typename T> struct ColoringAction :
 		KV("MAXITER",uint32_t),
 		KV("BAILOUT",float),
 		KV("JULIAMODE",bool),
-		KV("SMOOTH_MODE",uint32_t),
-		KV("SMOOTH_EXP",float),
 		KV("INSIDE_COLORING_KERNEL",std::string),
 		KV("OUTSIDE_COLORING_KERNEL",std::string)
 		> definesAction;

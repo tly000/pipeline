@@ -6,6 +6,7 @@
  */
 
 #include "CurveEditor.h"
+#include "PipelineUI.h"
 
 CurveEditor::CurveEditor() {
 	this->set_column_homogeneous(true);
@@ -172,6 +173,15 @@ CurveEditor::CurveEditor() {
 		int w = this->curveArea.get_allocated_width();
 		int h = this->curveArea.get_allocated_height();
 
+		int i = 0;
+		for(float f : this->histogram){
+			float pos = float(i)/256 * w;
+			gc->set_source_rgb(0.5,0.5,0.5);
+			gc->rectangle(float(i)/256 * w,0,float(w)/256,f * h);
+			gc->fill();
+			i++;
+		}
+
 		gc->set_line_width(1.4f);
 		gc->move_to(0,h);
 
@@ -189,7 +199,7 @@ CurveEditor::CurveEditor() {
 		gc->arc(p.x * w, (1-p.y) * h,4 + 2 * (this->hoveringPoint == 0),0,2 * G_PI);
 		gc->stroke();
 
-		int i = 1;
+		i = 1;
 		for(auto& s : this->c){
 			auto p = s.end;
 			gc->set_source_rgb(0.3,0.3,0.3);

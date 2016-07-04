@@ -27,9 +27,6 @@ struct AbstractPlatform{
 	virtual bool isDone() const = 0;
 	virtual void setReset(bool enable) = 0;
 
-	virtual std::string paramsToJson(const std::map<std::string,std::list<std::string>>& paramsToSave)= 0;
-	virtual void paramsFromJson(const std::string& jsonObj)= 0;
-
 	virtual ~AbstractPlatform() = default;
 };
 
@@ -103,63 +100,6 @@ struct Platform : AbstractPlatform{
 		return factory.getDeviceName();
 	}
 
-	std::string paramsToJson(const std::map<std::string,std::list<std::string>>& paramsToSave){
-		std::stringstream str;
-
-		bool firstPack = true;
-		str << "{\n";
-		for(auto& pack : paramsToSave){
-			if(!firstPack){
-				str << ",\n";
-			}else{
-				firstPack = false;
-			}
-			str << "\t\"" << pack.first << "\"" << " : {\n";
-			ParamPack& p = this->getPipeline().getParamPack(pack.first);
-
-			bool firstParam = true;
-			for(auto& paramName : pack.second){
-				if(!firstParam){
-					str << ",\n";
-				}else{
-					firstParam = false;
-				}
-				Parameter& param = p.getParam(paramName);
-				str << "\t\t\"" << param.name << "\"" << " : " << quote(param.getValueAsString());
-			}
-			str << "\n\t}";
-		}
-		str << "\n}";
-		return str.str();
-	}
-
-	void paramsFromJson(const std::string& jsonObj){
-		ParseTree obj = JsonParser::parseJson(jsonObj);
-		_log("[info] json: " << printTree(obj));
-
-		assertOrThrow(obj.elementName == "object");
-		for(auto& child : obj.children){
-			assertOrThrow(child.elementName == "pair" && child.children.back().elementName == "object");
-			std::string paramPackName = unquote(child.children.front().children.front().elementName);
-			ParamPack& pack = this->getPipeline().getParamPack(paramPackName);
-			auto& object = child.children.back();
-
-			for(auto& param : object.children){
-				std::string name = unquote(param.children.front().children.front().elementName);
-				if(pack.hasParam(name)){
-					auto& value = param.children.back();
-					assertOrThrow(value.elementName == "string");
-					assertOrThrow(value.elementName == "string");
-					if(!pack.getParam(name).setValueFromString(unquote(value.children.front().elementName))){
-						throw std::runtime_error("invalid value for parameter " + name);
-					}
-				}else{
-					throw std::runtime_error("could not find parameter with name " + name + " inside pack with name " + paramPackName);
-				}
-			}
-		}
-	}
-
 	bool isDone() const{
 		return this->pipeline->calcAction.getOutput("done"_c).getValue();
 	}
@@ -174,13 +114,13 @@ protected:
 	std::unique_ptr<PipelineParameterBox> paramBox = nullptr;
 };
 
-extern template struct Platform<CPUFactory,float>;
-extern template struct Platform<CPUFactory,double>;
+extern template struct Platform<CPUFactory<true>,float>;
+extern template struct Platform<CPUFactory<true>,double>;
 //extern template struct Platform<CPUFactory,longdouble>;
 //#ifdef QUADMATH_H
 //extern template struct Platform<CPUFactory,float128>;
 //#endif
-extern template struct Platform<CPUFactory,Fixed4>;
+extern template struct Platform<CPUFactory<true>,Fixed4>;
 //extern template struct Platform<CPUFactory,Fixed8>;
 //extern template struct Platform<CPUFactory,Fixed16>;
 

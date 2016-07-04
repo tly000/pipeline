@@ -35,6 +35,8 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		KV("disable bailout",bool),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool),
+		KV("smooth iteration count",bool),
+		KV("leading polynomial exponent",float),
 		KV("statistic function",std::string),
 		KV("positionImage",ComplexImage<Factory,T>),
 		KV("iterationImage",FloatImage<Factory>),
@@ -45,6 +47,7 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		KV("iterationImage",FloatImage<Factory>),
 		KV("processedPositionImage",ComplexImage<Factory,T>),
 		KV("statsImage",Float4Image<Factory>),
+		KV("time",uint64_t),
 		KV("done",bool)
 	)>{
 		CalculationActionBase(Factory& factory,std::string typeName)
@@ -56,6 +59,8 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		this->template delegateInput("disable bailout"_c, definesAction.getInput("DISABLE_BAILOUT"_c));
 		this->template delegateInput("cycle detection"_c, definesAction.template getInput("CYCLE_DETECTION"_c));
 		this->template delegateInput("visualize cycle detection"_c, definesAction.getInput("CYCLE_DETECTION_VISUALIZE"_c));
+		this->template delegateInput("smooth iteration count"_c, definesAction.getInput("SMOOTH_MODE"_c));
+		this->template delegateInput("leading polynomial exponent"_c, definesAction.getInput("SMOOTH_EXP"_c));
 		this->template delegateInput("statistic function"_c, definesAction.getInput("STAT_FUNCTION"_c));
 
 		definesAction.getInput("Type"_c).setDefaultValue(typeName);
@@ -87,6 +92,8 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		KV("DISABLE_BAILOUT",bool),
 		KV("CYCLE_DETECTION",bool),
 		KV("CYCLE_DETECTION_VISUALIZE",bool),
+		KV("SMOOTH_MODE",bool),
+		KV("SMOOTH_EXP",float),
 		KV("STAT_FUNCTION",std::string)> definesAction;
 	KernelGeneratorAction<Factory,ComplexImage<Factory,T>,FloatImage<Factory>,ComplexImage<Factory,T>,Float4Image<Factory>,T,T,AdditionalKernelParams...> kernelGeneratorAction;
 	KernelAction<Factory,Input(
@@ -112,7 +119,11 @@ protected:
 			this->getOutput("done"_c).setValue(this->step());
 		}else{
 			this->reset();
+			Timer t;
+			t.start();
 			while(!this->step());
+			auto time = t.stop();
+			this->getOutput("time"_c).setValue(time);
 			this->getOutput("done"_c).setValue(true);
 		}
 	}

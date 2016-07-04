@@ -22,7 +22,7 @@ MainWindow::MainWindow():
 			std::make_pair(name,#T),platforms.back().get() \
 		});
 
-	CPUFactory factory;
+	CPUFactory<true> factory;
 	std::string name = factory.getDeviceName();
 	platformBox.append(name);
 
@@ -73,7 +73,7 @@ MainWindow::MainWindow():
 			std::string fileName = dialog.get_filename();
 			std::string jsonObj = fileToString(fileName);
 			try{
-				this->getSelectedPlatform()->paramsFromJson(jsonObj);
+				this->getSelectedPlatform()->getPipeline().paramsFromJson(jsonObj);
 			}catch(std::exception& e){
 				Gtk::MessageDialog messageBox(*this,std::string("error while loading settings: \n") + e.what());
 				messageBox.run();
@@ -184,7 +184,7 @@ MainWindow::MainWindow():
 				return;
 			}
 			std::string fileName = dialog.get_filename();
-			std::string object = this->getSelectedPlatform()->paramsToJson(selectedParams);
+			std::string object = this->getSelectedPlatform()->getPipeline().paramsToJson(selectedParams);
 			if(fileName.substr(fileName.size()-5) != ".json"){
 				fileName += ".json";
 			}

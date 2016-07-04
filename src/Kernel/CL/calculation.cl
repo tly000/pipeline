@@ -70,7 +70,12 @@ void doCalculation(const int2 position,
 		}
 		i++;
 	}
-	iterOutput[bufferIndex] = i;
+	float iter = i;
+	if(SMOOTH_MODE && i != MAXITER){
+		iter -= log(log(tofloat(cabs2(z)))/log((float)MAXITER)) / log((float)SMOOTH_EXP);
+	}
+	
+	iterOutput[bufferIndex] = iter;
 	processedPositionOutput[bufferIndex] = z;
 	statsOutput[bufferIndex] = stats;
 }
@@ -153,6 +158,9 @@ kernel void successiveRefinementFilter(
 		for(int i = -step; i <= step; i++){
 			for(int j = -step; j <= step; j++){
 				iterOutput[i + pos.x + w * (j + pos.y)] = fiter;
+//				if(!(abs(i) % step == 0 && abs(j) % step == 0) ){
+//					iterOutput[i + pos.x + w * (j + pos.y)] = 0;
+//				}
 				//linear interpolation of z-values
 				
 				uint2 iPos = min((uint2)(i + step, j + step) / step, (uint2)(1,1));
@@ -257,18 +265,35 @@ kernel void successiveIterationKernel(
 	}
 	
 	filterBuffer[get_global_id(0)] = i != 100;
-	iterOutput[bufferIndex] = min(i + iterOutput[bufferIndex], (float)MAXITER);
+	if(i != 100){
+		float iter = i + iterOutput[bufferIndex];
+		if(SMOOTH_MODE && iter != MAXITER){
+			iter -= log(log(tofloat(cabs2(z)))/log((float)MAXITER)) / log((float)SMOOTH_EXP);
+		}
+		iterOutput[bufferIndex] = iter;
+	}else{
+		iterOutput[bufferIndex] = min(i + iterOutput[bufferIndex], (float)MAXITER);
+	}
 	processedPositionOutput[bufferIndex] = z;
 	statsOutput[bufferIndex] = stats;
 }
-/*
+
+kernel void marianiSilverKernel(
+	global Complex* image,uint32_t w,uint32_t h,
+	global float* iterOutput,uint32_t w2,uint32_t h2,
+	global Complex* processedPositionImage,uint32_t w3,uint32_t h3,
+	global float4* statsImage,uint32_t w4,uint32_t h4,
+	const Type cReal, const Type cImag,
+	global int2* positionBuffer,uint32_t size) {
+	doCalculation(positionBuffer[get_global_id(0)],image,w,h,iterOutput,w,h,processedPositionImage,w,h,statsImage,w,h,cReal,cImag);
+}
+
 kernel void successiveIterationFill(
-		global float* iterOutput,uint32_t w,uint32_t h,
-		global int2* positionBuffer,uint32_t s) {
-	
-	int2 position = positionBuffer[get_global_id(0)];
-	int bufferIndex = position.x + w * position.y; 
-	iterOutput[bufferIndex] = MAXITER;
+	global float* iterOutput,uint32_t w,uint32_t h,
+	global const uint2* positionBuffer,uint32_t s) {
+
+	uint2 position = positionBuffer[get_global_id(0)];
+	iterOutput[position.x + w * position.y] = MAXITER;
 }
 
 kernel void successiveIterationBuildPositionBuffer(
@@ -282,6 +307,7 @@ kernel void successiveIterationBuildPositionBuffer(
 		localSize = 0;
 	}
 	barrier(CLK_LOCAL_MEM_FENCE);
+
 	int offset = -1;
 	if(!filterBuffer[get_global_id(0)]){
 		offset = atomic_inc(&localSize);
@@ -295,98 +321,132 @@ kernel void successiveIterationBuildPositionBuffer(
 	barrier(CLK_LOCAL_MEM_FENCE);
 	
 	if(offset != -1){
-		newPositionBuffer[localIndex + offset] = positionBuffer[get_global_id(0)];
+		int startOffset = localIndex + offset;
+		newPositionBuffer[startOffset] = positionBuffer[get_global_id(0)];
 	}
 }
 
-/*kernel void marianiSilverKernel(
-	global Complex* positionInput,uint32_t w,uint32_t h,
-	global float* iterOutput,uint32_t w2,uint32_t h2,
-	global Complex* processedPositionOutput,uint32_t w3,uint32_t h3,
-	const Type cReal,const Type cImag,
-	global int2* positionBuffer) {
-	int2 pos = positionBuffer[get_global_id(0)];
-	doCalculation(pos,
-		positionInput,w,h,
-		iterOutput,w,h,
-		processedPositionOutput,w,h,
-		cReal,cImag
-	);
-}
+typedef struct{
+	int x,y,w,h;
+} Rectangle;
 
 kernel void marianiSilverFilter(
-	global float* iterOutput,uint32_t w,uint32_t h,
-	global uint2* rectangleBuffer, global uchar* filterBuffer) {	
-	
-	uint rectangleIndex = get_global_id(2);
-	uint sideIndex = get_global_id(1);
-	uint posIndex = get_global_id(0);
-	
-	uint4 rectangle = rectangleBuffer[rectangleIndex];
-	uint2 offset = {
-		sideIndex % 2 ? (sideIndex & 2 ? 0 : get_local_size(0)) : posIndex,
-		sideIndex % 2 ? posIndex : (sideIndex & 2 ? 0 : get_local_size(0)),
-	};
-	
-	float iter = iterOutput[rectangle.x + offset.x + w * (rectangle.y + offset.y)];
-	float compareIter = iterOutput[rectangle.x + w * rectangle.y];
-	
-	int localIndex = get_local_size(0) * sideIndex + posIndex;
-	if(localIndex == 0){
-		atomic_xchg(filterBuffer + rectangleIndex, true);
-	}
-	barrier(CLK_GLOBAL_MEM_FENCE);
-	atomic_and(filterBuffer + rectangleIndex, compareIter == iter);
-}
+	global float* iterImage,uint32_t w,uint32_t h,
+	global Rectangle* rectangleBuffer,uint32_t s,
+	global uint8_t* filterBuffer,uint32_t s2
+) {
+	Rectangle r = rectangleBuffer[get_global_id(0)];
 
-kernel void marianiSilverBuildBuffers(
-	global int2* positionBuffer, global uint2* rectangleBuffer, global uint2* newRectangleBuffer, 
-	global uchar* filterBuffer, global uint* atomicIndex, uint stepSize) {	
+	bool rising[4] = {true,true,true,true};
+	bool falling[4] = {true,true,true,true};
+	bool outside = true, inside = true;
 	
-	local uint localSize;
-	if(get_local_id(0) == 0){
-		localSize = 0;
+	float lastA = iterImage[r.x + w * r.y],
+		  lastB = iterImage[r.x + w * (r.y + r.h-1)];
+	for(int i = 1; i < r.w-1; i++){
+		float a = iterImage[r.x+i + w * r.y];
+		rising[0] &= a >= lastA;
+		falling[0] &= a <= lastA;
+		float b = iterImage[r.x+i + w * (r.y+r.h-1)];
+		rising[1] &= b >= lastB;
+		falling[1] &= b <= lastB;
+		lastA = a;
+		lastB = b;
+		
+		outside &= a != MAXITER;
+		outside &= b != MAXITER;
+		
+		inside &= a == MAXITER;
+		inside &= b == MAXITER;
 	}
-	barrier(CLK_LOCAL_MEM_FENCE);
+	lastA = iterImage[r.x + w * r.y];
+	lastB = iterImage[r.x + r.w-1 + w * r.y];
+	for(int j = 1; j < r.h-1; j++){
+		float a = iterImage[r.x + w * (r.y+j)];
+		rising[2] &= a >= lastA;
+		falling[2] &= a <= lastA;
+		float b = iterImage[r.x+r.w-1 + w * (r.y+j)];
+		rising[3] &= b >= lastB;
+		falling[3] &= b <= lastB;
+		lastA = a;
+		lastB = b;
+		
+		outside &= a != MAXITER;
+		outside &= b != MAXITER;
+		
+		inside &= a == MAXITER;		
+		inside &= b == MAXITER;
+	}
+	bool equal = 
+		(outside || inside) &&
+		(rising[0] || falling[0]) &&
+		(rising[1] || falling[1]) && 
+		(rising[2] || falling[2]) && 
+		(rising[3] || falling[3]);
 
-	int offset = -1;
-	if(!filterBuffer[get_global_id(0)]){
-		offset = atomic_inc(&localSize);
-	}
-	barrier(CLK_LOCAL_MEM_FENCE);
-		
-	local uint localPosIndex;
-	local uint localRectIndex;
-	if(get_local_id(0) == 0){
-		localPosIndex = atomic_add(atomicIndex + 0	,4 * (stepSize - 3) * localSize);
-		localRectIndex = atomic_add(atomicIndex + 1	,4 * localSize);
-	}
-	barrier(CLK_LOCAL_MEM_FENCE);
-	
-	if(offset != -1){
-		int posStartOffset = localPosIndex + 4 * (stepSize - 3) * offset;
-		int2 p = rectangleBuffer[get_global_id(0)];
-		
-		int halfSize = stepSize/2; 
-		for(int i = 0; i < halfSize - 2; i++){
-			positionBuffer[startOffset + 8 * i + 0] = p + (uint2)(halfSize-1, i + 1);
-			positionBuffer[startOffset + 8 * i + 1] = p + (uint2)(halfSize, i + 1);
-			
-			positionBuffer[startOffset + 8 * i + 2] = p + (uint2)(i + 1, halfSize-1);
-			positionBuffer[startOffset + 8 * i + 3] = p + (uint2)(i + 1, halfSize);
-			
-			positionBuffer[startOffset + 8 * i + 4] = p + (uint2)(halfSize-1, halfSize + i + 1);
-			positionBuffer[startOffset + 8 * i + 5] = p + (uint2)(halfSize, halfSize + i + 1);
-			
-			positionBuffer[startOffset + 8 * i + 6] = p + (uint2)(halfSize + i + 1, halfSize-1);
-			positionBuffer[startOffset + 8 * i + 7] = p + (uint2)(halfSize + i + 1, halfSize);
-		}
-		
-		int rectStartOffset = localRectIndex + 4 * offset;
-		for(int i = 0; i < 2; i++){
-			for(int j = 0; j < 2; j++){
-				newRectangleBuffer[localRectIndex + 2 * i + j] = p + (int2)(i,j) * halfSize;
+	filterBuffer[get_global_id(0)] = equal;
+	if(equal){
+		float p00 = iterImage[r.x + w * r.y];
+		float p01 = iterImage[r.x + w * (r.y + r.h-1)];
+		float p10 = iterImage[r.x + r.w-1 + w * r.y];
+		float p11 = iterImage[r.x + r.w-1 + w * (r.y + r.h-1)];
+
+		for(int i = 1; i < r.w - 1; i++){
+			for(int j = 1; j < r.h - 1; j++){
+				float u = (float)(i)/(r.w-1);
+				float v = (float)(j)/(r.h-1);			
+
+				float f0 = iterImage[r.x + w * (r.y + j)];
+				float f1 = iterImage[r.x + r.w-1 + w * (r.y + j)];
+				float g0 = iterImage[r.x + i + w * r.y];
+				float g1 = iterImage[r.x + i + w * (r.y + r.h-1)];
+				iterImage[r.x + i + w * (r.y + j)] = (mix(f0,f1,u)*v*(1-v) + mix(g0,g1,v)*u*(1-u))/(u*(1-u) + v*(1-v));
+				//iterImage[r.x + i + w * (r.y + j)] = mix(g0,g1,v) + mix(f0,f1,u) - mix(mix(p00,p10,u),mix(p01,p11,u),v);
 			}
 		}
 	}
-}*/
+}
+
+kernel void marianiSilverBuildBuffers(
+		global int2* positionBuffer,uint32_t positionSize,
+		const global Rectangle* rectangleBuffer,uint32_t rS,
+		global Rectangle* newRectangleBuffer,uint32_t rS2,
+		const global uint8_t* filterBuffer,uint32_t fS,
+		global uint32_t* atomicIndexBuffer,uint32_t aS) {
+	global uint32_t* atomicPositionIndex = atomicIndexBuffer + 0;
+	global uint32_t* atomicRectangleIndex = atomicIndexBuffer + 1;
+
+	uint id = get_global_id(0);
+	if(!filterBuffer[id]){
+		const Rectangle r = rectangleBuffer[id];
+		//subdivide
+		int w2 = r.w / 2, h2 = r.h/2;
+		int oddX = r.w % 2 ? 1 : 0, oddY = r.h % 2 ? 1 : 0;
+		Rectangle a = {
+			r.x,r.y,w2+1,h2+1
+		};
+		Rectangle b = {
+			r.x+w2,r.y,w2 + oddX,h2+1
+		};
+		Rectangle c = {
+			r.x,r.y+h2,w2+1,h2 + oddY
+		};
+		Rectangle d = {
+			r.x+w2,r.y+h2,w2 + oddX,h2 + oddY
+		};
+ 		int index = atomic_add(atomicRectangleIndex,4);
+		newRectangleBuffer[index + 0] = a;
+		newRectangleBuffer[index + 1] = b;
+		newRectangleBuffer[index + 2] = c;
+		newRectangleBuffer[index + 3] = d;
+
+		int posIndex = atomic_add(atomicPositionIndex,r.h-2);
+		for(int i = 0; i < r.h - 2; i++){
+			positionBuffer[posIndex + i] = (int2){r.x + w2, r.y + i + 1};
+		}
+		posIndex = atomic_add(atomicPositionIndex,r.w-2);
+		for(int i = 0; i < r.w - 2; i++){
+			positionBuffer[posIndex + i] = (int2){r.x + i + 1, r.y + h2};
+		}
+	}
+}

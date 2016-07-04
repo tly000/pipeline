@@ -117,13 +117,10 @@ kernel void coloringKernel(
 	};
 	int bufferIndex = globalID.x + globalID.y * w;
 	
-	global float* iter = iterInput + bufferIndex;
+	float iter = iterInput[bufferIndex];
 	Complex p = processedPositionImage[bufferIndex];
 	
-	if(SMOOTH_MODE && *iter != MAXITER){
-		*iter += 1 - log(log(tofloat(cabs2(p)))/log((float)MAXITER)) / log((float)SMOOTH_EXP);
-	}
-	if(*iter == MAXITER){
+	if(iter == MAXITER){
 		INSIDE_COLORING_KERNEL(globalID,
 			iterInput,
 			processedPositionImage,

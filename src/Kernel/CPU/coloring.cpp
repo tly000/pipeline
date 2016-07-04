@@ -114,12 +114,8 @@ extern "C" void coloringKernel(
 	const CPUBuffer<CurveSegment>& curveA,
 	const CPUBuffer<CurveSegment>& curveB) {
 
-	float& iter = iterInput.at(globalID.x,globalID.y);
+	float iter = iterInput.at(globalID.x,globalID.y);
 	const Complex& p = processedPositionImage.at(globalID.x,globalID.y);
-
-	if(SMOOTH_MODE && iter != MAXITER){
-		iter -= log(log(tofloat(cabs2(p)))/log((float)MAXITER)) / log((float)SMOOTH_EXP);
-	}
 	if(iter == MAXITER){
 		INSIDE_COLORING_KERNEL(globalID,localID,iterInput,processedPositionImage,statsImage,colorOutput,gradientB,gradientA,curveB,curveA);
 	}else{

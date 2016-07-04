@@ -8,9 +8,9 @@
  *      Author: tly
  */
 
-template struct Platform<CPUFactory,float>;
-template struct Platform<CPUFactory,double>;
-template struct Platform<CPUFactory,Fixed4>;
-template struct Platform<CPUFactory,Fixed8>;
+template struct Platform<CPUFactory<true>,float>;
+template struct Platform<CPUFactory<true>,double>;
+template struct Platform<CPUFactory<true>,Fixed4>;
+template struct Platform<CPUFactory<true>,Fixed8>;
 
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "../Utility/VariadicUtils.h"
 #include "TypeHelper.h"
+#include <vector>
 
 /*
  * EnumClass.h

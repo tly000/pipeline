@@ -2,7 +2,6 @@
 #include "GtkHeader.h"
 #include "../Type/Curve.h"
 #include "../Type/Gradient.h"
-
 /*
  * CurveEditor.h
  *
@@ -24,6 +23,7 @@ struct CurveEditor : Gtk::Grid{
 protected:
 	Gradient g;
 	Curve c;
+	std::array<float,256> histogram{{}};
 
 	int selectedPoint = -1;
 	int selectedSegment = -1;

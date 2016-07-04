@@ -23,6 +23,7 @@
 #include "GridbasedCalculationAction.h"
 #include "SuccessiveRefinementAction.h"
 #include "SuccessiveIterationAction.h"
+#include "MarianiSilverAction.h"
 
 /*
  * MandelPipeline.h
@@ -68,12 +69,12 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("disable bailout",bool),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool),
+		KV("smooth iteration count",bool),
+		KV("leading polynomial exponent",float),
 		KV("statistic function",std::string)
 	> algoParams{"escape time algorithm"};
 
 	UIParameterAction<
-		KV("smooth iteration count",bool),
-		KV("leading polynomial exponent",float),
 		KV("outer gradient",Gradient),
 		KV("outer curve",Curve),
 		KV("outer coloring method",std::string),
@@ -107,6 +108,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("disable bailout",bool),
 		KV("cycle detection",bool),
 		KV("visualize cycle detection",bool),
+		KV("smooth iteration count",bool),
+		KV("leading polynomial exponent",float),
 		KV("statistic function",std::string),
 		KV("positionImage",ComplexImage<Factory,T>),
 		KV("iterationImage",FloatImage<Factory>),
@@ -117,14 +120,13 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		KV("iterationImage",FloatImage<Factory>),
 		KV("processedPositionImage",ComplexImage<Factory,T>),
 		KV("statsImage",Float4Image<Factory>),
+		KV("time",uint64_t),
 		KV("done",bool)
 	)> calcAction;
 
 	using CalcActionType = typename decltype(calcAction)::SlotActionType;
 
 	SlotAction<Input(
-		KV("smooth iteration count",bool),
-		KV("leading polynomial exponent",float),
 		KV("outer gradient",Gradient),
 		KV("outer curve",Curve),
 		KV("outer coloring method",std::string),
@@ -194,8 +196,8 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		{ "successive refinement", [this]{
 			return std::make_unique<SuccessiveRefinementAction<Factory,T>>(factory,typeName);
 		}},
-		{ "Mariani-Silver", [this]()->std::unique_ptr<CalcActionType>{
-			throw std::runtime_error("Mariani-Silver not implemented.");
+		{ "Mariani-Silver", [this]{
+			return std::make_unique<MarianiSilverAction<Factory,T>>(factory,typeName);
 		}},
 		{ "successive iteration", [this]{
 			return std::make_unique<SuccessiveIterationAction<Factory,T>>(factory,typeName);
@@ -313,11 +315,11 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		algoParams.setValue("bailout"_c,16);
 		algoParams.setValue("disable bailout"_c,false);
 		algoParams.setValue("cycle detection"_c,false);
+		algoParams.setValue("smooth iteration count"_c,false);
+		algoParams.setValue("leading polynomial exponent"_c,2);
 		algoParams.setValue("visualize cycle detection"_c,false);
 		algoParams.setValue("statistic function"_c,"noStats");
 
-		colorParams.setValue("smooth iteration count"_c,false);
-		colorParams.setValue("leading polynomial exponent"_c,2);
 		colorParams.setValue("outer gradient"_c,Gradient{{0.0f,0.0f,0.0f},{0.0f,0.7f,1.0f}});
 		colorParams.setValue("outer curve"_c,Curve{CurveSegment{
 			{0,0},{1,1},1,1

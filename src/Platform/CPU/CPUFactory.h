@@ -12,10 +12,10 @@
  *      Author: tly
  */
 
-struct CPUFactory{
+template <bool EnableOpenMP> struct CPUFactory{
 	template<typename T> using Image = CPUImage<T>;
 	template<typename T> using Buffer= CPUBuffer<T>;
-	template<typename... Inputs> using Kernel = CPUKernel<Inputs...>;
+	template<typename... Inputs> using Kernel = CPUKernel<EnableOpenMP,Inputs...>;
 
 	template<typename T> Image<T> createImage(uint32_t width,uint32_t height){
 		return CPUImage<T>(width,height);
@@ -45,7 +45,7 @@ struct CPUFactory{
 		}
 
 		DynamicLibrary library(getCurrentWorkingDirectory() + "/" + libPath,true);
-		return CPUKernel<Inputs...>(
+		return CPUKernel<EnableOpenMP,Inputs...>(
 			library,
 			reinterpret_cast<typename Kernel<Inputs...>::KernelFunc>(library.loadSymbol(kernelName))
 		);

@@ -235,7 +235,6 @@
 		UNROLL
 		for(int i = 0; i < DIV_PRECISION; i++){
 			x = tmul(x,tsub(floatToFixed(2),tmul(b,x)));
-			//x = tadd(x,tmul(x,tsub(one,tmul(b,x))));
 		}
 
 		c = tmul(a,x);

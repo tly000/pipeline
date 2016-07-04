@@ -40,4 +40,7 @@ public:
 	ParamPack& getParamPack(std::string name){
 		return *paramPackMap.at(name);
 	}
+
+	std::string paramsToJson(const std::map<std::string,std::list<std::string>>& paramsToSave);
+	void paramsFromJson(const std::string&);
 };
