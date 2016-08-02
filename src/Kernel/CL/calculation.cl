@@ -18,6 +18,16 @@ float4 recipSmoothing(float4 current,unsigned i,Complex z){
 	return current + (float4){1/(tofloat(cabs2(z)) + 1),0,0,0};
 }
 
+float4 trap1(float4 current,unsigned i,Complex z){
+	if(i == 0){
+		current.x = 1000;
+	}
+	float l = sqrt(tofloat(cabs2(z)));
+	return (float4){
+		min(current.x,fabs(l-0.6f)),0,0,0
+	};
+}
+
 //https://www.shadertoy.com/view/4dfGRn
 float4 orbitTraps(float4 current, unsigned i, Complex z){
 	float2 zf = {
@@ -343,6 +353,40 @@ kernel void marianiSilverFilter(
 	
 	float lastA = iterImage[r.x + w * r.y],
 		  lastB = iterImage[r.x + w * (r.y + r.h-1)];
+//	for(int i = 1; i < r.w-1; i++){
+//		float a = iterImage[r.x+i + w * r.y];
+//		rising[0] &= a >= lastA;
+//		falling[0] &= a <= lastA;
+//		float b = iterImage[r.x+i + w * (r.y+r.h-1)];
+//		rising[1] &= b >= lastB;
+//		falling[1] &= b <= lastB;
+//		lastA = a;
+//		lastB = b;
+//		
+//		outside &= a != MAXITER;
+//		outside &= b != MAXITER;
+//		
+//		inside &= a == MAXITER;
+//		inside &= b == MAXITER;
+//	}
+//	lastA = iterImage[r.x + w * r.y];
+//	lastB = iterImage[r.x + r.w-1 + w * r.y];
+//	for(int j = 1; j < r.h-1; j++){
+//		float a = iterImage[r.x + w * (r.y+j)];
+//		rising[2] &= a >= lastA;
+//		falling[2] &= a <= lastA;
+//		float b = iterImage[r.x+r.w-1 + w * (r.y+j)];
+//		rising[3] &= b >= lastB;
+//		falling[3] &= b <= lastB;
+//		lastA = a;
+//		lastB = b;
+//		
+//		outside &= a != MAXITER;
+//		outside &= b != MAXITER;
+//		
+//		inside &= a == MAXITER;		
+//		inside &= b == MAXITER;
+//	}
 	for(int i = 1; i < r.w-1; i++){
 		float a = iterImage[r.x+i + w * r.y];
 		rising[0] &= a >= lastA;
@@ -353,8 +397,8 @@ kernel void marianiSilverFilter(
 		lastA = a;
 		lastB = b;
 		
-		outside &= a != MAXITER;
-		outside &= b != MAXITER;
+		outside &= a == lastA;
+		outside &= b == lastA;
 		
 		inside &= a == MAXITER;
 		inside &= b == MAXITER;
@@ -371,18 +415,18 @@ kernel void marianiSilverFilter(
 		lastA = a;
 		lastB = b;
 		
-		outside &= a != MAXITER;
-		outside &= b != MAXITER;
+		outside &= a == lastA;
+		outside &= b == lastA;
 		
 		inside &= a == MAXITER;		
 		inside &= b == MAXITER;
 	}
 	bool equal = 
-		(outside || inside) &&
-		(rising[0] || falling[0]) &&
-		(rising[1] || falling[1]) && 
-		(rising[2] || falling[2]) && 
-		(rising[3] || falling[3]);
+		(outside || inside);// &&
+		//(rising[0] || falling[0]) &&
+		//(rising[1] || falling[1]) && 
+		//(rising[2] || falling[2]) && 
+		//(rising[3] || falling[3]);
 
 	filterBuffer[get_global_id(0)] = equal;
 	if(equal){
@@ -400,7 +444,8 @@ kernel void marianiSilverFilter(
 				float f1 = iterImage[r.x + r.w-1 + w * (r.y + j)];
 				float g0 = iterImage[r.x + i + w * r.y];
 				float g1 = iterImage[r.x + i + w * (r.y + r.h-1)];
-				iterImage[r.x + i + w * (r.y + j)] = (mix(f0,f1,u)*v*(1-v) + mix(g0,g1,v)*u*(1-u))/(u*(1-u) + v*(1-v));
+				iterImage[r.x + i + w * (r.y + j)] = 0;
+				//iterImage[r.x + i + w * (r.y + j)] = (mix(f0,f1,u)*v*(1-v) + mix(g0,g1,v)*u*(1-u))/(u*(1-u) + v*(1-v));
 				//iterImage[r.x + i + w * (r.y + j)] = mix(g0,g1,v) + mix(f0,f1,u) - mix(mix(p00,p10,u),mix(p01,p11,u),v);
 			}
 		}

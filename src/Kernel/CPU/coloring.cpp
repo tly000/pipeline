@@ -57,6 +57,22 @@ extern "C" void expSmoothingGradient(
 	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,t);
 }
 
+extern "C" void trap1Gradient(
+	const Range& globalID, const Range& localID,
+	const CPUImage<float>& iterInput,
+	const CPUImage<Complex>& processedPositionImage,
+	const CPUImage<float4>& statsImage,
+	CPUImage<float3>& colorOutput,
+	const CPUBuffer<float3>& gradientA,
+	const CPUBuffer<float3>& gradientB,
+	const CPUBuffer<CurveSegment>& curveA,
+	const CPUBuffer<CurveSegment>& curveB) {
+	float val = statsImage.at(globalID.x,globalID.y)[0];
+	float iter = iterInput.at(globalID.x,globalID.y) / float(MAXITER);
+	float t = curveSample(curveA.getDataPointer(),curveA.getElemCount(),val);
+	colorOutput.at(globalID.x,globalID.y) = gradientSample(gradientA,t);
+}
+
 extern "C" void angleGradient(
 	const Range& globalID, const Range& localID,
 	const CPUImage<float>& iterInput,

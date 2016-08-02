@@ -7,10 +7,10 @@
 
 #include "ExternTemplates.h"
 
-template struct MandelPipeline<CPUFactory<true>,float>;
-template struct MandelPipeline<CPUFactory<true>,double>;
-template struct MandelPipeline<CPUFactory<true>,float128>;
-template struct MandelPipeline<CPUFactory<true>,Fixed4>;
+//template struct MandelPipeline<CPUFactory<true>,float>;
+//template struct MandelPipeline<CPUFactory<true>,double>;
+//template struct MandelPipeline<CPUFactory<true>,float128>;
+//template struct MandelPipeline<CPUFactory<true>,Fixed4>;
 template struct MandelPipeline<CPUFactory<true>,Fixed8>;
 //template struct MandelPipeline<CPUFactory<true>,Fixed16>;
 

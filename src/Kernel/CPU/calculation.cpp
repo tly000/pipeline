@@ -30,6 +30,16 @@ float4 recipSmoothing(float4 current,unsigned i,Complex z){
 	return current + (float4){1/(tofloat(cabs2(z)) + 1),0,0,0};
 }
 
+float4 trap1(float4 current,unsigned i,Complex z){
+	if(i == 0){
+		current[0] = 1000;
+	}
+	float l = sqrt(tofloat(cabs2(z)));
+	return float4{
+		std::min(current[0],fabsf(l-0.6)),0,0,0
+	};
+}
+
 void doCalculation(
 	const Range& position,
 	CPUImage<Complex>& image,
@@ -45,6 +55,7 @@ void doCalculation(
 		floatToType(0),
 		floatToType(0)
 	};
+	z = c;
 	Complex fastZ = z;
 	float4 stats{};
 
@@ -198,6 +209,7 @@ extern "C" void successiveIterationKernel(
 	Complex z = !first ? processedPositionImage.at(position[0],position[1]) :
 			JULIAMODE ? image.at(position[0],position[0]) :
 			(Complex){floatToType(0),floatToType(0)};
+	z = c;
 	Complex fastZ = z;
 
 	float4 stats = statsImage.at(position[0],position[0]);

@@ -116,7 +116,11 @@ protected:
 			if(this->getInput("reset calculation"_c).getValue()){
 				this->reset();
 			}
+			Timer t;
+			t.start();
 			this->getOutput("done"_c).setValue(this->step());
+			auto time = t.stop();
+			this->getOutput("time"_c).setValue(time);
 		}else{
 			this->reset();
 			Timer t;

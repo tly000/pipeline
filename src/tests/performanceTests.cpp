@@ -40,7 +40,7 @@ template<typename T,typename Factory> void testPipeline(Factory& f,std::string p
 	stbi_write_png(fileName.c_str(),renderedImage.getWidth(),renderedImage.getHeight(),4,image.data(),0);
 }
 
-int main(){
+void preftest(){
 	CPUFactory<true> cpuOpenMP;
 	CPUFactory<false> cpuNoOpenMP;
 	CLFactory gpu(1), cpuOpenCL(2);
@@ -60,7 +60,10 @@ int main(){
 	//_testType(double,factory,test,20); \
 	//_testType(Fixed4,factory,test,5); \
 
-	_testPlatform(gpu,"test7");
+
+	_testPlatform(cpuOpenMP,"test4");
+	//_testPlatform(cpuNoOpenMP,"test2");
+	//_testPlatform(cpuOpenCL,"test4");
 }
 
 

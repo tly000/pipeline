@@ -38,6 +38,47 @@ void iterationGradient(
 	colorOutput[3 * bufferIndex + 2] = color.z;
 }
 
+void expSmoothingGradient(
+	int2 globalID,
+	const global float* iterInput,
+	const global Complex* processedPositionImage,
+	global float4* statsImage,
+	global float* colorOutput,
+	uint32_t w,uint32_t h,
+	const global float* gradientA, uint32_t aSize,
+	const global float* gradientB, uint32_t bSize,
+	const global CurveSegment* curveA,uint32_t curveASize,
+	const global CurveSegment* curveB,uint32_t surveBSize) {
+	uint32_t bufferIndex = globalID.x + w * globalID.y;
+	float iter = statsImage[bufferIndex].x;
+	float t = curveSample(curveA,curveASize,iter / (float)MAXITER);
+	float3 color = gradientSample(gradientA,aSize,t);
+	colorOutput[3 * bufferIndex + 0] = color.x;
+	colorOutput[3 * bufferIndex + 1] = color.y;
+	colorOutput[3 * bufferIndex + 2] = color.z;
+}
+
+void trap1Gradient(
+	int2 globalID,
+	const global float* iterInput,
+	const global Complex* processedPositionImage,
+	global float4* statsImage,
+	global float* colorOutput,
+	uint32_t w,uint32_t h,
+	const global float* gradientA, uint32_t aSize,
+	const global float* gradientB, uint32_t bSize,
+	const global CurveSegment* curveA,uint32_t curveASize,
+	const global CurveSegment* curveB,uint32_t surveBSize) {
+	uint32_t bufferIndex = globalID.x + w * globalID.y;
+	float val = statsImage[bufferIndex].x;
+	float t = curveSample(curveA,curveASize,val);
+	float3 color = gradientSample(gradientA,aSize,t);
+	colorOutput[3 * bufferIndex + 0] = color.x;
+	colorOutput[3 * bufferIndex + 1] = color.y;
+	colorOutput[3 * bufferIndex + 2] = color.z;
+}
+
+
 void angleGradient(
 	int2 globalID,
 	const global float* iterInput,
