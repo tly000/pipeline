@@ -2,9 +2,9 @@
 #include "../MandelPipeline/MandelPipeline.h"
 #include "../Platform/CL/CLFactory.h"
 #include "../Platform/CPU/CPUFactory.h"
-#include "../stb_image_write.h"
 #include <fstream>
 #include <future>
+#include "../stb_image_write.h"
 
 /*
  * PipelineUI.cpp
