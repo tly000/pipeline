@@ -12,5 +12,6 @@ template struct Platform<CPUFactory<true>,float>;
 template struct Platform<CPUFactory<true>,double>;
 template struct Platform<CPUFactory<true>,Fixed4>;
 template struct Platform<CPUFactory<true>,Fixed8>;
+template struct Platform<CPUFactory<true>,quadfloat>;
 
 
