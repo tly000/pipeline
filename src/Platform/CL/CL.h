@@ -7,7 +7,7 @@
  *      Author: tly
  */
 
-#define __CL_ENABLE_EXCEPTIONS
+//#define __CL_ENABLE_EXCEPTIONS
 #ifdef __GNUC__
 	//remove compiler warnings in cl.hpp
 

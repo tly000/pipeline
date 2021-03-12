@@ -25,11 +25,11 @@
 #endif
 
 #define DIV_PRECISION 4
-#define USE_TWOS_COMPLEMENT false
+#define USE_TWOS_COMPLEMENT 0
 
 #if !USE_TWOS_COMPLEMENT
 
-	#define SAVE_SIGN_IN_MSB false
+	#define SAVE_SIGN_IN_MSB 0
 
 	#if SAVE_SIGN_IN_MSB
 		typedef struct{
@@ -155,7 +155,7 @@
 		//remove sign to ensure correct calculation
 		fixedSetSign(a,false);
 		fixedSetSign(b,false);
-		uint64_t carry[FixedSize] = {};
+		uint64_t carry[FixedSize] = {0};
 
 		UNROLL
 		for(int i = FixedSize-1; i >= 0; i--){

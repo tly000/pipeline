@@ -19,6 +19,6 @@ kernel void reductionKernel(global read_only float* input,uint32_t w,uint32_t h,
 		uint32_t index = globalID.x + globalID.y * w;
 		val += (float3)(input[3 * index + 0],input[3 * index + 1],input[3 * index + 2]);
 	}
-	uchar4 rgba = { convert_uchar3(255 * val), 255 };
-	output[globalID.x + globalID.y * wo] = rgba;
+	uchar3 rgb = convert_uchar3(255 * val);
+	output[globalID.x + globalID.y * wo] = (uchar4){rgb.x,rgb.y,rgb.z,255};
 }

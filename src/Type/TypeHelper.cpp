@@ -22,7 +22,7 @@ fromFloatSpecialization(Fixed4);
 fromFloatSpecialization(Fixed8);
 fromFloatSpecialization(Fixed16);
 fromFloatSpecialization(longdouble);
-fromFloatSpecialization(quadfloat);
+fromFloatSpecialization(qf128);
 
 template<> float fromString<float>(const std::string& s){
 	static std::locale l = std::locale::global(std::locale());
@@ -246,14 +246,14 @@ template<> std::string toString<float128>(const float128& f) {
 	return (const char*)buf;
 }
 
-template<> quadfloat fromString<quadfloat>(const std::string& s) {
-	return fromFloatToType<quadfloat>(fromString<float>(s));
-}
-
-template<> std::string toString<quadfloat>(const quadfloat& q) {
-	return toString(q.x);
-}
-
 #endif
+
+template<> qf128 fromString<qf128>(const std::string& s) {
+	return qfAssign(fromString<float>(s));
+}
+
+template<> std::string toString<qf128>(const qf128& f) {
+	return toString<float>(f[0]);
+}
 
 #undef stringize

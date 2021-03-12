@@ -14,7 +14,7 @@
 #include "../Kernel/Type/float.h"
 #include "../Kernel/Type/double.h"
 #include "../Kernel/Type/longdouble.h"
-#include "../Kernel/Type/quadfloat.h"
+#include "../Kernel/Type/qf128.h"
 #include <string>
 
 template<typename T> T fromFloatToType(float);
@@ -27,7 +27,7 @@ template<> Fixed4 fromFloatToType<Fixed4>(float);
 template<> Fixed8 fromFloatToType<Fixed8>(float);
 template<> Fixed16 fromFloatToType<Fixed16>(float);
 template<> longdouble fromFloatToType<longdouble>(float);
-template<> quadfloat fromFloatToType<quadfloat>(float);
+template<> qf128 fromFloatToType<qf128>(float);
 
 template<typename T> T fromString(const std::string&);
 
@@ -51,7 +51,7 @@ template<> bool fromString<bool>(const std::string&);
 
 template<> longdouble fromString<longdouble>(const std::string&);
 
-template<> quadfloat fromString<quadfloat>(const std::string&);
+template<> qf128 fromString<qf128>(const std::string&);
 
 template<typename T> std::string toString(const T&);
 
@@ -73,9 +73,9 @@ template<> std::string toString<bool>(const bool&);
 
 template<> std::string toString<Fixed16>(const Fixed16&);
 
-template<> std::string toString<quadfloat>(const quadfloat&);
-
 template<> std::string toString<longdouble>(const longdouble&);
+
+template<> std::string toString<qf128>(const qf128&);
 
 #ifndef __clang__
 #include "../Kernel/Type/float128.h"

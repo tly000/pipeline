@@ -186,36 +186,12 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	ReductionAction<Factory> reductionActionImpl;
 
 	std::map<std::string,std::unique_ptr<CalcActionType>> methodMap;
-	std::map<std::string,std::function<std::unique_ptr<CalcActionType>()>> creationMap{
-		{ "normal", [this]{
-			return std::make_unique<NormalCalculationAction<Factory,T>>(factory,typeName);
-		}},
-		{ "grid", [this]{
-			return std::make_unique<GridbasedCalculationAction<Factory,T>>(factory,typeName);
-		}},
-		{ "successive refinement", [this]{
-			return std::make_unique<SuccessiveRefinementAction<Factory,T>>(factory,typeName);
-		}},
-		{ "Mariani-Silver", [this]{
-			return std::make_unique<MarianiSilverAction<Factory,T>>(factory,typeName);
-		}},
-		{ "successive iteration", [this]{
-			return std::make_unique<SuccessiveIterationAction<Factory,T>>(factory,typeName);
-		}},
-	};
+	std::map<std::string,std::function<std::unique_ptr<CalcActionType>()>> creationMap;
 	FunctionCallAction<Input(
 		KV("calculation method",CalculationMethod)
 	),
 		KV("action",CalcActionType*)
-	> methodSelectionAction{
-		[this](const CalculationMethod& method){
-			std::string s = method.getString();
-			if(!methodMap.count(s)){
-				methodMap.emplace(s,creationMap.at(s)());
-			}
-			return methodMap.at(method.getString()).get();
-		}
-	};
+	> methodSelectionAction;
 
 	MandelPipeline(Factory& factory,std::string typeName):
 	  factory(factory),
@@ -228,7 +204,33 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 	  rgbaImageGenerator(factory),
 	  positionActionImpl(factory,typeName),
 	  coloringActionImpl(factory,typeName),
-	  reductionActionImpl(factory,typeName)
+	  reductionActionImpl(factory,typeName),
+	  creationMap{
+		  { "normal", [this]{
+			  return std::make_unique<NormalCalculationAction<Factory,T>>(this->factory,this->typeName);
+		  }},
+		  { "grid", [this]{
+			  return std::make_unique<GridbasedCalculationAction<Factory,T>>(this->factory,this->typeName);
+		  }},
+		  { "successive refinement", [this]{
+			  return std::make_unique<SuccessiveRefinementAction<Factory,T>>(this->factory,this->typeName);
+		  }},
+		  { "Mariani-Silver", [this]{
+			  return std::make_unique<MarianiSilverAction<Factory,T>>(this->factory,this->typeName);
+		  }},
+		  { "successive iteration", [this]{
+			  return std::make_unique<SuccessiveIterationAction<Factory,T>>(this->factory,this->typeName);
+		  }},
+	  },
+	  methodSelectionAction{
+		  [this](const CalculationMethod& method){
+			  std::string s = method.getString();
+			  if(!methodMap.count(s)){
+				  methodMap.emplace(s,creationMap.at(s)());
+			  }
+			  return methodMap.at(method.getString()).get();
+		  }
+	  }
 	{
 		this->addParam(imageParams);
 		this->addParam(multisampleParams);

@@ -65,7 +65,7 @@ struct Platform : AbstractPlatform{
 		auto& param = this->pipeline->positionParams;
 		auto scale = param.template getValue("scale"_c);
 
-		param.getParam("scale").setValueFromString(toString(tmul(scale,fromFloatToType<decltype(scale)>(factor))));
+		param.setValue("scale"_c, tmul(scale,fromFloatToType<decltype(scale)>(factor)));
 	}
 
 	//translate by x,y in image space
@@ -84,8 +84,8 @@ struct Platform : AbstractPlatform{
 		auto newX = tsub(tmul(X,cosA),tmul(Y,sinA));
 		auto newY = tadd(tmul(X,sinA),tmul(Y,cosA));
 
-		param.getParam("center real").setValueFromString(toString(tadd(offsetReal,newX)));
-		param.getParam("center imag").setValueFromString(toString(tadd(offsetImag,newY)));
+		param.setValue("center real"_c,tadd(offsetReal,newX));
+		param.setValue("center imag"_c,tadd(offsetImag,newY));
 	}
 
 	//translate by x,y in image space
@@ -93,7 +93,7 @@ struct Platform : AbstractPlatform{
 		//get current position and scale.
 		auto& param = this->pipeline->positionParams;
 		float currentAngle = param.getValue("angle"_c);
-		param.getParam("angle").setValueFromString(toString(currentAngle + angle));
+		param.setValue("angle"_c, currentAngle + angle);
 	}
 
 	std::string getName() const {

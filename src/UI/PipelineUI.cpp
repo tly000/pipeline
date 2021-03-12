@@ -2,9 +2,9 @@
 #include "../MandelPipeline/MandelPipeline.h"
 #include "../Platform/CL/CLFactory.h"
 #include "../Platform/CPU/CPUFactory.h"
+#include "../stb_image_write.h"
 #include <fstream>
 #include <future>
-#include "../stb_image_write.h"
 
 /*
  * PipelineUI.cpp
@@ -30,7 +30,7 @@ MainWindow::MainWindow():
 	addPlatform(double,factory,name);
 	addPlatform(Fixed4,factory,name);
 	addPlatform(Fixed8,factory,name);
-	addPlatform(quadfloat,factory,name);
+	addPlatform(qf128,factory,name);
 
 	for(uint32_t i = 0; i < CLFactory::getNumberOfDevices(); i++){
 		CLFactory factory(i);
@@ -41,7 +41,7 @@ MainWindow::MainWindow():
 		addPlatform(double,factory,name);
 		addPlatform(Fixed4,factory,name);
 		addPlatform(Fixed8,factory,name);
-		addPlatform(quadfloat,factory,name);
+		addPlatform(qf128,factory,name);
 	}
 	#undef addPlatform
 
@@ -58,7 +58,7 @@ MainWindow::MainWindow():
 	typeBox.append("double");
 	typeBox.append("Fixed4");
 	typeBox.append("Fixed8");
-	typeBox.append("quadfloat");
+	typeBox.append("qf128");
 	header.pack_start(typeBox);
 
 	auto openButton = Gtk::manage(new Gtk::Button());

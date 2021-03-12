@@ -65,7 +65,7 @@ struct CLFactory{
 		std::string source = fileToString(preprocessedFilePath);
 		cl::Program program(context,source);
 		try{
-			program.build("-cl-mad-enable -cl-fast-relaxed-math");
+			//program.build("-cl-mad-enable -cl-fast-relaxed-math");
 			program.build();
 			_log("[info] success building program \"" << progName << "\".");
 		}catch(const std::exception& err){

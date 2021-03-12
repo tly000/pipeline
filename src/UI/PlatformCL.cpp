@@ -12,5 +12,4 @@ template struct Platform<CLFactory,float>;
 template struct Platform<CLFactory,double>;
 template struct Platform<CLFactory,Fixed4>;
 template struct Platform<CLFactory,Fixed8>;
-template struct Platform<CLFactory,quadfloat>;
 

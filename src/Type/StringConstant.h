@@ -17,9 +17,18 @@ template<char... Chars> struct StringConstant{
 	}
 };
 
+#ifdef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wgnu-string-literal-operator-template"
+#endif
+
 template<typename CharT, CharT... Chars> StringConstant<Chars...> operator"" _c(){
 	return {};
 }
+
+#ifdef __clang__
+#pragma GCC diagnostic pop
+#endif
 
 template<typename A,typename B> struct KeyValuePair{
 	B value;

@@ -120,9 +120,9 @@ struct UIParameterAction : ParameterAction<Types...>, ParamPack{
 		this->template addParams(std::index_sequence_for<Types...>());
 	}
 
-//	template<size_t N> TypedParameter<NthType<N,Types...>>& getParam(){
-//		return static_cast<TypedParameter<NthType<N,Types...>>&>(*this->namedParams.at(N));
-//	}
+	template<size_t N> TypedParameter<NthType<N,Types...>>& getParam(){
+		return static_cast<TypedParameter<NthType<N,Types...>>&>(*this->namedParams.at(N));
+	}
 
 	const std::vector<std::unique_ptr<Parameter>>& getParams(){
 		return this->namedParams;

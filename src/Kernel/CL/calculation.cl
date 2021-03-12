@@ -63,7 +63,7 @@ void doCalculation(const int2 position,
 	};
 	Complex fastZ = z;
 
-	float4 stats = {};
+	float4 stats = {0,0,0,0};
 	unsigned i = 0;
 	while(i < MAXITER && (DISABLE_BAILOUT || tofloat(cabs2(z)) <= BAILOUT)){
 		z = f(z,c);
