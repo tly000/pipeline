@@ -19,11 +19,11 @@ struct ParameterAction : StaticPipelineAction<Input(),Output(Types...)>{
 		return this->template getOutput<N>().getValue();
 	}
 
-	template<typename S,typename T> void setValue(const S&,const T& val){
-		this->template getOutput(S()).setValue(val);
+	template<typename S,typename T> void setValue(const S& s,const T& val){
+		this->getOutput(s).setValue(val);
 	}
-	template<typename S> const auto& getValue(const S&){
-		return this->template getOutput(S()).getValue();
+	template<typename S> const auto& getValue(const S& s){
+		return this->getOutput(s).getValue();
 	}
 protected:
 	void execute(){};

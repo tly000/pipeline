@@ -77,7 +77,7 @@ template<> std::string toString<longdouble>(const longdouble&);
 
 template<> std::string toString<qf128>(const qf128&);
 
-#ifndef __clang__
+#ifdef __GNUC__
 #include "../Kernel/Type/float128.h"
 
 template<> float128 fromFloatToType<float128>(float);

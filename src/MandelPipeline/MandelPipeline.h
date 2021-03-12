@@ -251,7 +251,7 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		imageRangeGenerator.naturalConnect(complexImageGeneratorA);
 		imageRangeGenerator.naturalConnect(complexImageGeneratorB);
 
-		complexImageGeneratorA.template output<0>() >> positionAction.getInput("positionImage"_c);
+		complexImageGeneratorA.template output<0>() >> positionAction.getInput(_C("positionImage"));
 		positionAction.getActionInput().setDefaultValue(&positionActionImpl);
 
 		//connect calcAction
@@ -265,13 +265,13 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 		imageRangeGenerator.naturalConnect(calcAction);
 		imageRangeGenerator.naturalConnect(floatImageGenerator);
 		imageRangeGenerator.naturalConnect(float4ImageGenerator);
-		floatImageGenerator.template output<0>() >> calcAction.getInput("iterationImage"_c);
-		float4ImageGenerator.template output<0>() >> calcAction.getInput("statsImage"_c);
-		complexImageGeneratorB.template output<0>() >> calcAction.getInput("processedPositionImage"_c);
+		floatImageGenerator.template output<0>() >> calcAction.getInput(_C("iterationImage"));
+		float4ImageGenerator.template output<0>() >> calcAction.getInput(_C("statsImage"));
+		complexImageGeneratorB.template output<0>() >> calcAction.getInput(_C("processedPositionImage"));
 
 		calcParams.naturalConnect(methodSelectionAction);
 		methodSelectionAction.naturalConnect(calcAction);
-		calcAction.getInput("reset calculation"_c).setDefaultValue(true);
+		calcAction.getInput(_C("reset calculation")).setDefaultValue(true);
 
 		//connect coloringAction
 		algoParams.naturalConnect(coloringAction);
@@ -281,7 +281,7 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 
 		imageRangeGenerator.naturalConnect(coloringAction);
 		imageRangeGenerator.naturalConnect(float3ImageGenerator);
-		float3ImageGenerator.template output<0>() >> coloringAction.getInput("coloredImage"_c);
+		float3ImageGenerator.template output<0>() >> coloringAction.getInput(_C("coloredImage"));
 		coloringAction.getActionInput().setDefaultValue(&coloringActionImpl);
 
 		//connect reductionAction
@@ -290,48 +290,48 @@ template<typename Factory,typename T> struct MandelPipeline : PipelineWrapper{
 
 		reducedImageRangeGenerator.naturalConnect(reductionAction);
 		reducedImageRangeGenerator.naturalConnect(rgbaImageGenerator);
-		rgbaImageGenerator.template output<0>() >> reductionAction.getInput("reducedImage"_c);
+		rgbaImageGenerator.template output<0>() >> reductionAction.getInput(_C("reducedImage"));
 		reductionAction.getActionInput().setDefaultValue(&reductionActionImpl);
 
 		//set default values:
-		imageParams.setValue("width"_c,512);
-		imageParams.setValue("height"_c,512);
+		imageParams.setValue(_C("width"),512);
+		imageParams.setValue(_C("height"),512);
 
-		multisampleParams.setValue("enable multisampling"_c,false);
-		multisampleParams.setValue("size"_c,2);
-		multisampleParams.setValue("pattern"_c,"UNIFORM_GRID");
+		multisampleParams.setValue(_C("enable multisampling"),false);
+		multisampleParams.setValue(_C("size"),2);
+		multisampleParams.setValue(_C("pattern"),"UNIFORM_GRID");
 
-		positionParams.setValue("center real"_c,fromString<T>("-0.5"));
-		positionParams.setValue("center imag"_c,fromString<T>("0"));
-		positionParams.setValue("scale"_c,fromString<T>("2"));
-		positionParams.setValue("angle"_c,0);
+		positionParams.setValue(_C("center real"),fromString<T>("-0.5"));
+		positionParams.setValue(_C("center imag"),fromString<T>("0"));
+		positionParams.setValue(_C("scale"),fromString<T>("2"));
+		positionParams.setValue(_C("angle"),0);
 
-		calcParams.setValue("formula"_c,"z*z + c");
-		calcParams.setValue("enable juliamode"_c,false);
-		calcParams.setValue("julia c real"_c,fromString<T>("0"));
-		calcParams.setValue("julia c imag"_c,fromString<T>("0"));
-		calcParams.setValue("calculation method"_c,"normal");
-		calcParams.setValue("visualize steps"_c,false);
+		calcParams.setValue(_C("formula"),"z*z + c");
+		calcParams.setValue(_C("enable juliamode"),false);
+		calcParams.setValue(_C("julia c real"),fromString<T>("0"));
+		calcParams.setValue(_C("julia c imag"),fromString<T>("0"));
+		calcParams.setValue(_C("calculation method"),"normal");
+		calcParams.setValue(_C("visualize steps"),false);
 
-		algoParams.setValue("iterations"_c,64);
-		algoParams.setValue("bailout"_c,16);
-		algoParams.setValue("disable bailout"_c,false);
-		algoParams.setValue("cycle detection"_c,false);
-		algoParams.setValue("smooth iteration count"_c,false);
-		algoParams.setValue("leading polynomial exponent"_c,2);
-		algoParams.setValue("visualize cycle detection"_c,false);
-		algoParams.setValue("statistic function"_c,"noStats");
+		algoParams.setValue(_C("iterations"),64);
+		algoParams.setValue(_C("bailout"),16);
+		algoParams.setValue(_C("disable bailout"),false);
+		algoParams.setValue(_C("cycle detection"),false);
+		algoParams.setValue(_C("smooth iteration count"),false);
+		algoParams.setValue(_C("leading polynomial exponent"),2);
+		algoParams.setValue(_C("visualize cycle detection"),false);
+		algoParams.setValue(_C("statistic function"),"noStats");
 
-		colorParams.setValue("outer gradient"_c,Gradient{{0.0f,0.0f,0.0f},{0.0f,0.7f,1.0f}});
-		colorParams.setValue("outer curve"_c,Curve{CurveSegment{
+		colorParams.setValue(_C("outer gradient"),Gradient{{0.0f,0.0f,0.0f},{0.0f,0.7f,1.0f}});
+		colorParams.setValue(_C("outer curve"),Curve{CurveSegment{
 			{0,0},{1,1},1,1
 		}});
-		colorParams.setValue("outer coloring method"_c,"iterationGradient");
-		colorParams.setValue("inner gradient"_c,Gradient{{0.0f,0.0f,0.0f}});
-		colorParams.setValue("inner curve"_c,Curve{CurveSegment{
+		colorParams.setValue(_C("outer coloring method"),"iterationGradient");
+		colorParams.setValue(_C("inner gradient"),Gradient{{0.0f,0.0f,0.0f}});
+		colorParams.setValue(_C("inner curve"),Curve{CurveSegment{
 			{0,0},{1,1},1,1
 		}});
-		colorParams.setValue("inner coloring method"_c,"flatColor");
+		colorParams.setValue(_C("inner coloring method"),"flatColor");
 	}
 
 	void run(){

@@ -22,36 +22,36 @@ template<typename Factory,typename T> struct MarianiSilverAction :
 	   filterKernelGenerator(f),
 	   buildBufferActionGenerator(f),
 	   atomicIndexBuffer(f.template createBuffer<uint32_t>(2)){
-		this->kernelGeneratorAction.getInput("kernelName"_c).setDefaultValue("marianiSilverKernel");
+		this->kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("marianiSilverKernel");
 
 		this->definesAction.naturalConnect(this->filterKernelGenerator);
-		this->filterKernelGenerator.getInput("kernelName"_c).setDefaultValue("marianiSilverFilter");
-		this->filterKernelGenerator.getInput("programName"_c).setDefaultValue("calculation");
+		this->filterKernelGenerator.getInput(_C("kernelName")).setDefaultValue("marianiSilverFilter");
+		this->filterKernelGenerator.getInput(_C("programName")).setDefaultValue("calculation");
 		this->filterKernelGenerator.naturalConnect(filterKernelAction);
 
-		this->buildBufferActionGenerator.getInput("programName"_c).setDefaultValue("calculation");
-		this->buildBufferActionGenerator.getInput("kernelName"_c).setDefaultValue("marianiSilverBuildBuffers");
+		this->buildBufferActionGenerator.getInput(_C("programName")).setDefaultValue("calculation");
+		this->buildBufferActionGenerator.getInput(_C("kernelName")).setDefaultValue("marianiSilverBuildBuffers");
 		this->definesAction.naturalConnect(this->buildBufferActionGenerator);
 		this->buildBufferActionGenerator.naturalConnect(this->buildBufferAction);
 
-		this->delegateInput("imageRange"_c, bufferRangeAction.getInput("imageRange"_c));
-		this->delegateInput("iterationImage"_c,filterKernelAction.getInput("iterationImage"_c));
+		this->delegateInput(_C("imageRange"), bufferRangeAction.getInput(_C("imageRange")));
+		this->delegateInput(_C("iterationImage"),filterKernelAction.getInput(_C("iterationImage")));
 
 		this->bufferRangeAction.naturalConnect(this->positionBufferGenerator);
 		this->bufferRangeAction.naturalConnect(this->rectangleBufferGenerator1);
 		this->bufferRangeAction.naturalConnect(this->rectangleBufferGenerator2);
 		this->bufferRangeAction.naturalConnect(this->filterBufferGenerator);
 
-		this->filterBufferGenerator.template output<0>() >> this->filterKernelAction.getInput("filterBuffer"_c);
-		this->filterBufferGenerator.template output<0>() >> this->buildBufferAction.getInput("filterBuffer"_c);
-		this->positionBufferGenerator.template output<0>() >> this->buildBufferAction.getInput("positionBuffer"_c);
-		this->positionBufferGenerator.template output<0>() >> this->kernelAction.getInput("positionBuffer"_c);
+		this->filterBufferGenerator.template output<0>() >> this->filterKernelAction.getInput(_C("filterBuffer"));
+		this->filterBufferGenerator.template output<0>() >> this->buildBufferAction.getInput(_C("filterBuffer"));
+		this->positionBufferGenerator.template output<0>() >> this->buildBufferAction.getInput(_C("positionBuffer"));
+		this->positionBufferGenerator.template output<0>() >> this->kernelAction.getInput(_C("positionBuffer"));
 	}
 protected:
 	Factory& factory;
 
 	struct Rectangle{
-		int x,y,w,h;
+		uint32_t x,y,w,h;
 	};
 	using RectangleBuffer = typename Factory::template Buffer<Rectangle>;
 
@@ -95,7 +95,7 @@ protected:
 	}
 
 	bool step(){
-		Range imageRange = this->getInput("imageRange"_c).getValue();
+		Range imageRange = this->getInput(_C("imageRange")).getValue();
 		if(currentStepSize == -1){
 			this->currentStepSize = min(imageRange.x,imageRange.y);
 			std::vector<Vec<2,uint32_t>> currentPositionVector;
@@ -138,22 +138,22 @@ protected:
 			auto& positionBuffer = this->positionBufferGenerator.template getOutput<0>().getValue();
 			positionBuffer.copyFromBuffer(positionVector,0,positionVector.size());
 
-			this->kernelAction.getInput("globalSize"_c).setDefaultValue(Range{positionVector.size(),1,1});
+			this->kernelAction.getInput(_C("globalSize")).setDefaultValue(Range{uint32_t(positionVector.size()),1,1});
 			this->kernelAction.run();
 			return true;
 		}else{
-			this->kernelAction.getInput("globalSize"_c).setDefaultValue(Range{this->currentRange,1,1});
+			this->kernelAction.getInput(_C("globalSize")).setDefaultValue(Range{this->currentRange,1,1});
 			this->kernelAction.run();
 
-			this->filterKernelAction.getInput("rectangleBuffer"_c).setDefaultValue(*this->rectBuffer1);
-			this->filterKernelAction.getInput("globalSize"_c).setDefaultValue(Range{this->rectangleCount,1,1});
+			this->filterKernelAction.getInput(_C("rectangleBuffer")).setDefaultValue(*this->rectBuffer1);
+			this->filterKernelAction.getInput(_C("globalSize")).setDefaultValue(Range{this->rectangleCount,1,1});
 			this->filterKernelAction.run();
 
 			this->atomicIndexBuffer.copyFromBuffer({0,0},0,2);
-			this->buildBufferAction.getInput("rectangleBuffer"_c).setDefaultValue(*this->rectBuffer1);
-			this->buildBufferAction.getInput("newRectangleBuffer"_c).setDefaultValue(*this->rectBuffer2);
-			this->buildBufferAction.getInput("atomicIndex"_c).setDefaultValue(this->atomicIndexBuffer);
-			this->buildBufferAction.getInput("globalSize"_c).setDefaultValue(Range{this->rectangleCount,1,1});
+			this->buildBufferAction.getInput(_C("rectangleBuffer")).setDefaultValue(*this->rectBuffer1);
+			this->buildBufferAction.getInput(_C("newRectangleBuffer")).setDefaultValue(*this->rectBuffer2);
+			this->buildBufferAction.getInput(_C("atomicIndex")).setDefaultValue(this->atomicIndexBuffer);
+			this->buildBufferAction.getInput(_C("globalSize")).setDefaultValue(Range{this->rectangleCount,1,1});
 			this->buildBufferAction.run();
 
 			std::vector<uint32_t> atomicIndexVector;

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <array>
 
 /*
  * MapStruct.h
@@ -7,35 +8,28 @@
  *  Created on: 31.05.2016
  *      Author: tly
  */
-
-template<char... Chars> struct StringConstant{
-	static std::string toString() {
-		const char arr[] = {
-			Chars...
-		};
-		return std::string(arr,sizeof(arr));
-	}
-};
-
-#ifdef __clang__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wgnu-string-literal-operator-template"
-#endif
-
-template<typename CharT, CharT... Chars> StringConstant<Chars...> operator"" _c(){
-	return {};
+namespace detail {
+    template<size_t N> constexpr std::array<char, N> make_array(const char (&str)[N]) {
+        std::array<char, N> arr;
+        std::copy_n(str, N, arr.data());
+        return arr;
+    }
 }
 
-#ifdef __clang__
-#pragma GCC diagnostic pop
-#endif
-
-template<typename A,typename B> struct KeyValuePair{
-	B value;
-
-	std::string key() const {
-		return A::toString();
-	}
+template<auto Str> struct StringConstant{
+    static std::string toString() {
+        return Str.data();
+    }
 };
 
-#define KV(k,...) KeyValuePair<decltype(k##_c), __VA_ARGS__ >
+template<typename A, typename B>
+struct KeyValuePair {
+    B value;
+
+    std::string key() const { return A::toString(); }
+};
+
+#define STR_CONST_TYPE(s) StringConstant<detail::make_array(s)>
+#define _C(s) STR_CONST_TYPE(s)()
+
+#define KV(k, ...) KeyValuePair<STR_CONST_TYPE(k), __VA_ARGS__>

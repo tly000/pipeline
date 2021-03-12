@@ -117,7 +117,7 @@ template<typename... Types>
 struct UIParameterAction : ParameterAction<Types...>, ParamPack{
 	UIParameterAction(std::string paramPackName)
 		:ParamPack(paramPackName){
-		this->template addParams(std::index_sequence_for<Types...>());
+		this->addParams(std::index_sequence_for<Types...>());
 	}
 
 	template<size_t N> TypedParameter<NthType<N,Types...>>& getParam(){
@@ -129,7 +129,7 @@ struct UIParameterAction : ParameterAction<Types...>, ParamPack{
 	}
 protected:
 	template<size_t... I> void addParams(std::index_sequence<I...>){
-		variadicForEach(this->template addParam(this->template getOutput<I>()));
+		variadicForEach(this->addParam(this->template getOutput<I>()));
 	}
 };
 

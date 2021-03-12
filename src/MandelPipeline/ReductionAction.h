@@ -26,21 +26,21 @@ template<typename Factory> struct ReductionAction : BoxedAction<Input(
 
 	ReductionAction(Factory& factory,std::string typeName)
 	  :kernelGeneratorAction(factory){
-		this->template delegateInput("enable multisampling"_c, definesAction.template getInput("MULTISAMPLING_ENABLED"_c));
-		this->template delegateInput("size"_c,definesAction.template getInput("MULTISAMPLING_SIZE"_c));
+		this->delegateInput(_C("enable multisampling"), definesAction.getInput(_C("MULTISAMPLING_ENABLED")));
+		this->delegateInput(_C("size"),definesAction.getInput(_C("MULTISAMPLING_SIZE")));
 
-		definesAction.getInput("Type"_c).setDefaultValue(typeName);
+		definesAction.getInput(_C("Type")).setDefaultValue(typeName);
 		definesAction.naturalConnect(kernelGeneratorAction);
-		kernelGeneratorAction.getInput("programName"_c).setDefaultValue("reduction");
-		kernelGeneratorAction.getInput("kernelName"_c).setDefaultValue("reductionKernel");
+		kernelGeneratorAction.getInput(_C("programName")).setDefaultValue("reduction");
+		kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("reductionKernel");
 
 		kernelGeneratorAction.naturalConnect(kernelAction);
 
-		this->template delegateInput("coloredImage"_c, kernelAction.getInput("coloredImage"_c));
-		this->template delegateInput("reducedImage"_c, kernelAction.getInput("reducedImage"_c));
-		this->template delegateInput("imageRange"_c, kernelAction.getInput("globalSize"_c));
+		this->delegateInput(_C("coloredImage"), kernelAction.getInput(_C("coloredImage")));
+		this->delegateInput(_C("reducedImage"), kernelAction.getInput(_C("reducedImage")));
+		this->delegateInput(_C("imageRange"), kernelAction.getInput(_C("globalSize")));
 
-		this->template delegateOutput("reducedImage"_c,kernelAction.getOutput("reducedImage"_c));
+		this->delegateOutput(_C("reducedImage"),kernelAction.getOutput(_C("reducedImage")));
 	}
 
 	KernelDefinesAction<KV("Type",std::string),KV("MULTISAMPLING_ENABLED",bool),KV("MULTISAMPLING_SIZE",uint32_t)> definesAction;

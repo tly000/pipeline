@@ -1,0 +1,47 @@
+{
+	"calculation" : {
+		"formula" : "abs(re(z)*re(z) - im(z) * im(z)) + i*(re(z)*im(z) + re(z)*im(z)) + c",
+		"enable juliamode" : "true",
+		"julia c real" : "-1.335266352",
+		"julia c imag" : "-0.121490881",
+		"calculation method" : "normal",
+		"visualize steps" : "false"
+	},
+	"coloring" : {
+		"smooth iteration count" : "true",
+		"leading polynomial exponent" : "2.000000000",
+		"outer gradient" : "[
+[0, 0, 0],
+[0.203922, 0.396078, 0.643137],
+[1, 0, 0.324208],
+[0.933333, 0.933333, 0.92549]
+]",
+		"outer coloring method" : "iterationGradient",
+		"inner gradient" : "[
+[0.952941, 0.952941, 0.952941]
+]",
+		"inner coloring method" : "lengthGradient"
+	},
+	"escape time algorithm" : {
+		"iterations" : "70",
+		"bailout" : "16.000000000",
+		"disable bailout" : "false",
+		"cycle detection" : "false",
+		"visualize cycle detection" : "false"
+	},
+	"image" : {
+		"width" : "1920",
+		"height" : "1080"
+	},
+	"multisampling" : {
+		"enable multisampling" : "true",
+		"size" : "4",
+		"pattern" : "UNIFORM_GRID"
+	},
+	"position" : {
+		"center real" : "-0.009190546",
+		"center imag" : "-0.000575169",
+		"scale" : "0.049919222",
+		"angle" : "0.000000000"
+	}
+}

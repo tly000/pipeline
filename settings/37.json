@@ -1,0 +1,20 @@
+{
+	"general" : {
+		"formula" : "z*z + c",
+		"julia mode" : "false",
+		"julia c real" : "0.0",
+		"julia c imag" : "0.0"
+	},
+	"iteration" : {
+		"iterations" : "6400",
+		"bailout" : "4.000000000",
+		"cycle detection" : "false",
+		"visualize cycle detection" : "false"
+	},
+	"position" : {
+		"real position" : "0.3994960006412856508502146163",
+		"imag position" : "0.1952944617959473060236589004",
+		"scale" : "0.0000000000000000000035451805",
+		"rotation" : "0.000000000"
+	}
+}

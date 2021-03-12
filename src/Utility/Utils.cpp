@@ -31,8 +31,6 @@ std::string demangle(const std::type_info& info){
 	return demangle(info.name());
 }
 
-#include <cxxabi.h>
-
 std::string loadSourceFileWithHeaders(const std::string& fileName) {
 	std::set<std::string> alreadyLoadedFiles;
 	return loadSourceFileWithHeaders(fileName,alreadyLoadedFiles);
@@ -80,6 +78,9 @@ std::string loadSourceFileWithHeaders(
 	return sourceFile;
 }
 
+#if defined(__GNUC__) or defined(__clang__)
+#include <cxxabi.h>
+
 std::string demangle(const char* mangledName){
 	size_t length = 256;
 	int error;
@@ -93,6 +94,16 @@ std::string demangle(const char* mangledName){
 		return std::string((const char*) demangledName.get());
 	}
 }
+#else
+std::string demangle(const char* mangledName){
+    return mangledName;
+}
+#endif
+
+#ifdef _WIN32
+#define popen _popen
+#define pclose _pclose
+#endif
 
 //http://stackoverflow.com/questions/478898/how-to-execute-a-command-and-get-output-of-command-within-c-using-posix
 std::pair<int,std::string> systemCommand(const std::string& command) {

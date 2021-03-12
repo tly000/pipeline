@@ -23,27 +23,27 @@ template<typename Factory,typename T> struct SuccessiveIterationAction :
 	   positionBufferGenerator2(f),
 	   filterBufferGenerator(f),
 	   atomicIndexBuffer(f.template createBuffer<uint32_t>(1)){
-		this->kernelGeneratorAction.getInput("kernelName"_c).setDefaultValue("successiveIterationKernel");
+		this->kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("successiveIterationKernel");
 
-		this->finalActionGenerator.getInput("programName"_c).setDefaultValue("calculation");
-		this->finalActionGenerator.getInput("kernelName"_c).setDefaultValue("successiveIterationFill");
+		this->finalActionGenerator.getInput(_C("programName")).setDefaultValue("calculation");
+		this->finalActionGenerator.getInput(_C("kernelName")).setDefaultValue("successiveIterationFill");
 		this->definesAction.naturalConnect(this->finalActionGenerator);
 		this->finalActionGenerator.naturalConnect(this->finalAction);
 
-		this->buildBufferActionGenerator.getInput("programName"_c).setDefaultValue("calculation");
-		this->buildBufferActionGenerator.getInput("kernelName"_c).setDefaultValue("successiveIterationBuildPositionBuffer");
+		this->buildBufferActionGenerator.getInput(_C("programName")).setDefaultValue("calculation");
+		this->buildBufferActionGenerator.getInput(_C("kernelName")).setDefaultValue("successiveIterationBuildPositionBuffer");
 		this->definesAction.naturalConnect(this->buildBufferActionGenerator);
 		this->buildBufferActionGenerator.naturalConnect(this->buildBufferAction);
 
-		this->delegateInput("imageRange"_c, bufferRangeAction.getInput("imageRange"_c));
-		this->delegateInput("iterationImage"_c, finalAction.getInput("iterationImage"_c));
+		this->delegateInput(_C("imageRange"), bufferRangeAction.getInput(_C("imageRange")));
+		this->delegateInput(_C("iterationImage"), finalAction.getInput(_C("iterationImage")));
 
 		this->bufferRangeAction.naturalConnect(this->positionBufferGenerator1);
 		this->bufferRangeAction.naturalConnect(this->positionBufferGenerator2);
 		this->bufferRangeAction.naturalConnect(this->filterBufferGenerator);
 
-		this->filterBufferGenerator.template output<0>() >> this->kernelAction.getInput("filterBuffer"_c);
-		this->filterBufferGenerator.template output<0>() >> this->buildBufferAction.getInput("filterBuffer"_c);
+		this->filterBufferGenerator.template output<0>() >> this->kernelAction.getInput(_C("filterBuffer"));
+		this->filterBufferGenerator.template output<0>() >> this->buildBufferAction.getInput(_C("filterBuffer"));
 	}
 protected:
 	Factory& factory;
@@ -86,8 +86,8 @@ protected:
 	}
 
 	bool step(){
-		Range imageRange = this->getInput("imageRange"_c).getValue();
-		uint32_t maxIter = this->getInput("iterations"_c).getValue();
+		Range imageRange = this->getInput(_C("imageRange")).getValue();
+		uint32_t maxIter = this->getInput(_C("iterations")).getValue();
 
 		do{
 			if(currentIter == 0){
@@ -108,16 +108,16 @@ protected:
 				this->positionBuffer1->copyFromBuffer(currentPositionVector,0,currentRange);
 			}
 
-			this->kernelAction.getInput("positionBuffer"_c).setDefaultValue(*this->positionBuffer1);
-			this->kernelAction.getInput("first"_c).setDefaultValue(currentIter == 0);
-			this->kernelAction.getInput("globalSize"_c).setDefaultValue(Range{currentRange,1,1});
+			this->kernelAction.getInput(_C("positionBuffer")).setDefaultValue(*this->positionBuffer1);
+			this->kernelAction.getInput(_C("first")).setDefaultValue(currentIter == 0);
+			this->kernelAction.getInput(_C("globalSize")).setDefaultValue(Range{currentRange,1,1});
 			this->kernelAction.run();
 
 			this->atomicIndexBuffer.copyFromBuffer({0},0,1);
-			this->buildBufferAction.getInput("positionBuffer"_c).setDefaultValue(*this->positionBuffer1);
-			this->buildBufferAction.getInput("newPositionBuffer"_c).setDefaultValue(*this->positionBuffer2);
-			this->buildBufferAction.getInput("atomicIndex"_c).setDefaultValue(this->atomicIndexBuffer);
-			this->buildBufferAction.getInput("globalSize"_c).setDefaultValue(Range{currentRange,1,1});
+			this->buildBufferAction.getInput(_C("positionBuffer")).setDefaultValue(*this->positionBuffer1);
+			this->buildBufferAction.getInput(_C("newPositionBuffer")).setDefaultValue(*this->positionBuffer2);
+			this->buildBufferAction.getInput(_C("atomicIndex")).setDefaultValue(this->atomicIndexBuffer);
+			this->buildBufferAction.getInput(_C("globalSize")).setDefaultValue(Range{currentRange,1,1});
 			this->buildBufferAction.run();
 
 			std::vector<uint32_t> atomicIndexVector;
@@ -130,8 +130,8 @@ protected:
 			if(newRange == 0){
 				return true;
 			}else if(decreasingPointCount && currentRange - newRange < 10){
-				this->finalAction.getInput("positionBuffer"_c).setDefaultValue(*this->positionBuffer1);
-				this->finalAction.getInput("globalSize"_c).setDefaultValue(Range{newRange,1,1});
+				this->finalAction.getInput(_C("positionBuffer")).setDefaultValue(*this->positionBuffer1);
+				this->finalAction.getInput(_C("globalSize")).setDefaultValue(Range{newRange,1,1});
 				this->finalAction.run();
 				return true;
 			}

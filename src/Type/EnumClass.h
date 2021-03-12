@@ -2,6 +2,7 @@
 #include "../Utility/VariadicUtils.h"
 #include "TypeHelper.h"
 #include <vector>
+#include <stdexcept>
 
 /*
  * EnumClass.h

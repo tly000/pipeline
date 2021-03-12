@@ -17,7 +17,7 @@ template<typename... Inputs, typename... Outputs> struct SlotAction<Input(Inputs
 	),Output(Outputs...)>{
 
 	auto& getActionInput(){
-		return this->getInput("action"_c);
+		return this->getInput(_C("action"));
 	}
 
 	using SlotActionType = StaticPipelineAction<Input(Inputs...),Output(Outputs...)>;

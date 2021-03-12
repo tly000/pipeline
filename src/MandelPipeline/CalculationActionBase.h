@@ -52,35 +52,35 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 	)>{
 		CalculationActionBase(Factory& factory,std::string typeName)
 	  :kernelGeneratorAction(factory){
-		this->template delegateInput("processed formula"_c, definesAction.getInput("FORMULA"_c));
-		this->template delegateInput("enable juliamode"_c, definesAction.getInput("JULIAMODE"_c));
-		this->template delegateInput("iterations"_c, definesAction.getInput("MAXITER"_c));
-		this->template delegateInput("bailout"_c, definesAction.getInput("BAILOUT"_c));
-		this->template delegateInput("disable bailout"_c, definesAction.getInput("DISABLE_BAILOUT"_c));
-		this->template delegateInput("cycle detection"_c, definesAction.template getInput("CYCLE_DETECTION"_c));
-		this->template delegateInput("visualize cycle detection"_c, definesAction.getInput("CYCLE_DETECTION_VISUALIZE"_c));
-		this->template delegateInput("smooth iteration count"_c, definesAction.getInput("SMOOTH_MODE"_c));
-		this->template delegateInput("leading polynomial exponent"_c, definesAction.getInput("SMOOTH_EXP"_c));
-		this->template delegateInput("statistic function"_c, definesAction.getInput("STAT_FUNCTION"_c));
+		this->delegateInput(_C("processed formula"), definesAction.getInput(_C("FORMULA")));
+		this->delegateInput(_C("enable juliamode"), definesAction.getInput(_C("JULIAMODE")));
+		this->delegateInput(_C("iterations"), definesAction.getInput(_C("MAXITER")));
+		this->delegateInput(_C("bailout"), definesAction.getInput(_C("BAILOUT")));
+		this->delegateInput(_C("disable bailout"), definesAction.getInput(_C("DISABLE_BAILOUT")));
+		this->delegateInput(_C("cycle detection"), definesAction.getInput(_C("CYCLE_DETECTION")));
+		this->delegateInput(_C("visualize cycle detection"), definesAction.getInput(_C("CYCLE_DETECTION_VISUALIZE")));
+		this->delegateInput(_C("smooth iteration count"), definesAction.getInput(_C("SMOOTH_MODE")));
+		this->delegateInput(_C("leading polynomial exponent"), definesAction.getInput(_C("SMOOTH_EXP")));
+		this->delegateInput(_C("statistic function"), definesAction.getInput(_C("STAT_FUNCTION")));
 
-		definesAction.getInput("Type"_c).setDefaultValue(typeName);
+		definesAction.getInput(_C("Type")).setDefaultValue(typeName);
 		definesAction.naturalConnect(kernelGeneratorAction);
-		kernelGeneratorAction.getInput("programName"_c).setDefaultValue("calculation");
-		kernelGeneratorAction.getInput("kernelName"_c).setDefaultValue("mandelbrotKernel");
+		kernelGeneratorAction.getInput(_C("programName")).setDefaultValue("calculation");
+		kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("mandelbrotKernel");
 
 		kernelGeneratorAction.naturalConnect(kernelAction);
 
-		this->template delegateInput("positionImage"_c,kernelAction.getInput("positionImage"_c));
-		this->template delegateInput("iterationImage"_c, kernelAction.getInput("iterationImage"_c));
-		this->template delegateInput("processedPositionImage"_c, kernelAction.getInput("processedPositionImage"_c));
-		this->template delegateInput("statsImage"_c, kernelAction.getInput("statsImage"_c));
-		this->template delegateInput("julia c real"_c, kernelAction.getInput("julia c real"_c));
-		this->template delegateInput("julia c imag"_c, kernelAction.getInput("julia c imag"_c));
-		this->template delegateInput("imageRange"_c, kernelAction.getInput("globalSize"_c));
+		this->delegateInput(_C("positionImage"),kernelAction.getInput(_C("positionImage")));
+		this->delegateInput(_C("iterationImage"), kernelAction.getInput(_C("iterationImage")));
+		this->delegateInput(_C("processedPositionImage"), kernelAction.getInput(_C("processedPositionImage")));
+		this->delegateInput(_C("statsImage"), kernelAction.getInput(_C("statsImage")));
+		this->delegateInput(_C("julia c real"), kernelAction.getInput(_C("julia c real")));
+		this->delegateInput(_C("julia c imag"), kernelAction.getInput(_C("julia c imag")));
+		this->delegateInput(_C("imageRange"), kernelAction.getInput(_C("globalSize")));
 
-		this->template delegateOutput("iterationImage"_c, kernelAction.getOutput("iterationImage"_c));
-		this->template delegateOutput("processedPositionImage"_c, kernelAction.getOutput("processedPositionImage"_c));
-		this->template delegateOutput("statsImage"_c, kernelAction.getOutput("statsImage"_c));
+		this->delegateOutput(_C("iterationImage"), kernelAction.getOutput(_C("iterationImage")));
+		this->delegateOutput(_C("processedPositionImage"), kernelAction.getOutput(_C("processedPositionImage")));
+		this->delegateOutput(_C("statsImage"), kernelAction.getOutput(_C("statsImage")));
 	}
 
 	KernelDefinesAction<
@@ -112,23 +112,23 @@ protected:
 	virtual void reset()= 0;
 
 	void executeImpl(){
-		if(this->getInput("visualize steps"_c).getValue()){
-			if(this->getInput("reset calculation"_c).getValue()){
+		if(this->getInput(_C("visualize steps")).getValue()){
+			if(this->getInput(_C("reset calculation")).getValue()){
 				this->reset();
 			}
 			Timer t;
 			t.start();
-			this->getOutput("done"_c).setValue(this->step());
+			this->getOutput(_C("done")).setValue(this->step());
 			auto time = t.stop();
-			this->getOutput("time"_c).setValue(time);
+			this->getOutput(_C("time")).setValue(time);
 		}else{
 			this->reset();
 			Timer t;
 			t.start();
 			while(!this->step());
 			auto time = t.stop();
-			this->getOutput("time"_c).setValue(time);
-			this->getOutput("done"_c).setValue(true);
+			this->getOutput(_C("time")).setValue(time);
+			this->getOutput(_C("done")).setValue(true);
 		}
 	}
 };

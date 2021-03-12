@@ -1,5 +1,5 @@
 #include "Parser.h"
-
+#include <cctype>
 /*
  * Parser.cpp
  *

@@ -23,7 +23,7 @@ template<int A,int B> struct IntPair{};
 template<typename...> struct StaticPipelineAction;
 
 template<typename T> struct UnpackType{
-	using key_type = decltype("unnamed"_c);
+	using key_type = STR_CONST_TYPE("unnamed");
 	using value_type = T;
 };
 
@@ -90,7 +90,7 @@ private:
 	template<typename Action,typename S>
 	std::enable_if_t<Action::template HasInput<S>::value> naturalConnectImpl(Action& a,const S&){
 		if(S::toString() != "unnamed"){
-			this->template getOutput(S()) >> a.getInput(S());
+			this->getOutput(S()) >> a.getInput(S());
 		}
 	}
 

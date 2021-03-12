@@ -22,7 +22,10 @@ typedef unsigned long uint64_t;
 #include <math.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <algorithm>
 #include "../../Type/Vec.h"
+
+using std::clamp;
 
 using float3 = Vec<3,float>;
 using float4 = Vec<4,float>;
@@ -34,10 +37,6 @@ struct float2 {
 
 template<typename T> T mix(T a,T b,T t){
 	return (1-t) * a + t * b;
-}
-
-template<typename T> T clamp(T a,T lo,T hi){
-	return a < lo ? lo : a > hi ? hi : a;
 }
 
 #else

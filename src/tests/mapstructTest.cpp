@@ -12,8 +12,8 @@
 #include <iostream>
 
 EnumClass(TestEnum,
-	"A"_c,
-	"B"_c
+          _C("A"),
+          _C("B")
 );
 
 template<typename S,typename... Strings> int indexOf(S,Strings...){
@@ -26,7 +26,7 @@ symbolexport void mapstructTest(){
 		KV("element2", float),
 		KV("test", std::string)
 	> testMap;
-	testMap.at("element1"_c).value = 77;
+	testMap.at(_C("element1")).value = 77;
 
 	testMap.forEach([](auto& v){
 		std::cout << v.key() << std::endl;

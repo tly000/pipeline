@@ -192,8 +192,8 @@
 		a = fabs(a);
 
 		Fixed f = {{
-			[0] = (uint32_t)(a),
-			[1] = (uint32_t)(fmod(a,1) * ((uint64_t)(1) << 32))
+			(uint32_t)(a),
+			(uint32_t)(fmod(a,1) * ((uint64_t)(1) << 32))
 		}};
 		fixedSetSign(f,negate);
 

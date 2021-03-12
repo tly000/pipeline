@@ -18,15 +18,15 @@ template<typename Factory,typename... Inputs> struct KernelGeneratorAction
 	)>{
 
 	KernelGeneratorAction(Factory factory) : factory(factory){
-		this->getInput("defines"_c).setDefaultValue("");
+		this->getInput(_C("defines")).setDefaultValue("");
 	}
 protected:
 	Factory factory;
 
 	void executeImpl(){
-		std::string progName = this->getInput("programName"_c).getValue();
-		std::string kernelName = this->getInput("kernelName"_c).getValue();
-		std::string kernelParams = this->getInput("defines"_c).getValue();
+		std::string progName = this->getInput(_C("programName")).getValue();
+		std::string kernelName = this->getInput(_C("kernelName")).getValue();
+		std::string kernelParams = this->getInput(_C("defines")).getValue();
 		this->template getOutput<0>().setValue(factory.template createKernel<Val<Inputs>...>(progName,kernelName,kernelParams));
 	}
 };

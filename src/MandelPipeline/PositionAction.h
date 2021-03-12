@@ -28,25 +28,25 @@ template<typename Factory,typename T,
 	)>{
 	PositionAction(Factory& factory,std::string typeName)
 	  :kernelGeneratorAction(factory){
-		this->template delegateInput("enable multisampling"_c, definesAction.template getInput("MULTISAMPLING_ENABLED"_c));
-		this->template delegateInput("pattern"_c, definesAction.template getInput("MULTISAMPLING_PATTERN"_c));
+		this->delegateInput(_C("enable multisampling"), definesAction.getInput(_C("MULTISAMPLING_ENABLED")));
+		this->delegateInput(_C("pattern"), definesAction.getInput(_C("MULTISAMPLING_PATTERN")));
 
-		definesAction.getInput("Type"_c).setDefaultValue(typeName);
+		definesAction.getInput(_C("Type")).setDefaultValue(typeName);
 		definesAction.naturalConnect(kernelGeneratorAction);
-		kernelGeneratorAction.getInput("programName"_c).setDefaultValue("position");
-		kernelGeneratorAction.getInput("kernelName"_c).setDefaultValue("positionKernel");
+		kernelGeneratorAction.getInput(_C("programName")).setDefaultValue("position");
+		kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("positionKernel");
 
-		this->template delegateInput("scale"_c, rotationAction.template getInput("scale"_c));
-		this->template delegateInput("angle"_c, rotationAction.template getInput("angle"_c));
+		this->delegateInput(_C("scale"), rotationAction.getInput(_C("scale")));
+		this->delegateInput(_C("angle"), rotationAction.getInput(_C("angle")));
 		rotationAction.naturalConnect(kernelAction);
 
 		kernelGeneratorAction.naturalConnect(kernelAction);
-		this->template delegateInput("positionImage"_c,kernelAction.getInput("positionImage"_c));
-		this->template delegateInput("center real"_c, kernelAction.getInput("center real"_c));
-		this->template delegateInput("center imag"_c, kernelAction.getInput("center imag"_c));
-		this->template delegateInput("imageRange"_c, kernelAction.getInput("globalSize"_c));
+		this->delegateInput(_C("positionImage"),kernelAction.getInput(_C("positionImage")));
+		this->delegateInput(_C("center real"), kernelAction.getInput(_C("center real")));
+		this->delegateInput(_C("center imag"), kernelAction.getInput(_C("center imag")));
+		this->delegateInput(_C("imageRange"), kernelAction.getInput(_C("globalSize")));
 
-		this->template delegateOutput("positionImage"_c, kernelAction.getOutput("positionImage"_c));
+		this->delegateOutput(_C("positionImage"), kernelAction.getOutput(_C("positionImage")));
 	}
 
 	KernelDefinesAction<KV("Type",std::string),KV("MULTISAMPLING_ENABLED",bool),KV("MULTISAMPLING_PATTERN",MultisamplingPattern)> definesAction;

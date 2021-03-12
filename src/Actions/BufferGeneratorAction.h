@@ -32,7 +32,7 @@ protected:
 	Factory factory;
 
 	void executeImpl(){
-		auto& data = this->template getInput("data"_c).getValue();
+		auto& data = this->getInput(_C("data")).getValue();
 		auto buffer = factory.template createBuffer<Val<T>>(data.size());
 		buffer.copyFromBuffer(data,0,data.size());
 		this->template getOutput<0>().setValue(buffer);

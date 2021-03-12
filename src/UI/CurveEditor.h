@@ -2,6 +2,7 @@
 #include "GtkHeader.h"
 #include "../Type/Curve.h"
 #include "../Type/Gradient.h"
+#include <array>
 /*
  * CurveEditor.h
  *

@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "../Platform/CPU/CPUFactory.h"
 #include "../Platform/CL/CLFactory.h"
 #include "../Kernel/Type/Fixed4.h"

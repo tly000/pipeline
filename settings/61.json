@@ -1,0 +1,57 @@
+{
+	"calculation" : {
+		"formula" : "abs(re(z)*re(z) - im(z) * im(z)) + i*(re(z)*im(z) + re(z)*im(z)) + c",
+		"enable juliamode" : "true",
+		"julia c real" : "-0.670211077",
+		"julia c imag" : "-0.435367048",
+		"calculation method" : "normal",
+		"visualize steps" : "false"
+	},
+	"coloring" : {
+		"smooth iteration count" : "true",
+		"leading polynomial exponent" : "2.000000000",
+		"outer gradient" : "[
+[0.988235, 0.686275, 0.243137],
+[0.937255, 0.160784, 0.160784],
+[0.929412, 0.831373, 0]
+]",
+		"outer coloring method" : "iterationGradient",
+		"inner gradient" : "[
+[0, 0.699748, 1],
+[0, 0, 0],
+[0.933333, 0.933333, 0.92549],
+[0.66215, 1, 0],
+[1, 1, 1],
+[1, 1, 1],
+[1, 1, 1],
+[1, 1, 1],
+[1, 1, 1],
+[1, 1, 1],
+[1, 1, 1],
+[1, 1, 1]
+]",
+		"inner coloring method" : "angleGradient"
+	},
+	"escape time algorithm" : {
+		"iterations" : "200",
+		"bailout" : "2.000000000",
+		"disable bailout" : "false",
+		"cycle detection" : "false",
+		"visualize cycle detection" : "false"
+	},
+	"image" : {
+		"width" : "1920",
+		"height" : "1080"
+	},
+	"multisampling" : {
+		"enable multisampling" : "true",
+		"size" : "4",
+		"pattern" : "UNIFORM_GRID"
+	},
+	"position" : {
+		"center real" : "0.119804285",
+		"center imag" : "-0.401685357",
+		"scale" : "0.075290479",
+		"angle" : "0.000000000"
+	}
+}

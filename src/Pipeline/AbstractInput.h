@@ -1,6 +1,7 @@
 #pragma once
 #include "AbstractPipelineAction.h"
 #include "../Utility/NonCopyable.h"
+#include <string>
 
 /*
  * AbstractInput.h

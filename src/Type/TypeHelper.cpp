@@ -24,29 +24,34 @@ fromFloatSpecialization(Fixed16);
 fromFloatSpecialization(longdouble);
 fromFloatSpecialization(qf128);
 
+static bool set_locale() {
+    std::setlocale(LC_NUMERIC, "en-US");
+    return true;
+}
+
 template<> float fromString<float>(const std::string& s){
-	static std::locale l = std::locale::global(std::locale());
+    static bool l = set_locale();
 	char* pos = nullptr;
 	float val = std::strtof(s.c_str(),&pos);
 	return pos == s.c_str() + s.size() ? val : throw std::runtime_error("invalid conversion");
 }
 
 template<> int fromString<int>(const std::string& s){
-	static std::locale l = std::locale::global(std::locale());
+    static bool l = set_locale();
 	char* pos = nullptr;
 	int val = std::strtol(s.c_str(),&pos,10);
 	return pos == s.c_str() + s.size() ? val : throw std::runtime_error("invalid conversion");
 }
 
 template<> uint32_t fromString<uint32_t>(const std::string& s){
-	static std::locale l = std::locale::global(std::locale());
+    static bool l = set_locale();
 	char* pos = nullptr;
 	uint32_t val = std::strtoul(s.c_str(),&pos,10);
 	return pos == s.c_str() + s.size() ? val : throw std::runtime_error("invalid conversion");
 }
 
 template<> double fromString<double>(const std::string& s){
-	static std::locale l = std::locale::global(std::locale());
+    static bool l = set_locale();
 	char* pos = nullptr;
 	double val = std::strtod(s.c_str(),&pos);
 	return pos == s.c_str() + s.size() ? val : throw std::runtime_error("invalid conversion");

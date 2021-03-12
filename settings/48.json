@@ -1,0 +1,46 @@
+{
+	"calculation" : {
+		"formula" : "1/(z^2+c)",
+		"enable juliamode" : "true",
+		"julia c real" : "0.600000024",
+		"julia c imag" : "0.200000003",
+		"calculation method" : "normal",
+		"visualize steps" : "false"
+	},
+	"coloring" : {
+		"smooth iteration count" : "false",
+		"leading polynomial exponent" : "2.000000000",
+		"outer gradient" : "[
+[0, 0, 0],
+[0.0804913, 1, 0.00663767],
+[1, 1, 1]
+]",
+		"outer coloring method" : "iterationGradient",
+		"inner gradient" : "[
+[0.933333, 0.933333, 0.92549]
+]",
+		"inner coloring method" : "flatColor"
+	},
+	"escape time algorithm" : {
+		"iterations" : "700",
+		"bailout" : "16.000000000",
+		"disable bailout" : "true",
+		"cycle detection" : "true",
+		"visualize cycle detection" : "true"
+	},
+	"image" : {
+		"width" : "1920",
+		"height" : "1080"
+	},
+	"multisampling" : {
+		"enable multisampling" : "true",
+		"size" : "4",
+		"pattern" : "JITTERING"
+	},
+	"position" : {
+		"center real" : "0.118549012",
+		"center imag" : "0.050809801",
+		"scale" : "2.424070597",
+		"angle" : "0.000000000"
+	}
+}

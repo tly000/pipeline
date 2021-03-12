@@ -2,6 +2,7 @@
 #include "../Utility/NonCopyable.h"
 #include "AbstractPipelineAction.h"
 #include <list>
+#include <string>
 
 /*
  * AbstractOutput.h

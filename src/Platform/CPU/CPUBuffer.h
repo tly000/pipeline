@@ -1,4 +1,5 @@
 #pragma once
+#include "../../Utility/Utils.h"
 #include "../Buffer.h"
 #include <vector>
 #include <memory>

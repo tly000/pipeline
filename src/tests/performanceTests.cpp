@@ -15,7 +15,7 @@ template<typename T,typename Factory> void testPipeline(Factory& f,std::string p
 
 	std::string testFile = fileToString("./" + test + ".json");
 	pipeline.paramsFromJson(testFile);
-	pipeline.calcParams.setValue("calculation method"_c,method.c_str());
+	pipeline.calcParams.setValue(_C("calculation method"),method.c_str());
 
 	pipeline.run();
 
@@ -25,15 +25,15 @@ template<typename T,typename Factory> void testPipeline(Factory& f,std::string p
 	std::vector<uint64_t> times;
 	for(int i = 0; i < testCount; i++){
 		pipeline.run();
-		log << pipeline.calcAction.getOutput("time"_c).getValue() << ", ";
-		times.push_back(pipeline.calcAction.getOutput("time"_c).getValue());
+		log << pipeline.calcAction.getOutput(_C("time")).getValue() << ", ";
+		times.push_back(pipeline.calcAction.getOutput(_C("time")).getValue());
 	}
 	log << std::endl;
 	log << std::endl;
 	log.close();
 
 	std::vector<unsigned> image;
-	auto& renderedImage = pipeline.reductionAction.getOutput("reducedImage"_c).getValue();
+	auto& renderedImage = pipeline.reductionAction.getOutput(_C("reducedImage")).getValue();
 	renderedImage.copyToBuffer(image);
 
 	std::string fileName = pipelineName + "_" + typeName + "_" + test + "_" + method + ".png";

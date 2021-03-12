@@ -30,7 +30,7 @@ protected:
 		using Index = IndexOf<String,Key<Inputs>...>;
 		static_assert(Index::value != -1, "Input not found.");
 		inputDelegation.emplace(Index::value,[&]{
-			inputSlot.setDefaultValue(this->template getInput(String()).getValue());
+			inputSlot.setDefaultValue(this->getInput(String()).getValue());
 		});
 	}
 
@@ -38,7 +38,7 @@ protected:
 		using Index = IndexOf<String,Key<Outputs>...>;
 		static_assert(Index::value != -1, "Output not found.");
 		outputDelegation.emplace(Index::value,[&]{
-			this->template getOutput(String()).setValue(outputSlot.getValue());
+			this->getOutput(String()).setValue(outputSlot.getValue());
 		});
 	}
 

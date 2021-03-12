@@ -9,16 +9,16 @@
  */
 
 EnumClass(MultisamplingPattern,
-	"UNIFORM_GRID"_c,
-	"JITTERING"_c
+          _C("UNIFORM_GRID"),
+          _C("JITTERING")
 );
 
 EnumClass(CalculationMethod,
-	"normal"_c,
-	"successive refinement"_c,
-	"Mariani-Silver"_c,
-	"grid"_c,
-	"successive iteration"_c
+          _C("normal"),
+          _C("successive refinement"),
+          _C("Mariani-Silver"),
+          _C("grid"),
+          _C("successive iteration")
 );
 
 

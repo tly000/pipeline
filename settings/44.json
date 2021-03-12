@@ -1,0 +1,36 @@
+{
+	"calculation" : {
+		"formula" : "z - (z^7-z^4 + 1+ c)/(7*z^6+4*z^3 + c) + c",
+		"enable juliamode" : "false",
+		"julia c real" : "0.00000000000000000",
+		"julia c imag" : "0.00000000000000000",
+		"calculation method" : "normal",
+		"visualize steps" : "false"
+	},
+	"coloring" : {
+		"smooth iteration count" : "false",
+		"leading polynomial exponent" : "2.000000000"
+	},
+	"escape time algorithm" : {
+		"iterations" : "20000",
+		"bailout" : "4000.000000000",
+		"disable bailout" : "true",
+		"cycle detection" : "true",
+		"visualize cycle detection" : "true"
+	},
+	"image" : {
+		"width" : "1920",
+		"height" : "1080"
+	},
+	"multisampling" : {
+		"enable multisampling" : "true",
+		"size" : "2",
+		"pattern" : "JITTERING"
+	},
+	"position" : {
+		"center real" : "0.30735545265006436",
+		"center imag" : "-0.04617671788899412",
+		"scale" : "0.00580642949034905",
+		"angle" : "0.000000000"
+	}
+}

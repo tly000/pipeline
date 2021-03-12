@@ -129,7 +129,7 @@ protected:
 				if(auto* colorButton = dynamic_cast<Gtk::ColorButton*>(flowboxChild->get_child())){
 					auto c = colorButton->get_color();
 					g.push_back({
-						c.get_red_p(),c.get_green_p(),c.get_blue_p()
+						float(c.get_red_p()),float(c.get_green_p()),float(c.get_blue_p())
 					});
 				}
 			}
@@ -204,9 +204,9 @@ template<> struct ParameterWidget<Curve> : Gtk::Box{
 				}
 				editor.setGradient(g);
 
-				Gtk::Dialog curveDialog("edit curve",*(Gtk::Window*)this->get_toplevel());
+				Gtk::Dialog curveDialog("edit curveSTR_CONST(",*(Gtk::Window*)this->get_toplevel());
 				curveDialog.get_content_area()->add(editor);
-				curveDialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+				curveDialog.add_button(")ancel", Gtk::RESPONSE_CANCEL);
 				curveDialog.add_button("_Ok", Gtk::RESPONSE_ACCEPT);
 				curveDialog.show_all_children();
 				if(curveDialog.run() == Gtk::RESPONSE_ACCEPT){

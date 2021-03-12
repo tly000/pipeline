@@ -1,0 +1,43 @@
+{
+	"calculation" : {
+		"formula" : "z*z + c",
+		"enable juliamode" : "false",
+		"julia c real" : "0.000000000",
+		"julia c imag" : "0.000000000",
+		"calculation method" : "normal",
+		"visualize steps" : "false"
+	},
+	"coloring" : {
+		"smooth iteration count" : "true",
+		"leading polynomial exponent" : "2.000000000",
+		"outer gradient" : "[\n[0, 0, 0],\n[0, 0.699901, 1],\n[1, 0.959991, 0],\n[1, 0.239994, 0]\n]",
+		"outer curve" : "[\r\n{\r\n\t\"start\": [0, 0],\r\n\t\"end\": [0.138614, 0],\r\n\t\"paramA\": 1,\r\n\t\"paramB\": 1,\r\n\t\"repetition\": 0,\r\n\t\"step\": 0\r\n},\r\n{\r\n\t\"start\": [0.138614, 0],\r\n\t\"end\": [0.349835, 1],\r\n\t\"paramA\": 0.864687,\r\n\t\"paramB\": 1.32013,\r\n\t\"repetition\": 0,\r\n\t\"step\": 0\r\n},\r\n{\r\n\t\"start\": [0.349835, 1],\r\n\t\"end\": [1, 1],\r\n\t\"paramA\": 0.927392,\r\n\t\"paramB\": 0.966998,\r\n\t\"repetition\": 0,\r\n\t\"step\": 0\r\n}\r\n]",
+		"outer coloring method" : "iterationGradient",
+		"inner gradient" : "[\r\n[0, 0, 0],\r\n[1, 1, 1],\r\n[0, 0, 0],\r\n[1, 1, 1]\r\n]",
+		"inner curve" : "[\r\n{\r\n\t\"start\": [0, 0],\r\n\t\"end\": [1, 1],\r\n\t\"paramA\": 0.950495,\r\n\t\"paramB\": 1.28053,\r\n\t\"repetition\": 0,\r\n\t\"step\": 0\r\n}\r\n]",
+		"inner coloring method" : "flatColor"
+	},
+	"escape time algorithm" : {
+		"iterations" : "20000",
+		"bailout" : "16.000000000",
+		"disable bailout" : "false",
+		"cycle detection" : "false",
+		"visualize cycle detection" : "false",
+		"statistic function" : "noStats"
+	},
+	"image" : {
+		"width" : "1920",
+		"height" : "1080"
+	},
+	"multisampling" : {
+		"enable multisampling" : "true",
+		"size" : "4",
+		"pattern" : "UNIFORM_GRID"
+	},
+	"position" : {
+		"center real" : "0.317363650",
+		"center imag" : "-0.556101263",
+		"scale" : "0.000034381",
+		"angle" : "0.000000000"
+	}
+}

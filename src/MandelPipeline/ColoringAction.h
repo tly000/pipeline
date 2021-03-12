@@ -39,36 +39,36 @@ template<typename Factory,typename T> struct ColoringAction :
 	   curveBufferGenerator1(factory),
 	   curveBufferGenerator2(factory),
 	   kernelGeneratorAction(factory){
-		this->template delegateInput("outer gradient"_c,this->gradientBufferGenerator1.getInput("data"_c));
-		this->template delegateInput("inner gradient"_c,this->gradientBufferGenerator2.getInput("data"_c));
+		this->delegateInput(_C("outer gradient"),this->gradientBufferGenerator1.getInput(_C("data")));
+		this->delegateInput(_C("inner gradient"),this->gradientBufferGenerator2.getInput(_C("data")));
 
-		this->template delegateInput("outer curve"_c,this->curveBufferGenerator1.getInput("data"_c));
-		this->template delegateInput("inner curve"_c,this->curveBufferGenerator2.getInput("data"_c));
+		this->delegateInput(_C("outer curve"),this->curveBufferGenerator1.getInput(_C("data")));
+		this->delegateInput(_C("inner curve"),this->curveBufferGenerator2.getInput(_C("data")));
 
-		this->template delegateInput("outer coloring method"_c,this->definesAction.getInput("OUTSIDE_COLORING_KERNEL"_c));
-		this->template delegateInput("inner coloring method"_c,this->definesAction.getInput("INSIDE_COLORING_KERNEL"_c));
-		this->template delegateInput("bailout"_c,this->definesAction.getInput("BAILOUT"_c));
-		this->template delegateInput("enable juliamode"_c,this->definesAction.getInput("JULIAMODE"_c));
-		this->template delegateInput("iterations"_c,this->definesAction.getInput("MAXITER"_c));
-		this->definesAction.getInput("Type"_c).setDefaultValue(typeName);
+		this->delegateInput(_C("outer coloring method"),this->definesAction.getInput(_C("OUTSIDE_COLORING_KERNEL")));
+		this->delegateInput(_C("inner coloring method"),this->definesAction.getInput(_C("INSIDE_COLORING_KERNEL")));
+		this->delegateInput(_C("bailout"),this->definesAction.getInput(_C("BAILOUT")));
+		this->delegateInput(_C("enable juliamode"),this->definesAction.getInput(_C("JULIAMODE")));
+		this->delegateInput(_C("iterations"),this->definesAction.getInput(_C("MAXITER")));
+		this->definesAction.getInput(_C("Type")).setDefaultValue(typeName);
 		this->definesAction.naturalConnect(kernelGeneratorAction);
 
-		kernelGeneratorAction.getInput("programName"_c).setDefaultValue("coloring");
-		kernelGeneratorAction.getInput("kernelName"_c).setDefaultValue("coloringKernel");
+		kernelGeneratorAction.getInput(_C("programName")).setDefaultValue("coloring");
+		kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("coloringKernel");
 
 		kernelGeneratorAction.naturalConnect(kernelAction);
 
-		this->template delegateInput("iterationImage"_c,kernelAction.getInput("iterationImage"_c));
-		this->template delegateInput("processedPositionImage"_c,kernelAction.getInput("processedPositionImage"_c));
-		this->template delegateInput("statsImage"_c,kernelAction.getInput("statsImage"_c));
-		this->template delegateInput("coloredImage"_c, kernelAction.getInput("coloredImage"_c));
-		this->template delegateInput("imageRange"_c, kernelAction.getInput("globalSize"_c));
-		this->gradientBufferGenerator1.template output<0>() >> this->kernelAction.getInput("gradientA"_c);
-		this->gradientBufferGenerator2.template output<0>() >> this->kernelAction.getInput("gradientB"_c);
-		this->curveBufferGenerator1.template output<0>() >> this->kernelAction.getInput("curveA"_c);
-		this->curveBufferGenerator2.template output<0>() >> this->kernelAction.getInput("curveB"_c);
+		this->delegateInput(_C("iterationImage"),kernelAction.getInput(_C("iterationImage")));
+		this->delegateInput(_C("processedPositionImage"),kernelAction.getInput(_C("processedPositionImage")));
+		this->delegateInput(_C("statsImage"),kernelAction.getInput(_C("statsImage")));
+		this->delegateInput(_C("coloredImage"), kernelAction.getInput(_C("coloredImage")));
+		this->delegateInput(_C("imageRange"), kernelAction.getInput(_C("globalSize")));
+		this->gradientBufferGenerator1.template output<0>() >> this->kernelAction.getInput(_C("gradientA"));
+		this->gradientBufferGenerator2.template output<0>() >> this->kernelAction.getInput(_C("gradientB"));
+		this->curveBufferGenerator1.template output<0>() >> this->kernelAction.getInput(_C("curveA"));
+		this->curveBufferGenerator2.template output<0>() >> this->kernelAction.getInput(_C("curveB"));
 
-		this->template delegateOutput("coloredImage"_c, kernelAction.getOutput("coloredImage"_c));
+		this->delegateOutput(_C("coloredImage"), kernelAction.getOutput(_C("coloredImage")));
 	}
 
 	Factory& factory;

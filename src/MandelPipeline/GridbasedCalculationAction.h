@@ -15,13 +15,13 @@ protected:
 	const uint32_t gridSize = 50;
 
 	bool step(){
-		Range imageRange = this->getInput("imageRange"_c).getValue();
+		Range imageRange = this->getInput(_C("imageRange")).getValue();
 		if(currentPosY < imageRange.y){
 			uint32_t nextPixelsX = std::min(gridSize,imageRange.x - currentPosX);
 			uint32_t nextPixelsY = std::min(gridSize,imageRange.y - currentPosY);
 
-			this->kernelAction.getInput("globalOffset"_c).setDefaultValue(Range{currentPosX,currentPosY,0});
-			this->kernelAction.getInput("globalSize"_c).setDefaultValue(Range{nextPixelsX,nextPixelsY,1});
+			this->kernelAction.getInput(_C("globalOffset")).setDefaultValue(Range{currentPosX,currentPosY,0});
+			this->kernelAction.getInput(_C("globalSize")).setDefaultValue(Range{nextPixelsX,nextPixelsY,1});
 			this->kernelAction.run();
 
 			currentPosX += gridSize;

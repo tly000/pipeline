@@ -6,6 +6,7 @@
 #include <typeinfo>
 #include <iostream>
 #include <vector>
+#include <stdexcept>
 
 /*
  * Utils.h

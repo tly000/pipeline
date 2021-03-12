@@ -1,4 +1,5 @@
 #include "JsonParser.h"
+#include <stdexcept>
 
 /*
  * JsonParser.cpp

@@ -65,8 +65,8 @@ MainWindow::MainWindow():
 	openButton->set_image_from_icon_name("document-open-symbolic");
 	openButton->signal_clicked().connect([this]{
 		Gtk::FileChooserDialog dialog(*this,"Open settings",Gtk::FILE_CHOOSER_ACTION_OPEN);
-		dialog.set_current_folder("./settings");
-		dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+		dialog.set_current_folder("./settingsSTR_CONST(");
+		dialog.add_button(")ancel", Gtk::RESPONSE_CANCEL);
 		dialog.add_button("_Open", Gtk::RESPONSE_ACCEPT);
 		auto filter = Gtk::FileFilter::create();
 		filter->set_name("settings file (*.json)");
@@ -88,8 +88,8 @@ MainWindow::MainWindow():
 		auto saveImageButton = Gtk::manage(new Gtk::Button());
 		saveImageButton->set_image_from_icon_name("camera-photo-symbolic");
 		saveImageButton->signal_clicked().connect([this]{
-			Gtk::FileChooserDialog dialog(*this,"Save image",Gtk::FILE_CHOOSER_ACTION_SAVE);
-		    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+			Gtk::FileChooserDialog dialog(*this,"Save imageSTR_CONST(",Gtk::FILE_CHOOSER_ACTION_SAVE);
+		    dialog.add_button(")ancel", Gtk::RESPONSE_CANCEL);
 		    dialog.add_button("_Save", Gtk::RESPONSE_ACCEPT);
 			auto filter = Gtk::FileFilter::create();
 			filter->set_name("image file (*.bmp,*.png)");
@@ -151,9 +151,9 @@ MainWindow::MainWindow():
 			treeView.expand_all();
 
 			Gtk::Dialog selectionDialog("select settings",*this);
-			selectionDialog.get_content_area()->add(*Gtk::manage(new Gtk::Label("select settings to save:")));
+			selectionDialog.get_content_area()->add(*Gtk::manage(new Gtk::Label("select settings to save:STR_CONST(")));
 			selectionDialog.get_content_area()->add(treeView);
-			selectionDialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+			selectionDialog.add_button(")ancel", Gtk::RESPONSE_CANCEL);
 			selectionDialog.add_button("_Ok", Gtk::RESPONSE_ACCEPT);
 			selectionDialog.show_all_children();
 			if(selectionDialog.run() != Gtk::RESPONSE_ACCEPT){
@@ -176,8 +176,8 @@ MainWindow::MainWindow():
 				}
 			}
 
-			Gtk::FileChooserDialog dialog(*this,"Save settings",Gtk::FILE_CHOOSER_ACTION_SAVE);
-		    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+			Gtk::FileChooserDialog dialog(*this,"Save settingsSTR_CONST(",Gtk::FILE_CHOOSER_ACTION_SAVE);
+		    dialog.add_button(")ancel", Gtk::RESPONSE_CANCEL);
 		    dialog.add_button("_Save", Gtk::RESPONSE_ACCEPT);
 			auto filter = Gtk::FileFilter::create();
 			filter->set_name("json file (*.json)");
