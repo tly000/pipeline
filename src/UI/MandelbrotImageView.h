@@ -16,9 +16,12 @@ struct MandelbrotImageView : Gtk::Overlay{
 	void updateView(const CPUImage<unsigned>& cpuImage);
 
 	void set_sensitive(bool s);
+
+    void get_transformed_pointer(int& x, int& y);
+    void update_transform();
 protected:
+    Cairo::Matrix transform;
 	Glib::RefPtr<Gdk::Pixbuf> pixBuf;
-	Gtk::Image image;
 	Gtk::DrawingArea drawArea;
 	MainWindow* window;
 
