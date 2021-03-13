@@ -79,11 +79,12 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
 
             int mx, my;
             this->get_transformed_pointer(mx, my);
-            if (this->mousePositionInRectangle()) {
+            if (this->mousePositionInRectangle() || draggingRectangle) {
                 if (window->get_cursor() != cursor1) {
                     window->set_cursor(cursor1);
                 }
                 if (e->state & GDK_BUTTON1_MASK) {
+                    draggingRectangle = true;
                     if (this->lastXPos != -1) {
                         int dx = mx - this->lastXPos;
                         int dy = my - this->lastYPos;
@@ -93,8 +94,11 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
 
                         this->queue_draw();
                     }
+                } else {
+                    draggingRectangle = false;
                 }
             } else {
+                draggingRectangle = false;
                 if (window->get_cursor() != cursor2) {
                     window->set_cursor(cursor2);
                 }
@@ -106,6 +110,7 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
         return true;
     });
     drawArea.signal_button_release_event().connect([=](GdkEventButton *e) {
+        draggingRectangle = false;
         if (drawingRectangle) {
             setRectangleFromMouse();
             if (this->w < 0) {

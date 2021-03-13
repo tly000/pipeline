@@ -28,6 +28,7 @@ protected:
 	int xPos = -1, yPos = -1;
 	int w = -1, h = -1;
 	bool drawingRectangle = false;
+    bool draggingRectangle = false;
 
 	int lastXPos = -1, lastYPos = -1;
 
