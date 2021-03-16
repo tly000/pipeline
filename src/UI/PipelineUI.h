@@ -41,8 +41,7 @@ protected:
 	Gtk::ScrolledWindow parameterBox;
 	sigc::connection calcbuttonConnection;
 
-	std::list<std::unique_ptr<AbstractPlatform>> platforms;
-	std::map<std::pair<std::string,std::string>,AbstractPlatform*> platformMap;
+	std::map<std::string,std::unique_ptr<AbstractPlatform>> platformMap;
 
 	AbstractPlatform* selectedPlatform = nullptr;
 

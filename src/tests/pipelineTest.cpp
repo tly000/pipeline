@@ -1,9 +1,6 @@
 #include <stdexcept>
 #include "../Platform/CPU/CPUFactory.h"
 #include "../Platform/CL/CLFactory.h"
-#include "../Kernel/Type/Fixed4.h"
-#include "../Kernel/Type/Fixed8.h"
-#include "../Kernel/Type/Fixed16.h"
 #include "../MandelPipeline/MandelPipeline.h"
 
 /*
@@ -14,9 +11,7 @@
  */
 
 symbolexport void pipelineTest(){
-	CLFactory gpu;
-
-	MandelPipeline<CLFactory,float> gpuPipeline(gpu,"float");
+	MandelPipeline gpuPipeline(std::make_shared<CLFactory>());
 	gpuPipeline.run();
 }
 

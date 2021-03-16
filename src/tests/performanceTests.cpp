@@ -5,13 +5,15 @@
  *      Author: tly
  */
 
-#include "ExternTemplates.h"
+#include "../MandelPipeline/MandelPipeline.h"
+#include "../Platform/CL/CLFactory.h"
+#include "../Platform/CPU/CPUFactory.h"
 #include "../stb_image_write.h"
 #include <fstream>
 
-template<typename T,typename Factory> void testPipeline(Factory& f,std::string pipelineName, std::string typeName,std::string test,std::string method,int testCount){
+void testPipeline(std::shared_ptr<Factory> f,std::string pipelineName, std::string typeName,std::string test,std::string method,int testCount){
 	std::cout << "testing pipeline " << pipelineName << " with type " << typeName << " and method " << method << std::endl;
-	MandelPipeline<Factory,T> pipeline(f,typeName);
+	MandelPipeline pipeline(f);
 
 	std::string testFile = fileToString("./" + test + ".json");
 	pipeline.paramsFromJson(testFile);
@@ -19,7 +21,7 @@ template<typename T,typename Factory> void testPipeline(Factory& f,std::string p
 
 	pipeline.run();
 
-	std::ofstream log(test+".log",ios::out | ios::app);
+	std::ofstream log(test+".log",std::ios::out | std::ios::app);
 
 	log << pipelineName << "_" << typeName + "_" << test << "_" << method << ", ";
 	std::vector<uint64_t> times;
@@ -32,20 +34,20 @@ template<typename T,typename Factory> void testPipeline(Factory& f,std::string p
 	log << std::endl;
 	log.close();
 
-	std::vector<unsigned> image;
 	auto& renderedImage = pipeline.reductionAction.getOutput(_C("reducedImage")).getValue();
-	renderedImage.copyToBuffer(image);
+    std::vector<unsigned> image(renderedImage.getWidth() * renderedImage.getHeight());
+    renderedImage.getRawImage()->copyToBuffer(image.data(), sizeof(unsigned) + image.size());
 
 	std::string fileName = pipelineName + "_" + typeName + "_" + test + "_" + method + ".png";
 	stbi_write_png(fileName.c_str(),renderedImage.getWidth(),renderedImage.getHeight(),4,image.data(),0);
 }
 
 void preftest(){
-	CPUFactory<true> cpuOpenMP;
-	CPUFactory<false> cpuNoOpenMP;
-	CLFactory gpu(1), cpuOpenCL(2);
+	auto cpuOpenMP = std::make_shared<CPUFactory>();
+    auto gpu = std::make_shared<CLFactory>(1);
+    auto cpuOpenCL = std::make_shared<CLFactory>(2);
 
-#define _testPipeline(type,pipeline,test,method,count) testPipeline<type,decltype(pipeline)>(pipeline,#pipeline,#type,test,method,count)
+#define _testPipeline(type,pipeline,test,method,count) testPipeline(pipeline,#pipeline,#type,test,method,count)
 
 #define _testType(type,factory,test,count) \
 	for(auto& method : { \

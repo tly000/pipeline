@@ -1,5 +1,6 @@
 #pragma once
 #include "LazyAction.h"
+#include "../Type/TypeHelper.h"
 
 /*
  * KernelDefinesAction.h

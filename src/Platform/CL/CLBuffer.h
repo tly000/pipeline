@@ -10,41 +10,32 @@
  *      Author: tly
  */
 
-template<typename T> struct CLBuffer : Buffer<T>{
-	CLBuffer(cl::Context& ctx,cl::CommandQueue queue,cl_mem_flags memFlags,size_t elemCount) :
-		Buffer<T>(elemCount),
-		queue(queue),
-		bufferHandle(ctx,memFlags,sizeof(T) * elemCount){}
+struct CLBuffer : RawBuffer {
+    CLBuffer(cl::Context &ctx, cl::CommandQueue queue, cl_mem_flags memFlags, size_t elemCount, size_t elemSize)
+        : queue(queue),
+          bufferHandle(ctx, memFlags, elemSize * elemCount),
+          elemCount(elemCount),
+          elemSize(elemSize){}
 
-	T* getDataPointer(){
-		throw std::runtime_error("not implemented");
-	}
-	const T* getDataPointer() const {
-		throw std::runtime_error("not implemented");
-	}
+    cl::Buffer getHandle() const {
+        return bufferHandle;
+    }
 
-	cl::Buffer getHandle() const {
-		return bufferHandle;
-	}
+    void copyToBuffer(void *data, std::size_t size) const {
+        queue.enqueueReadBuffer(bufferHandle, true, 0, size, data);
+        queue.finish();
+    }
 
-	void copyToBuffer(std::vector<T>& buffer) const{
-		buffer.resize(this->elemCount);
-		queue.enqueueReadBuffer(bufferHandle,true,0,this->elemCount * sizeof(T),buffer.data());
-		queue.finish();
-	}
+    void copyFromBuffer(const void *data, std::size_t size) {
+        queue.enqueueWriteBuffer(bufferHandle, true, 0, size, data);
+        queue.finish();
+    }
 
-	void copyFromBuffer(const std::vector<T>& buffer, size_t offset, size_t n){
-		assertOrThrow(buffer.size() >= offset + n);
-		assertOrThrow(this->elemCount >= n);
-		queue.enqueueWriteBuffer(bufferHandle,true,0,n * sizeof(T),buffer.data() + offset);
-		queue.finish();
-	}
+    size_t getElementCount() const override { return elemCount; }
+    size_t getElementByteSize() const override { return elemSize; }
 protected:
-	cl::CommandQueue queue;
-	cl::Buffer bufferHandle;
+    cl::CommandQueue queue;
+    cl::Buffer bufferHandle;
+    std::size_t elemCount;
+    std::size_t elemSize;
 };
-
-
-
-
-

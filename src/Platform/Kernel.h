@@ -1,5 +1,9 @@
 #pragma once
 #include "../Type/Range.h"
+#include "Buffer.h"
+#include "Image.h"
+#include <variant>
+#include "../Utility/VariadicUtils.h"
 
 /*
  * Kernel.h
@@ -8,16 +12,53 @@
  *      Author: tly
  */
 
-template<typename... Inputs>
-struct Kernel{
-	virtual void run(
-		const Range& globalOffset,
-		const Range& globalSize,
-		const Range& localSize,
-		Inputs&...
-	) = 0;
+struct RawKernel {
+    virtual void setArg(int i, const void* data, std::size_t size) = 0;
+    virtual void setArg(int i, const RawBuffer& buffer) = 0;
 
-	virtual ~Kernel() = default;
+    virtual void run(
+        const Range &globalOffset,
+        const Range &globalSize,
+        const Range &localSize) = 0;
+
+    virtual ~RawKernel() = default;
 };
 
+template<typename... Inputs> struct Kernel {
+    Kernel(std::shared_ptr<RawKernel> rawKernel) : rawKernel(rawKernel) {}
 
+    void run(const Range &globalOffset,
+             const Range &globalSize,
+             const Range &localSize, Inputs&... inputs) {
+        int i = 0;
+        variadicForEach(this->forwardArg(i,inputs));
+        rawKernel->run(globalOffset, globalSize, localSize);
+    }
+protected:
+    std::shared_ptr<RawKernel> rawKernel;
+
+    // setArg helpers:
+    template<typename T> void forwardArg(int& i, const T& data) {
+        rawKernel->setArg(i, static_cast<const void*>(&data), sizeof(T));
+        i++;
+    }
+
+    template<typename... Types> void forwardArg(int& i, const std::variant<Types...>& v) {
+        std::visit([&](const auto& v){
+            this->forwardArg(i, v);
+        }, v);
+    }
+
+    template<typename T> void forwardArg(int& i, const Buffer<T>& v) {
+        rawKernel->setArg(i, *v.getRawBuffer());
+        i++;
+        this->forwardArg(i, std::uint32_t(v.getElementCount()));
+    }
+
+    template<typename T> void forwardArg(int& i, const Image<T>& v) {
+        rawKernel->setArg(i, *v.getRawImage());
+        i++;
+        this->forwardArg(i, std::uint32_t(v.getWidth()));
+        this->forwardArg(i, std::uint32_t(v.getHeight()));
+    }
+};

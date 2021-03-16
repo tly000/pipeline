@@ -8,9 +8,7 @@
  *      Author: tly
  */
 
-int sgn(int x) {
-    return (x < 0) ? -1 : 1;
-}
+int sgn(int x) { return (x < 0) ? -1 : 1; }
 
 MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
     : window(window), transform(Cairo::identity_matrix()) {
@@ -18,13 +16,10 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
     this->set_sensitive(true);
     this->set_size_request(512, 512);
 
-    this->signal_size_allocate().connect([this](const Gtk::Allocation &alloc) {
-        update_transform();
-    });
+    this->signal_size_allocate().connect([this](const Gtk::Allocation &alloc) { update_transform(); });
 
     drawArea.signal_button_press_event().connect([this](GdkEventButton *e) {
-        if (!pixBuf)
-            return false;
+        if (!pixBuf) return false;
 
         if (mousePositionInRectangle()) {
             if (e->type == GdkEventType::GDK_2BUTTON_PRESS && (e->button == 1 || e->button == 3)) {
@@ -80,9 +75,7 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
             int mx, my;
             this->get_transformed_pointer(mx, my);
             if (this->mousePositionInRectangle() || draggingRectangle) {
-                if (window->get_cursor() != cursor1) {
-                    window->set_cursor(cursor1);
-                }
+                if (window->get_cursor() != cursor1) { window->set_cursor(cursor1); }
                 if (e->state & GDK_BUTTON1_MASK) {
                     draggingRectangle = true;
                     if (this->lastXPos != -1) {
@@ -99,9 +92,7 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
                 }
             } else {
                 draggingRectangle = false;
-                if (window->get_cursor() != cursor2) {
-                    window->set_cursor(cursor2);
-                }
+                if (window->get_cursor() != cursor2) { window->set_cursor(cursor2); }
             }
 
             this->lastXPos = mx;
@@ -121,9 +112,7 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
                 this->yPos += h;
                 h = -h;
             }
-            if (std::max(abs(this->w), abs(this->h)) < 10) {
-                this->w = -1;
-            }
+            if (std::max(abs(this->w), abs(this->h)) < 10) { this->w = -1; }
             drawArea.queue_draw();
             drawingRectangle = false;
         }
@@ -131,14 +120,12 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
     });
 
     drawArea.signal_draw().connect([this](const Cairo::RefPtr<Cairo::Context> &gc) {
-        static const std::vector<double> dashPattern = {
-            3};
+        static const std::vector<double> dashPattern = {3};
 
         gc->save();
         gc->transform(transform);
 
-        if (!pixBuf)
-            return false;
+        if (!pixBuf) return false;
         Gdk::Cairo::set_source_pixbuf(gc, pixBuf);
         gc->paint();
         gc->restore();
@@ -163,26 +150,20 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
     });
 }
 
-void MandelbrotImageView::updateView(const CPUImage<unsigned> &cpuImage) {
-    pixBuf = Gdk::Pixbuf::create_from_data(
-        reinterpret_cast<const guint8 *>(cpuImage.getDataBuffer().data()),
-        Gdk::Colorspace::COLORSPACE_RGB,
-        true, 8, cpuImage.getWidth(),
-        cpuImage.getHeight(),
-        4 * cpuImage.getWidth());
+void MandelbrotImageView::updateView(const Image<unsigned> &image) {
+    pixBuf = Gdk::Pixbuf::create(Gdk::Colorspace::COLORSPACE_RGB, true, 8, image.getWidth(), image.getHeight());
+    image.getRawImage()->copyToBuffer(reinterpret_cast<unsigned *>(pixBuf->get_pixels()),
+                                      sizeof(unsigned) * image.getWidth() * image.getHeight());
     update_transform();
     queue_draw();
-    while (Gtk::Main::events_pending()) {
-        Gtk::Main::iteration(false);
-    }
+    while (Gtk::Main::events_pending()) { Gtk::Main::iteration(false); }
 }
 
 bool MandelbrotImageView::mousePositionInRectangle() {
     int mx, my;
     this->get_transformed_pointer(mx, my);
-    return this->w != -1 &&
-           (mx > this->xPos) && (mx <= this->xPos + this->w) &&
-           (my > this->yPos) && (my <= this->yPos + this->h);
+    return this->w != -1 && (mx > this->xPos) && (mx <= this->xPos + this->w) && (my > this->yPos) &&
+           (my <= this->yPos + this->h);
 }
 
 bool MandelbrotImageView::mousePositionOnRectangleBorder(int borderSize) {
@@ -204,18 +185,12 @@ bool MandelbrotImageView::mousePositionOnRectangleBorder(int borderSize) {
 
 void MandelbrotImageView::set_sensitive(bool s) {
     if (s) {
-        drawArea.add_events(
-            Gdk::EventMask::BUTTON_MOTION_MASK |
-            Gdk::EventMask::BUTTON_PRESS_MASK |
-            Gdk::EventMask::BUTTON_RELEASE_MASK |
-            Gdk::EventMask::POINTER_MOTION_MASK);
+        drawArea.add_events(Gdk::EventMask::BUTTON_MOTION_MASK | Gdk::EventMask::BUTTON_PRESS_MASK |
+                            Gdk::EventMask::BUTTON_RELEASE_MASK | Gdk::EventMask::POINTER_MOTION_MASK);
     } else {
-        drawArea.set_events(
-            drawArea.get_events() & ~(
-                                        Gdk::EventMask::BUTTON_MOTION_MASK |
-                                        Gdk::EventMask::BUTTON_PRESS_MASK |
-                                        Gdk::EventMask::BUTTON_RELEASE_MASK |
-                                        Gdk::EventMask::POINTER_MOTION_MASK));
+        drawArea.set_events(drawArea.get_events() &
+                            ~(Gdk::EventMask::BUTTON_MOTION_MASK | Gdk::EventMask::BUTTON_PRESS_MASK |
+                              Gdk::EventMask::BUTTON_RELEASE_MASK | Gdk::EventMask::POINTER_MOTION_MASK));
     }
 }
 
@@ -230,8 +205,7 @@ void MandelbrotImageView::get_transformed_pointer(int &x, int &y) {
 }
 
 void MandelbrotImageView::update_transform() {
-    if (!pixBuf)
-        return;
+    if (!pixBuf) return;
 
     const double x_ratio = std::min(double(get_allocated_width()) / double(pixBuf->get_width()), 1.0);
     const double y_ratio = std::min(double(get_allocated_height()) / double(pixBuf->get_height()), 1.0);

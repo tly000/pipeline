@@ -1,6 +1,9 @@
 #pragma once
 #include "CalculationActionBase.h"
 #include "../Actions/BufferGeneratorAction.h"
+#include "../Actions/FunctionCallAction.h"
+#include "Typedefs.h"
+#include "Enums.h"
 
 /*
  * MarianiSilverAction.h
@@ -9,56 +12,22 @@
  *      Author: tly
  */
 
-template<typename Factory,typename T> struct MarianiSilverAction :
-	CalculationActionBase<Factory,T,KV("positionBuffer",UInt2Buffer<Factory>)>{
+struct MarianiSilverAction :
+	CalculationActionBase<KV("positionBuffer",UInt2Buffer)>{
 
-	MarianiSilverAction(Factory& f, std::string typeName)
-	  :CalculationActionBase<Factory,T,KV("positionBuffer",UInt2Buffer<Factory>)>(f,typeName),
-	   factory(f),
-	   positionBufferGenerator(f),
-	   rectangleBufferGenerator1(f),
-	   rectangleBufferGenerator2(f),
-	   filterBufferGenerator(f),
-	   filterKernelGenerator(f),
-	   buildBufferActionGenerator(f),
-	   atomicIndexBuffer(f.template createBuffer<uint32_t>(2)){
-		this->kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("marianiSilverKernel");
-
-		this->definesAction.naturalConnect(this->filterKernelGenerator);
-		this->filterKernelGenerator.getInput(_C("kernelName")).setDefaultValue("marianiSilverFilter");
-		this->filterKernelGenerator.getInput(_C("programName")).setDefaultValue("calculation");
-		this->filterKernelGenerator.naturalConnect(filterKernelAction);
-
-		this->buildBufferActionGenerator.getInput(_C("programName")).setDefaultValue("calculation");
-		this->buildBufferActionGenerator.getInput(_C("kernelName")).setDefaultValue("marianiSilverBuildBuffers");
-		this->definesAction.naturalConnect(this->buildBufferActionGenerator);
-		this->buildBufferActionGenerator.naturalConnect(this->buildBufferAction);
-
-		this->delegateInput(_C("imageRange"), bufferRangeAction.getInput(_C("imageRange")));
-		this->delegateInput(_C("iterationImage"),filterKernelAction.getInput(_C("iterationImage")));
-
-		this->bufferRangeAction.naturalConnect(this->positionBufferGenerator);
-		this->bufferRangeAction.naturalConnect(this->rectangleBufferGenerator1);
-		this->bufferRangeAction.naturalConnect(this->rectangleBufferGenerator2);
-		this->bufferRangeAction.naturalConnect(this->filterBufferGenerator);
-
-		this->filterBufferGenerator.template output<0>() >> this->filterKernelAction.getInput(_C("filterBuffer"));
-		this->filterBufferGenerator.template output<0>() >> this->buildBufferAction.getInput(_C("filterBuffer"));
-		this->positionBufferGenerator.template output<0>() >> this->buildBufferAction.getInput(_C("positionBuffer"));
-		this->positionBufferGenerator.template output<0>() >> this->kernelAction.getInput(_C("positionBuffer"));
-	}
+	MarianiSilverAction(Factory& f);
 protected:
 	Factory& factory;
 
 	struct Rectangle{
 		uint32_t x,y,w,h;
 	};
-	using RectangleBuffer = typename Factory::template Buffer<Rectangle>;
+	using RectangleBuffer = Buffer<Rectangle>;
 
-	BufferGeneratorAction<Factory,Vec<2,uint32_t>> positionBufferGenerator;
-	BufferGeneratorAction<Factory,Rectangle> rectangleBufferGenerator1;
-	BufferGeneratorAction<Factory,Rectangle> rectangleBufferGenerator2;
-	BufferGeneratorAction<Factory,uint8_t> filterBufferGenerator;
+	BufferGeneratorAction<Vec<2,uint32_t>> positionBufferGenerator;
+	BufferGeneratorAction<Rectangle> rectangleBufferGenerator1;
+	BufferGeneratorAction<Rectangle> rectangleBufferGenerator2;
+	BufferGeneratorAction<uint8_t> filterBufferGenerator;
 
 	FunctionCallAction<Input(KV("imageRange",Range)),KV("elemCount",uint32_t)> bufferRangeAction{
 		[](const Range& r){
@@ -66,105 +35,32 @@ protected:
 		}
 	};
 
-	KernelGeneratorAction<Factory,FloatImage<Factory>,RectangleBuffer,UCharBuffer<Factory>> filterKernelGenerator;
-	KernelAction<Factory,Input(
-		KV("iterationImage",FloatImage<Factory>),
+	KernelGeneratorAction<FloatImage,RectangleBuffer,UCharBuffer> filterKernelGenerator;
+	KernelAction<Input(
+		KV("iterationImage",FloatImage),
 		KV("rectangleBuffer",RectangleBuffer),
-		KV("filterBuffer",UCharBuffer<Factory>)
+		KV("filterBuffer",UCharBuffer)
 	),KernelOutput<2>> filterKernelAction;
 
-	KernelGeneratorAction<Factory,UInt2Buffer<Factory>,RectangleBuffer,RectangleBuffer,UCharBuffer<Factory>,UIntBuffer<Factory>> buildBufferActionGenerator;
-	KernelAction<Factory,Input(
-		KV("positionBuffer",UInt2Buffer<Factory>),
+	KernelGeneratorAction<UInt2Buffer,RectangleBuffer,RectangleBuffer,UCharBuffer,UIntBuffer> buildBufferActionGenerator;
+	KernelAction<Input(
+		KV("positionBuffer",UInt2Buffer),
 		KV("rectangleBuffer",RectangleBuffer),
 		KV("newRectangleBuffer",RectangleBuffer),
-		KV("filterBuffer",UCharBuffer<Factory>),
-		KV("atomicIndex",UIntBuffer<Factory>)
+		KV("filterBuffer",UCharBuffer),
+		KV("atomicIndex",UIntBuffer)
 	),KernelOutput<>> buildBufferAction;
 
-	UIntBuffer<Factory> atomicIndexBuffer;
+	UIntBuffer atomicIndexBuffer;
 	RectangleBuffer* rectBuffer1 = nullptr, *rectBuffer2 = nullptr;
 
 	int32_t currentStepSize = -1;
 	uint32_t currentRange = 0;
 	uint32_t rectangleCount = 0;
 
-	void reset(){
-		currentStepSize = -1;
-		currentRange = 0;
-	}
+	void reset();
 
-	bool step(){
-		Range imageRange = this->getInput(_C("imageRange")).getValue();
-		if(currentStepSize == -1){
-			this->currentStepSize = min(imageRange.x,imageRange.y);
-			std::vector<Vec<2,uint32_t>> currentPositionVector;
-			currentPositionVector.reserve(2 * (imageRange.x + imageRange.y));
-			for(uint32_t i = 0; i < imageRange.x; i ++){
-				currentPositionVector.push_back({i,0});
-				currentPositionVector.push_back({i,imageRange.y-1});
-			}
-			for(uint32_t i = 1; i < imageRange.y-1; i ++){
-				currentPositionVector.push_back({0,i});
-				currentPositionVector.push_back({imageRange.x-1,i});
-			}
-			this->positionBufferGenerator.run();
-			this->rectangleBufferGenerator1.run();
-			this->rectangleBufferGenerator2.run();
-
-			this->rectangleCount = 1;
-			this->currentRange = currentPositionVector.size();
-
-			this->rectBuffer1 = &this->rectangleBufferGenerator1.template getOutput<0>().getValue();
-			this->rectBuffer2 = &this->rectangleBufferGenerator2.template getOutput<0>().getValue();
-			auto& positionBuffer = this->positionBufferGenerator.template getOutput<0>().getValue();
-			positionBuffer.copyFromBuffer(currentPositionVector,0,currentRange);
-			std::vector<Rectangle> rectangles{{0,0,imageRange.x,imageRange.y}};
-			this->rectBuffer1->copyFromBuffer(rectangles,0,1);
-		}
-
-		if(this->currentStepSize == 2){
-			std::vector<Rectangle> remainingRects;
-			this->rectBuffer2->copyToBuffer(remainingRects);
-			std::vector<Vec<2,uint32_t>> positionVector;
-			for(const auto& r : remainingRects){
-				for(int i = 1; i < r.w-1; i++){
-					for(int j = 1; j < r.h-1; j++){
-						positionVector.push_back({r.x + i, r.y + j});
-					}
-				}
-			}
-
-			auto& positionBuffer = this->positionBufferGenerator.template getOutput<0>().getValue();
-			positionBuffer.copyFromBuffer(positionVector,0,positionVector.size());
-
-			this->kernelAction.getInput(_C("globalSize")).setDefaultValue(Range{uint32_t(positionVector.size()),1,1});
-			this->kernelAction.run();
-			return true;
-		}else{
-			this->kernelAction.getInput(_C("globalSize")).setDefaultValue(Range{this->currentRange,1,1});
-			this->kernelAction.run();
-
-			this->filterKernelAction.getInput(_C("rectangleBuffer")).setDefaultValue(*this->rectBuffer1);
-			this->filterKernelAction.getInput(_C("globalSize")).setDefaultValue(Range{this->rectangleCount,1,1});
-			this->filterKernelAction.run();
-
-			this->atomicIndexBuffer.copyFromBuffer({0,0},0,2);
-			this->buildBufferAction.getInput(_C("rectangleBuffer")).setDefaultValue(*this->rectBuffer1);
-			this->buildBufferAction.getInput(_C("newRectangleBuffer")).setDefaultValue(*this->rectBuffer2);
-			this->buildBufferAction.getInput(_C("atomicIndex")).setDefaultValue(this->atomicIndexBuffer);
-			this->buildBufferAction.getInput(_C("globalSize")).setDefaultValue(Range{this->rectangleCount,1,1});
-			this->buildBufferAction.run();
-
-			std::vector<uint32_t> atomicIndexVector;
-			this->atomicIndexBuffer.copyToBuffer(atomicIndexVector);
-			std::swap(this->rectBuffer1,this->rectBuffer2);
-			this->currentRange = atomicIndexVector.at(0);
-			this->rectangleCount = atomicIndexVector.at(1);
-			this->currentStepSize /= 2;
-			return this->rectangleCount == 0;
-		}
-	}
+	bool step();
 };
 
 

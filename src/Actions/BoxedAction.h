@@ -1,5 +1,7 @@
 #pragma once
 #include "../Pipeline/StaticPipelineAction.h"
+#include <functional>
+#include <map>
 
 /*
  * BoxedAction.h

@@ -1,5 +1,5 @@
 #include "../Actions/ParameterAction.h"
-#include "../Platform/CPU/CPUImage.h"
+#include "../Platform/Image.h"
 #include <iostream>
 
 /*
@@ -9,9 +9,10 @@
  *      Author: tly
  */
 
-struct BoxFilterAction : StaticPipelineAction<Input(CPUImage<int>,int),Output(CPUImage<int>)>{
+// TODO fixme
+/*struct BoxFilterAction : StaticPipelineAction<Input(CPUImage<int>,int),Output(CPUImage<int>)>{
 	BoxFilterAction(){
-		this->getOutput<0>().setValue(CPUImage<int>(1,1));
+		this->getOutput<0>().setValue(CPUImage<int>(1,1, std::make_shared<CPUBuffer<int>>(1)));
 	}
 protected:
 	int clip(int i,int h){
@@ -26,7 +27,7 @@ protected:
 		CPUImage<int>& outputImage = this->getOutput<0>().getValue();
 		if(outputImage.getWidth() != w ||
 		   outputImage.getHeight() != h){
-			outputImage = CPUImage<int>(w,h);
+			outputImage = CPUImage<int>(w,h, std::make_shared<CPUBuffer<int>>(w*h));
 		}
 
 		const int radius = this->getInput<1>().getValue();
@@ -46,7 +47,7 @@ protected:
 };
 
 void test2(){
-	CPUImage<int> testImage(100,100);
+	CPUImage<int> testImage(100,100, std::make_shared<CPUBuffer<int>>(100*100));
 	for(size_t x = 0; x < 100; x++){
 		for(size_t y = 0; y < 100; y++){
 			testImage.at(x,y) = std::rand() % 256;
@@ -65,6 +66,6 @@ void test2(){
 	filter.run();
 
 	auto& outputImage = filter.getOutput<0>().getValue();
-}
+}*/
 
 

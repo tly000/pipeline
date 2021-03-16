@@ -9,9 +9,9 @@
  *      Author: tly
  */
 
-template<bool EnableOpenMP,typename... Inputs>
-struct CPUKernel : Kernel<Inputs...>{
-	using KernelFunc = void(*)(const Range& globalID,const Range& localID,Inputs&...);
+struct CPUKernel : RawKernel{
+    constexpr static bool EnableOpenMP = true;
+	using KernelFunc = void(*)(const Range& globalID,const Range& localID);
 
 	CPUKernel(DynamicLibrary library,KernelFunc kernelFunc)
 		: library(library),kernelFunc(kernelFunc){}
@@ -19,27 +19,16 @@ struct CPUKernel : Kernel<Inputs...>{
 	void run(
 		const Range& globalOffset,
 		const Range& globalSize,
-		const Range& localSize,
-		Inputs&... inputs){
-
-		if(EnableOpenMP){
-			#pragma omp parallel for collapse(3)
-			for(auto i = globalOffset.x; i < globalOffset.x + globalSize.x; i++){
-				for(auto j = globalOffset.y; j < globalOffset.y + globalSize.y; j++){
-					for(auto k = globalOffset.z; k < globalOffset.z + globalSize.z; k++){
-						kernelFunc(Range{i,j,k},Range{0,0,0},inputs...);
-					}
-				}
-			}
-		}else{
-			for(auto i = globalOffset.x; i < globalOffset.x + globalSize.x; i++){
-				for(auto j = globalOffset.y; j < globalOffset.y + globalSize.y; j++){
-					for(auto k = globalOffset.z; k < globalOffset.z + globalSize.z; k++){
-						kernelFunc(Range{i,j,k},Range{0,0,0},inputs...);
-					}
-				}
-			}
-		}
+		const Range& localSize){
+        throw std::runtime_error("TODO CPUKernel::run");
+        /*#pragma omp parallel for collapse(3) if(EnableOpenMP)
+        for(auto i = globalOffset.x; i < globalOffset.x + globalSize.x; i++){
+            for(auto j = globalOffset.y; j < globalOffset.y + globalSize.y; j++){
+                for(auto k = globalOffset.z; k < globalOffset.z + globalSize.z; k++){
+                    kernelFunc(Range{i,j,k},Range{0,0,0},inputs...);
+                }
+            }
+        }*/
 	}
 protected:
 	DynamicLibrary library;

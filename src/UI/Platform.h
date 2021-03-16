@@ -3,11 +3,10 @@
 #include "PipelineParameterBox.h"
 #include <list>
 #include <string>
-#include "../Platform/CPU/CPUImage.h"
+#include "../Platform/Image.h"
 #include "../MandelPipeline/MandelPipeline.h"
 #include "../Platform/CPU/CPUFactory.h"
 #include "../Platform/CL/CLFactory.h"
-#include "../tests/ExternTemplates.h"
 
 /*
  * AbstractPlatform.h
@@ -19,7 +18,7 @@
 struct AbstractPlatform{
 	virtual PipelineWrapper& getPipeline() = 0;
 	virtual PipelineParameterBox& getParameterBox() = 0;
-	virtual const CPUImage<unsigned>& getRenderedImage() = 0;
+	virtual const Image<unsigned>& getRenderedImage() = 0;
 
 	virtual void scale(float factor) = 0;
 	virtual void translate(float x,float y) = 0;
@@ -31,15 +30,13 @@ struct AbstractPlatform{
 	virtual ~AbstractPlatform() = default;
 };
 
-template<typename Factory,typename T>
 struct Platform : AbstractPlatform{
-	Platform(Factory factory,std::string typeName):
-		typeName(typeName),
+	Platform(std::shared_ptr<Factory> factory):
 		factory(factory){}
 
 	PipelineWrapper& getPipeline(){
 		if(!pipeline){
-			pipeline = std::make_unique<MandelPipeline<Factory,T>>(factory,typeName);
+			pipeline = std::make_unique<MandelPipeline>(factory);
 		}
 		return *pipeline;
 	}
@@ -51,14 +48,8 @@ struct Platform : AbstractPlatform{
 		return *paramBox;
 	}
 
-	const CPUImage<unsigned>& getRenderedImage(){
-		auto& renderedImage = pipeline->reductionAction.getOutput(_C("reducedImage")).getValue();
-		if(outputImage.getHeight() != renderedImage.getHeight() ||
-		   outputImage.getWidth() != renderedImage.getWidth()){
-			outputImage = CPUImage<unsigned>(renderedImage.getWidth(),renderedImage.getHeight());
-		}
-		renderedImage.copyToBuffer(outputImage.getDataBuffer());
-		return outputImage;
+	const Image<unsigned>& getRenderedImage(){
+		return pipeline->reductionAction.getOutput(_C("reducedImage")).getValue();
 	}
 
 	void scale(float factor){
@@ -98,7 +89,7 @@ struct Platform : AbstractPlatform{
 	}
 
 	std::string getName() const {
-		return factory.getDeviceName();
+		return factory->getDeviceName();
 	}
 
 	bool isDone() const{
@@ -108,25 +99,7 @@ struct Platform : AbstractPlatform{
 		this->pipeline->calcAction.getInput(_C("reset calculation")).setDefaultValue(enable);
 	}
 protected:
-	std::string typeName;
-	CPUImage<unsigned> outputImage{1,1};
-	Factory factory;
-	std::unique_ptr<MandelPipeline<Factory,T>> pipeline = nullptr;
+    std::shared_ptr<Factory> factory;
+	std::unique_ptr<MandelPipeline> pipeline = nullptr;
 	std::unique_ptr<PipelineParameterBox> paramBox = nullptr;
 };
-
-extern template struct Platform<CPUFactory<true>,float>;
-extern template struct Platform<CPUFactory<true>,double>;
-//extern template struct Platform<CPUFactory,longdouble>;
-//#ifdef QUADMATH_H
-//extern template struct Platform<CPUFactory,float128>;
-//#endif
-extern template struct Platform<CPUFactory<true>,Fixed4>;
-//extern template struct Platform<CPUFactory,Fixed8>;
-//extern template struct Platform<CPUFactory,Fixed16>;
-
-extern template struct Platform<CLFactory,float>;
-extern template struct Platform<CLFactory,double>;
-extern template struct Platform<CLFactory,Fixed4>;
-extern template struct Platform<CLFactory,Fixed8>;
-extern template struct Platform<CLFactory,Fixed16>;

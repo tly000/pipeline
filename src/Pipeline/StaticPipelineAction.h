@@ -37,6 +37,8 @@ template<typename T> using Key = typename UnpackType<T>::key_type;
 
 template<typename... Inputs,typename... Outputs>
 struct StaticPipelineAction<Input(Inputs...),Output(Outputs...)> : AbstractPipelineAction, NonCopyable{
+    using ThisType = StaticPipelineAction<Input(Inputs...),Output(Outputs...)>;
+
 	StaticPipelineAction()
 		:inputSlots{std::make_unique<StaticInput<Val<Inputs>>>(this,Key<Inputs>::toString())...},
 		 outputSlots{std::make_unique<StaticOutput<Val<Outputs>>>(this,Key<Outputs>::toString())...}{}

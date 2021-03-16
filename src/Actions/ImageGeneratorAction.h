@@ -1,5 +1,6 @@
 #pragma once
 #include "../Actions/LazyAction.h"
+#include "../Platform/Factory.h"
 #include "../Type/Range.h"
 
 /*
@@ -9,8 +10,8 @@
  *      Author: tly
  */
 
-template<typename Factory,typename T> struct ImageGeneratorAction
-	: LazyAction<Input(KV("imageRange",Range)),Output(typename Factory::template Image<T>)>{
+template<typename T> struct ImageGeneratorAction
+	: LazyAction<Input(KV("imageRange",Range)),Output(Image<T>)>{
 
 	ImageGeneratorAction(Factory& factory) : factory(factory){}
 protected:
@@ -19,7 +20,7 @@ protected:
 	void executeImpl(){
 		uint32_t width = this->template getInput<0>().getValue().x;
 		uint32_t height = this->template getInput<0>().getValue().y;
-		this->template getOutput<0>().setValue(factory.template createImage<Val<T>>(width,height));
+		this->template getOutput<0>().setValue(Image<T>(width, height, factory.createBuffer(width * height, sizeof(T))));
 	}
 };
 

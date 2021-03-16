@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 /*
@@ -8,27 +9,38 @@
  *  Created on: Mar 27, 2016
  *      Author: tly
  */
+struct RawBuffer {
+    virtual std::size_t getElementCount() const = 0;
+    virtual std::size_t getElementByteSize() const = 0;
+    virtual ~RawBuffer() = default;
 
-template<typename T>
-struct Buffer{
-	Buffer(std::size_t elemCount)
-		:elemCount(elemCount){}
-
-	std::size_t getElemCount() const{
-		return elemCount;
-	}
-
-	virtual T* getDataPointer() = 0;
-	virtual const T* getDataPointer() const = 0;
-
-	virtual void copyToBuffer(std::vector<T>& buffer) const = 0;
-	virtual void copyFromBuffer(const std::vector<T>& buffer,std::size_t offset, std::size_t n) = 0;
-
-	virtual ~Buffer() = default;
-protected:
-	std::size_t elemCount;
+    virtual void copyToBuffer(void* data, std::size_t size) const = 0;
+    virtual void copyFromBuffer(const void *data, std::size_t size) = 0;
 };
 
+template<typename T>
+struct Buffer {
+    Buffer(std::shared_ptr<RawBuffer> rawBuffer) : rawBuffer(rawBuffer) {
+        assertOrThrow(rawBuffer->getElementByteSize() == sizeof(T));
+    }
 
+    std::size_t getElementCount() const {
+        return rawBuffer->getElementCount();
+    }
+    std::size_t getElementByteSize() const {
+        return sizeof(T);
+    }
 
+    void copyToBuffer(T *begin, T *end) const {
+        rawBuffer->copyToBuffer(begin, (end - begin) * sizeof(T));
+    }
+    void copyFromBuffer(const T *begin, const T* end) {
+        rawBuffer->copyFromBuffer(begin, (end - begin) * sizeof(T));
+    }
 
+    std::shared_ptr<RawBuffer> getRawBuffer() const {
+        return rawBuffer;
+    }
+protected:
+    std::shared_ptr<RawBuffer> rawBuffer;
+};

@@ -1,9 +1,9 @@
 #pragma once
 #include "../../Utility/Utils.h"
 #include "../Buffer.h"
-#include <vector>
-#include <memory>
 #include <cstring>
+#include <memory>
+#include <vector>
 
 /*
  * CPUBuffer.h
@@ -12,42 +12,19 @@
  *      Author: tly
  */
 
-template<typename T> struct CPUBuffer : Buffer<T>{
-	CPUBuffer(std::size_t elemCount)
-	  : Buffer<T>(elemCount),
-		data(std::make_shared<std::vector<T>>(elemCount)){}
+struct CPUBuffer : RawBuffer {
+    CPUBuffer(std::size_t elemCount, std::size_t elemSize)
+        : data(elemCount * elemSize), elemCount(elemCount), elemSize(elemSize) {}
 
-	T* getDataPointer(){ return data->data(); }
-	const T* getDataPointer() const{ return data->data(); }
+    void copyToBuffer(void *dst, std::size_t n) const override { std::memcpy(dst, this->data.data(), n); }
 
-	void copyToBuffer(std::vector<T>& buffer) const {
-		buffer.resize(this->elemCount);
-		buffer.insert(buffer.begin(),data->begin(),data->end());
-	}
+    void copyFromBuffer(const void *src, std::size_t n) override { std::memcpy(this->data.data(), src, n); }
 
-	void copyFromBuffer(const std::vector<T>& buffer,size_t offset, size_t n){
-		assertOrThrow(buffer.size() >= offset + n);
-		assertOrThrow(this->data->size() >= n);
-		std::memcpy(this->getDataPointer(), buffer.data() + offset, n * sizeof(T));
-	}
+    size_t getElementCount() const override { return elemCount; }
+    size_t getElementByteSize() const override { return elemSize; }
 
-	std::vector<T>& getDataBuffer(){
-		return *data;
-	}
-
-	std::vector<T>& getDataBuffer() const{
-		return *data;
-	}
-
-	T& at(size_t x){
-		return this->data->at(x);
-	}
-
-	const T& at(size_t x) const {
-		return this->data->at(x);
-	}
 protected:
-	std::shared_ptr<std::vector<T>> data;
+    std::vector<std::uint8_t> data;
+    std::size_t elemCount;
+    std::size_t elemSize;
 };
-
-

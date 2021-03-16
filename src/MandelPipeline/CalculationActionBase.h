@@ -1,9 +1,16 @@
 #pragma once
 #include "../Actions/BoxedAction.h"
+#include "../Actions/BufferGeneratorAction.h"
+#include "../Actions/FunctionCallAction.h"
+#include "../Actions/ImageGeneratorAction.h"
 #include "../Actions/KernelAction.h"
-#include "../Actions/KernelGeneratorAction.h"
 #include "../Actions/KernelDefinesAction.h"
+#include "../Actions/KernelGeneratorAction.h"
+#include "../Platform/Factory.h"
 #include "../Type/Vec.h"
+#include "Enums.h"
+#include "Typedefs.h"
+#include "VariantUtils.h"
 
 /*
  * CalculationAction.h
@@ -12,24 +19,15 @@
  *      Author: tly
  */
 
-template<typename Factory> using UInt2Buffer = typename Factory::template Buffer<Vec<2,uint32_t>>;
-template<typename Factory> using UIntBuffer = typename Factory::template Buffer<uint32_t>;
-template<typename Factory> using UCharBuffer = typename Factory::template Buffer<uint8_t>;
-template<typename Factory> using Float3Buffer = typename Factory::template Buffer<Vec<3,float>>;
-template<typename Factory,typename T> using ComplexImage = typename Factory::template Image<Vec<2,T>>;
-template<typename Factory> using FloatImage = typename Factory::template Image<float>;
-template<typename Factory> using Float3Image = typename Factory::template Image<Vec<3,float>>;
-template<typename Factory> using Float4Image = typename Factory::template Image<Vec<4,float>>;
-template<typename Factory> using RGBAImage = typename Factory::template Image<uint32_t>;
-
-template<typename Factory,typename T,typename... AdditionalKernelParams> struct CalculationActionBase :
+template<typename... AdditionalKernelParams> struct CalculationActionBase :
 	BoxedAction<Input(
+        KV("numeric type", NumericType),
 		KV("visualize steps",bool),
 		KV("reset calculation",bool),
 		KV("processed formula",std::string),
 		KV("enable juliamode",bool),
-		KV("julia c real",T),
-		KV("julia c imag",T),
+		KV("julia c real",VariantNumericType),
+		KV("julia c imag",VariantNumericType),
 		KV("iterations",uint32_t),
 		KV("bailout",float),
 		KV("disable bailout",bool),
@@ -38,20 +36,22 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		KV("smooth iteration count",bool),
 		KV("leading polynomial exponent",float),
 		KV("statistic function",std::string),
-		KV("positionImage",ComplexImage<Factory,T>),
-		KV("iterationImage",FloatImage<Factory>),
-		KV("processedPositionImage",ComplexImage<Factory,T>),
-		KV("statsImage",Float4Image<Factory>),
+		KV("positionImage",VariantComplexImage),
 		KV("imageRange",Range)
 	),Output(
-		KV("iterationImage",FloatImage<Factory>),
-		KV("processedPositionImage",ComplexImage<Factory,T>),
-		KV("statsImage",Float4Image<Factory>),
+		KV("iterationImage",FloatImage),
+		KV("processedPositionImage",VariantComplexImage),
+		KV("statsImage",Float4Image),
 		KV("time",uint64_t),
 		KV("done",bool)
 	)>{
-		CalculationActionBase(Factory& factory,std::string typeName)
-	  :kernelGeneratorAction(factory){
+		CalculationActionBase(Factory& factory)
+	  : iterationImageGenerator(factory),
+        statsImageGenerator(factory),
+        processedPositionImageGenerator([&](const NumericType& type, const Range& imageRange) {
+            return make_variant_complex_image(factory, type, imageRange);
+        }),
+        kernelGeneratorAction(factory) {
 		this->delegateInput(_C("processed formula"), definesAction.getInput(_C("FORMULA")));
 		this->delegateInput(_C("enable juliamode"), definesAction.getInput(_C("JULIAMODE")));
 		this->delegateInput(_C("iterations"), definesAction.getInput(_C("MAXITER")));
@@ -62,8 +62,12 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		this->delegateInput(_C("smooth iteration count"), definesAction.getInput(_C("SMOOTH_MODE")));
 		this->delegateInput(_C("leading polynomial exponent"), definesAction.getInput(_C("SMOOTH_EXP")));
 		this->delegateInput(_C("statistic function"), definesAction.getInput(_C("STAT_FUNCTION")));
+        this->delegateInput(_C("numeric type"), definesAction.getInput(_C("Type")));
+        this->delegateInput(_C("numeric type"), processedPositionImageGenerator.getInput(_C("numeric type")));
+        this->delegateInput(_C("imageRange"), iterationImageGenerator.getInput(_C("imageRange")));
+        this->delegateInput(_C("imageRange"), statsImageGenerator.getInput(_C("imageRange")));
+        this->delegateInput(_C("imageRange"), processedPositionImageGenerator.getInput(_C("imageRange")));
 
-		definesAction.getInput(_C("Type")).setDefaultValue(typeName);
 		definesAction.naturalConnect(kernelGeneratorAction);
 		kernelGeneratorAction.getInput(_C("programName")).setDefaultValue("calculation");
 		kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("mandelbrotKernel");
@@ -71,20 +75,28 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		kernelGeneratorAction.naturalConnect(kernelAction);
 
 		this->delegateInput(_C("positionImage"),kernelAction.getInput(_C("positionImage")));
-		this->delegateInput(_C("iterationImage"), kernelAction.getInput(_C("iterationImage")));
-		this->delegateInput(_C("processedPositionImage"), kernelAction.getInput(_C("processedPositionImage")));
-		this->delegateInput(_C("statsImage"), kernelAction.getInput(_C("statsImage")));
 		this->delegateInput(_C("julia c real"), kernelAction.getInput(_C("julia c real")));
 		this->delegateInput(_C("julia c imag"), kernelAction.getInput(_C("julia c imag")));
 		this->delegateInput(_C("imageRange"), kernelAction.getInput(_C("globalSize")));
 
-		this->delegateOutput(_C("iterationImage"), kernelAction.getOutput(_C("iterationImage")));
+        iterationImageGenerator.template getOutput<0>() >> kernelAction.getInput(_C("iterationImage"));
+        statsImageGenerator.template getOutput<0>() >> kernelAction.getInput(_C("statsImage"));
+        processedPositionImageGenerator.template getOutput<0>() >> kernelAction.getInput(_C("processedPositionImage"));
+
+        this->delegateOutput(_C("iterationImage"), kernelAction.getOutput(_C("iterationImage")));
 		this->delegateOutput(_C("processedPositionImage"), kernelAction.getOutput(_C("processedPositionImage")));
 		this->delegateOutput(_C("statsImage"), kernelAction.getOutput(_C("statsImage")));
 	}
 
+    ImageGeneratorAction<float> iterationImageGenerator;
+    ImageGeneratorAction<Vec<4,float>> statsImageGenerator;
+    FunctionCallAction<Input(
+        KV("numeric type",NumericType),
+        KV("imageRange",Range)
+    ), KV("positionImage",VariantComplexImage)> processedPositionImageGenerator;
+
 	KernelDefinesAction<
-		KV("Type",std::string),
+		KV("Type",NumericType),
 		KV("FORMULA",std::string),
 		KV("JULIAMODE",bool),
 		KV("MAXITER",uint32_t),
@@ -95,14 +107,14 @@ template<typename Factory,typename T,typename... AdditionalKernelParams> struct 
 		KV("SMOOTH_MODE",bool),
 		KV("SMOOTH_EXP",float),
 		KV("STAT_FUNCTION",std::string)> definesAction;
-	KernelGeneratorAction<Factory,ComplexImage<Factory,T>,FloatImage<Factory>,ComplexImage<Factory,T>,Float4Image<Factory>,T,T,AdditionalKernelParams...> kernelGeneratorAction;
-	KernelAction<Factory,Input(
-		KV("positionImage",ComplexImage<Factory,T>),
-		KV("iterationImage",FloatImage<Factory>),
-		KV("processedPositionImage",ComplexImage<Factory,T>),
-		KV("statsImage",Float4Image<Factory>),
-		KV("julia c real",T),
-		KV("julia c imag",T),
+	KernelGeneratorAction<VariantComplexImage,FloatImage, VariantComplexImage,Float4Image,VariantNumericType ,VariantNumericType,AdditionalKernelParams...> kernelGeneratorAction;
+	KernelAction<Input(
+		KV("positionImage",VariantComplexImage),
+		KV("iterationImage",FloatImage),
+		KV("processedPositionImage",VariantComplexImage),
+		KV("statsImage",Float4Image),
+		KV("julia c real",VariantNumericType),
+		KV("julia c imag",VariantNumericType),
 		AdditionalKernelParams...
 	), KernelOutput<1,2,3>> kernelAction;
 

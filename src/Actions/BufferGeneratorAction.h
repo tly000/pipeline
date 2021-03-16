@@ -1,6 +1,7 @@
 #pragma once
 #include "../Actions/LazyAction.h"
 #include "../Type/Range.h"
+#include "../Platform/Factory.h"
 #include <vector>
 
 /*
@@ -10,31 +11,31 @@
  *      Author: tly
  */
 
-template<typename Factory,typename T> struct BufferGeneratorAction
-	: LazyAction<Input(KV("elemCount", uint32_t)),Output(typename Factory::template Buffer<T>)>{
+template<typename T> struct BufferGeneratorAction
+	: LazyAction<Input(KV("elemCount", uint32_t)),Output(Buffer<T>)>{
 
-	BufferGeneratorAction(Factory factory) : factory(factory){}
+	BufferGeneratorAction(Factory& factory) : factory(factory){}
 protected:
-	Factory factory;
+	Factory& factory;
 
 	void executeImpl(){
 		uint32_t elemCount = this->template getInput<0>().getValue();
-		auto buffer = factory.template createBuffer<Val<T>>(elemCount);
+		auto buffer = Buffer<T>(factory.createBuffer(elemCount, sizeof(T)));
 		this->template getOutput<0>().setValue(buffer);
 	}
 };
 
-template<typename Factory,typename T> struct FilledBufferGeneratorAction
-	: LazyAction<Input(KV("data", std::vector<T>)),Output(typename Factory::template Buffer<T>)>{
+template<typename T> struct FilledBufferGeneratorAction
+	: LazyAction<Input(KV("data", std::vector<T>)),Output(Buffer<T>)>{
 
-	FilledBufferGeneratorAction(Factory factory) : factory(factory){}
+	FilledBufferGeneratorAction(Factory& factory) : factory(factory){}
 protected:
-	Factory factory;
+	Factory& factory;
 
 	void executeImpl(){
 		auto& data = this->getInput(_C("data")).getValue();
-		auto buffer = factory.template createBuffer<Val<T>>(data.size());
-		buffer.copyFromBuffer(data,0,data.size());
+		auto buffer = Buffer<T>(factory.createBuffer(data.size(), sizeof(T)));
+		buffer.copyFromBuffer(data.data(), data.data() + data.size());
 		this->template getOutput<0>().setValue(buffer);
 	}
 };

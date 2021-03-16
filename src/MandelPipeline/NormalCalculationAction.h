@@ -8,8 +8,8 @@
  *      Author: tly
  */
 
-template<typename Factory,typename T> struct NormalCalculationAction : CalculationActionBase<Factory,T>{
-	using CalculationActionBase<Factory,T>::CalculationActionBase;
+struct NormalCalculationAction : CalculationActionBase<>{
+	using CalculationActionBase<>::CalculationActionBase;
 protected:
 	bool step(){
 		this->kernelAction.run();

@@ -3,6 +3,7 @@
 #include "../Type/Range.h"
 #include <tuple>
 #include "../Utility/Timer.h"
+#include "../Platform/Factory.h"
 
 /*
  * KernelAction.h
@@ -15,12 +16,11 @@ template<size_t...> struct KernelOutput{};
 
 template<typename...> struct KernelAction;
 
-template<typename Factory,
-		 typename... Inputs,
+template<typename... Inputs,
 		 size_t... Outputs>
-struct KernelAction<Factory,Input(Inputs...),KernelOutput<Outputs...>>
+struct KernelAction<Input(Inputs...),KernelOutput<Outputs...>>
 	: StaticPipelineAction<Input(
-		KV("kernel",typename Factory::template Kernel<Val<Inputs>...>),
+		KV("kernel",Kernel<Val<Inputs>...>),
 		KV("globalOffset",Range),
 		KV("globalSize",Range),
 		KV("localSize",Range),
@@ -38,7 +38,7 @@ struct KernelAction<Factory,Input(Inputs...),KernelOutput<Outputs...>>
 		this->executeImpl(std::make_index_sequence<3 + sizeof...(Inputs)>());
 	}
 
-	using KernelType = typename Factory::template Kernel<Val<Inputs>...>;
+	using KernelType = Kernel<Val<Inputs>...>;
 
 	StaticInput<KernelType>& getKernelInput(){
 		return this->template getInput<0>();

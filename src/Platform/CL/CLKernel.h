@@ -1,7 +1,9 @@
 #pragma once
+#include <utility>
+
+#include "../../Utility/VariadicUtils.h"
 #include "../Kernel.h"
 #include "CL.h"
-#include "../../Utility/VariadicUtils.h"
 
 /*
  * CLKernel.h
@@ -10,48 +12,24 @@
  *      Author: tly
  */
 
-template<typename... Inputs> struct CLKernel : Kernel<Inputs...>{
-	CLKernel(cl::CommandQueue queue,cl::Kernel kernel)
-		:queue(queue),
-		 kernel(kernel){}
+struct CLKernel : RawKernel {
+    CLKernel(cl::CommandQueue queue, cl::Kernel kernel) : queue(std::move(queue)), kernel(std::move(kernel)) {}
 
-	void run(
-		const Range& globalOffset,
-		const Range& globalSize,
-		const Range& localSize,
-		Inputs&... inputs
-	){
-		int i = 0;
-		variadicForEach(this->forward(i,inputs));
-		cl::NDRange offset(globalOffset.x,globalOffset.y,globalOffset.z);
-		cl::NDRange global(globalSize.x,globalSize.y,globalSize.z);
-		cl::NDRange local(localSize.x,localSize.y,localSize.z);
-		queue.enqueueNDRangeKernel(kernel,offset,global/*,local*/);
-		queue.finish();
-	}
+    void run(const Range &globalOffset, const Range &globalSize, const Range &localSize) override {
+        cl::NDRange offset(globalOffset.x, globalOffset.y, globalOffset.z);
+        cl::NDRange global(globalSize.x, globalSize.y, globalSize.z);
+        cl::NDRange local(localSize.x, localSize.y, localSize.z);
+        queue.enqueueNDRangeKernel(kernel, offset, global /*,local*/);
+        queue.finish();
+    }
+
+    void setArg(int i, const void *data, std::size_t size) override {
+        kernel.setArg(i, size, data);
+    }
+    void setArg(int i, const RawBuffer &buffer) override {
+        kernel.setArg(i, dynamic_cast<const CLBuffer&>(buffer).getHandle());
+    }
 protected:
-	cl::CommandQueue queue;
-	cl::Kernel kernel;
-
-	template<typename T> void forward(int& i,CLImage<T>& image){
-		kernel.setArg(i,image.getHandle());
-		i++;
-		kernel.setArg(i,uint32_t(image.getWidth()));
-		i++;
-		kernel.setArg(i,uint32_t(image.getHeight()));
-		i++;
-	}
-
-	template<typename T> void forward(int& i,CLBuffer<T>& buffer){
-		kernel.setArg(i,buffer.getHandle());
-		i++;
-		kernel.setArg(i,uint32_t(buffer.getElemCount()));
-		i++;
-	}
-
-	template<typename T> void forward(int& i,T& obj){
-		kernel.setArg(i,obj);
-		i++;
-	}
+    cl::CommandQueue queue;
+    cl::Kernel kernel;
 };
-

@@ -7,13 +7,13 @@
  *      Author: tly
  */
 
-#include "../Platform/CPU/CPUImage.h"
+#include "../Platform/Image.h"
 #include "GtkHeader.h"
 
 struct MandelbrotImageView : Gtk::Overlay{
 	MandelbrotImageView(struct MainWindow* window);
 
-	void updateView(const CPUImage<unsigned>& cpuImage);
+	void updateView(const Image<unsigned>& cpuImage);
 
 	void set_sensitive(bool s);
 

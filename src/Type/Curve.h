@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "TypeHelper.h"
-#include "../Kernel/Type/CurveSegment.h"
+#include "../../kernels/Type/CurveSegment.h"
 
 /*
  * Curve.h

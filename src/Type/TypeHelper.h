@@ -6,15 +6,15 @@
  *  Created on: 04.05.2016
  *      Author: tly
  */
-#include "../Kernel/Type/Q16_16.h"
-#include "../Kernel/Type/Q32_32.h"
-#include "../Kernel/Type/Fixed4.h"
-#include "../Kernel/Type/Fixed8.h"
-#include "../Kernel/Type/Fixed16.h"
-#include "../Kernel/Type/float.h"
-#include "../Kernel/Type/double.h"
-#include "../Kernel/Type/longdouble.h"
-#include "../Kernel/Type/qf128.h"
+#include "../../kernels/Type/Q16_16.h"
+#include "../../kernels/Type/Q32_32.h"
+#include "../../kernels/Type/Fixed4.h"
+#include "../../kernels/Type/Fixed8.h"
+#include "../../kernels/Type/Fixed16.h"
+#include "../../kernels/Type/float.h"
+#include "../../kernels/Type/double.h"
+#include "../../kernels/Type/longdouble.h"
+#include "../../kernels/Type/qf128.h"
 #include <string>
 
 template<typename T> T fromFloatToType(float);
