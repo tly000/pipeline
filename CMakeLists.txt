@@ -34,4 +34,8 @@ find_package(OpenCL REQUIRED)
 include_directories(
         ${GTKMM_INCLUDE_DIRS})
 
+if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    find_package(OpenMP REQUIRED)
+    target_link_libraries(mandelpipeline PUBLIC OpenMP::OpenMP_CXX)
+endif()
 target_link_libraries(mandelpipeline PUBLIC OpenCL::OpenCL ${GTKMM_LIBRARIES})
