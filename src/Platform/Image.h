@@ -9,29 +9,28 @@
  *  Created on: Mar 27, 2016
  *      Author: tly
  */
+struct RawImage : virtual RawBuffer {
+    virtual std::size_t getWidth() const = 0;
+    virtual std::size_t getHeight() const = 0;
+};
 
 template<typename T>
 struct Image {
-    Image(std::size_t width, std::size_t height, std::shared_ptr<RawBuffer> rawImage)
-        : width(width),
-          height(height),
-          rawImage(rawImage) {
+    Image(std::shared_ptr<RawImage> rawImage)
+        : rawImage(rawImage) {
         assertOrThrow(rawImage->getElementByteSize() == sizeof(T));
-        assertOrThrow(rawImage->getElementCount() == width * height);
     }
 
     std::size_t getWidth() const {
-        return width;
+        return rawImage->getWidth();
     }
     std::size_t getHeight() const {
-        return height;
+        return rawImage->getHeight();
     }
 
-    std::shared_ptr<RawBuffer> getRawImage() const {
+    std::shared_ptr<RawImage> getRawImage() const {
         return rawImage;
     }
 protected:
-    std::shared_ptr<RawBuffer> rawImage;
-    std::size_t height;
-    std::size_t width;
+    std::shared_ptr<RawImage> rawImage;
 };

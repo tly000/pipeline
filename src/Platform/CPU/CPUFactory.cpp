@@ -2,17 +2,18 @@
 // Created by tly on 14.03.2021.
 //
 
-#include "CPUBuffer.h"
-#include "CPUKernel.h"
 #include "CPUFactory.h"
 #include "../../Utility/DynamicLibrary.h"
+#include "CPUBuffer.h"
+#include "CPUImage.h"
+#include "CPUKernel.h"
 
 std::shared_ptr<RawBuffer> CPUFactory::createBuffer(std::size_t elemCount, std::size_t elemSize) {
     return std::make_shared<CPUBuffer>(elemCount, elemSize);
 }
 
 std::shared_ptr<RawKernel> CPUFactory::createKernel(const std::string &progName, const std::string &kernelName, const std::string &compilerParams) {
-    std::string filePath = "./src/Kernel/CPU/" + progName + ".cpp";
+    std::string filePath = "./kernels/CPU/" + progName + ".cpp";
 
     std::string libName = progName;
     int i = 0;
@@ -39,4 +40,8 @@ std::shared_ptr<RawKernel> CPUFactory::createKernel(const std::string &progName,
         library,
         reinterpret_cast<typename CPUKernel<>::KernelFunc>(library.loadSymbol(kernelName))
     );*/
+}
+
+std::shared_ptr<RawImage> CPUFactory::createImage(std::size_t width, std::size_t height, std::size_t elemSize) {
+    return std::make_shared<CPUImage>(width, height, elemSize);
 }

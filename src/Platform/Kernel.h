@@ -15,6 +15,7 @@
 struct RawKernel {
     virtual void setArg(int i, const void* data, std::size_t size) = 0;
     virtual void setArg(int i, const RawBuffer& buffer) = 0;
+    virtual void setArg(int i, const RawImage& image) = 0;
 
     virtual void run(
         const Range &globalOffset,
@@ -52,13 +53,10 @@ protected:
     template<typename T> void forwardArg(int& i, const Buffer<T>& v) {
         rawKernel->setArg(i, *v.getRawBuffer());
         i++;
-        this->forwardArg(i, std::uint32_t(v.getElementCount()));
     }
 
     template<typename T> void forwardArg(int& i, const Image<T>& v) {
         rawKernel->setArg(i, *v.getRawImage());
         i++;
-        this->forwardArg(i, std::uint32_t(v.getWidth()));
-        this->forwardArg(i, std::uint32_t(v.getHeight()));
     }
 };

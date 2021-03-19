@@ -20,7 +20,7 @@ protected:
 	void executeImpl(){
 		uint32_t width = this->template getInput<0>().getValue().x;
 		uint32_t height = this->template getInput<0>().getValue().y;
-		this->template getOutput<0>().setValue(Image<T>(width, height, factory.createBuffer(width * height, sizeof(T))));
+		this->template getOutput<0>().setValue(Image<T>(factory.createImage(width, height, sizeof(T))));
 	}
 };
 

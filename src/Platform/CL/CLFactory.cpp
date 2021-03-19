@@ -2,6 +2,7 @@
 #include "../../Utility/Utils.h"
 #include "CLBuffer.h"
 #include "CLKernel.h"
+#include "CLImage.h"
 
 /*
  * CLFactory.cpp
@@ -107,4 +108,8 @@ uint32_t CLFactory::getNumberOfDevices() {
 
 std::shared_ptr<RawBuffer> CLFactory::createBuffer(std::size_t elemCount, std::size_t elemSize) {
     return std::make_shared<CLBuffer>(context, queue, CL_MEM_READ_WRITE, elemCount, elemSize);
+}
+
+std::shared_ptr<RawImage> CLFactory::createImage(std::size_t width, std::size_t height, std::size_t elemSize) {
+    return std::make_shared<CLImage>(context, queue, CL_MEM_READ_WRITE, width, height, elemSize);
 }

@@ -10,7 +10,7 @@
  *      Author: tly
  */
 
-struct CLBuffer : RawBuffer {
+struct CLBuffer : virtual RawBuffer {
     CLBuffer(cl::Context &ctx, cl::CommandQueue queue, cl_mem_flags memFlags, size_t elemCount, size_t elemSize)
         : queue(queue),
           bufferHandle(ctx, memFlags, elemSize * elemCount),

@@ -18,19 +18,14 @@ VariantNumericType variant_from_numeric_type(const NumericType &type) {
 VariantComplexImage make_variant_complex_image(Factory &factory, const NumericType &type, const Range &imageSize) {
     return std::visit(
         [&]<typename T>(T type) -> VariantComplexImage {
-            return Image<Vec<2, T>>(
-                imageSize.x, imageSize.y,
-                factory.createBuffer(imageSize.x * imageSize.y, sizeof(Vec<2, T>)));
+            return Image<Vec<2, T>>(factory.createImage(imageSize.x, imageSize.y, sizeof(Vec<2, T>)));
         },
         variant_from_numeric_type(type));
 }
 
 VariantNumericType make_variant_number(const NumericType &type, const HighPrecisionType &highPrecisionNumber) {
     VariantNumericType number = variant_from_numeric_type(type);
-    std::visit(
-        [&]<typename T>(T &number) {
-            number = fromString<T>(toString<HighPrecisionType>(highPrecisionNumber));
-        },
-        number);
+    std::visit([&]<typename T>(T &number) { number = fromString<T>(toString<HighPrecisionType>(highPrecisionNumber)); },
+               number);
     return number;
 }

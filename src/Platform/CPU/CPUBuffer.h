@@ -12,7 +12,7 @@
  *      Author: tly
  */
 
-struct CPUBuffer : RawBuffer {
+struct CPUBuffer : virtual RawBuffer {
     CPUBuffer(std::size_t elemCount, std::size_t elemSize)
         : data(elemCount * elemSize), elemCount(elemCount), elemSize(elemSize) {}
 
