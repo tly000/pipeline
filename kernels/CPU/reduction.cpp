@@ -1,8 +1,8 @@
-#include "../../Type/Range.h"
-#include "../../Platform/CPU/CPUImage.h"
+#include "../../src/Type/Range.h"
+#include "../Type/CPUImage.h"
 #include "../Utils.h"
 #include "../Multisampling.h"
-#include "../../Type/Vec.h"
+#include "../../src/Type/Vec.h"
 #include <iostream>
 #include <cmath>
 

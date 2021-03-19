@@ -1,8 +1,9 @@
-#include "../../Type/Range.h"
-#include "../../Platform/CPU/CPUImage.h"
+#include "../../src/Type/Range.h"
+#include "../Type/CPUImage.h"
+#include "../Type/CPUBuffer.h"
 #include <iostream>
 #include <cmath>
-#include "../../Type/Vec.h"
+#include "../../src/Type/Vec.h"
 #include "../Type/Complex.h"
 #include "../Type/CurveSegment.h"
 

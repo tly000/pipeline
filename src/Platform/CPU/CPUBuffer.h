@@ -23,6 +23,13 @@ struct CPUBuffer : virtual RawBuffer {
     size_t getElementCount() const override { return elemCount; }
     size_t getElementByteSize() const override { return elemSize; }
 
+    std::uint8_t* getDataPointer() {
+        return this->data.data();
+    }
+
+    const std::uint8_t* getDataPointer() const {
+        return this->data.data();
+    }
 protected:
     std::vector<std::uint8_t> data;
     std::size_t elemCount;

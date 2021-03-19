@@ -1,5 +1,5 @@
-#include "../../Type/Range.h"
-#include "../../Platform/CPU/CPUImage.h"
+#include "../../src/Type/Range.h"
+#include "../Type/CPUImage.h"
 #include "../Utils.h"
 #include "../Multisampling.h"
 #include "../Type/Complex.h"
@@ -15,7 +15,7 @@
 extern "C" void positionKernel(const Range& globalID,const Range& localID,CPUImage<Complex>& image,Type& offsetReal,Type& offsetImag,Complex& scaleFactor){
 	int w = image.getWidth();
 	int h = image.getHeight();
-	Complex offset ={
+    Complex offset ={
 		offsetReal, offsetImag
 	};
 	float fx = globalID.x, fy = globalID.y;

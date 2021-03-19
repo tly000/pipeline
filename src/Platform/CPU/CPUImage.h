@@ -15,3 +15,4 @@ protected:
     std::size_t width;
     std::size_t height;
 };
+
