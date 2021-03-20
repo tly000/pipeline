@@ -75,8 +75,8 @@ bool MarianiSilverAction::step() {
         this->rectBuffer2->copyToBuffer(remainingRects.data(), remainingRects.data() + remainingRects.size());
         std::vector<Vec<2,uint32_t>> positionVector;
         for(const auto& r : remainingRects) {
-            for(int i = 1; i < r.w-1; i++){
-                for(int j = 1; j < r.h-1; j++){
+            for(int i = 1; i < int(r.w)-1; i++){
+                for(int j = 1; j < int(r.h)-1; j++){
                     positionVector.push_back({r.x + i, r.y + j});
                 }
             }
