@@ -444,8 +444,8 @@ kernel void marianiSilverFilter(
 				float f1 = iterImage[r.x + r.w-1 + w * (r.y + j)];
 				float g0 = iterImage[r.x + i + w * r.y];
 				float g1 = iterImage[r.x + i + w * (r.y + r.h-1)];
-				iterImage[r.x + i + w * (r.y + j)] = 0;
-				//iterImage[r.x + i + w * (r.y + j)] = (mix(f0,f1,u)*v*(1-v) + mix(g0,g1,v)*u*(1-u))/(u*(1-u) + v*(1-v));
+				//iterImage[r.x + i + w * (r.y + j)] = 0;
+				iterImage[r.x + i + w * (r.y + j)] = (mix(f0,f1,u)*v*(1-v) + mix(g0,g1,v)*u*(1-u))/(u*(1-u) + v*(1-v));
 				//iterImage[r.x + i + w * (r.y + j)] = mix(g0,g1,v) + mix(f0,f1,u) - mix(mix(p00,p10,u),mix(p01,p11,u),v);
 			}
 		}
