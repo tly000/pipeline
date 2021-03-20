@@ -13,23 +13,19 @@
 
 #include "GtkHeader.h"
 
-#include <iostream>
+#include "../MandelPipeline/MandelPipeline.h"
 #include "../UI/PipelineParameterBox.h"
 #include "MandelbrotImageView.h"
-#include "Platform.h"
 
 struct MainWindow : Gtk::Window{
 	MainWindow();
 
-	Platform* getSelectedPlatform(){
-		return &platform;
-	}
-
 	void calculateNow();
+
+    MandelPipeline pipeline;
 protected:
 	void setSensitive(bool s);
 	Gtk::HeaderBar header;
-	Gtk::Box verticalBox{Gtk::ORIENTATION_VERTICAL};
 	Gtk::Paned mainView;
 	MandelbrotImageView imageView;
 
@@ -38,8 +34,6 @@ protected:
 
 	Gtk::ScrolledWindow parameterBox;
 	sigc::connection calcbuttonConnection;
-
-	Platform platform;
 };
 
 

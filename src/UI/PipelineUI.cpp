@@ -1,7 +1,5 @@
 #include "PipelineUI.h"
 #include "../MandelPipeline/MandelPipeline.h"
-#include "../Platform/CL/CLFactory.h"
-#include "../Platform/CPU/CPUFactory.h"
 #include "../stb_image_write.h"
 #include <fstream>
 #include <future>
@@ -29,7 +27,7 @@ MainWindow::MainWindow() : imageView(this) {
             std::string fileName = dialog.get_filename();
             std::string jsonObj = fileToString(fileName);
             try {
-                this->getSelectedPlatform()->getPipeline().paramsFromJson(jsonObj);
+                this->pipeline.paramsFromJson(jsonObj);
             } catch (std::exception &e) {
                 Gtk::MessageDialog messageBox(*this, std::string("error while loading settings: \n") + e.what());
                 messageBox.run();
@@ -51,7 +49,7 @@ MainWindow::MainWindow() : imageView(this) {
         dialog.add_filter(filter);
         if (dialog.run() == Gtk::RESPONSE_ACCEPT) {
             std::string fileName = dialog.get_filename();
-            auto &image = this->getSelectedPlatform()->getRenderedImage();
+            auto &image = this->pipeline.reductionAction.getOutput(_C("reducedImage")).getValue();
             std::vector<std::uint32_t> image_data(image.getWidth() * image.getHeight());
             image.getRawImage()->copyToBuffer(image_data.data(), sizeof(std::uint32_t) * image_data.size());
             if (fileName.substr(fileName.size() - 4) == ".bmp") {
@@ -79,7 +77,7 @@ MainWindow::MainWindow() : imageView(this) {
         auto treeStore = Gtk::TreeStore::create(record);
         Gtk::TreeView treeView(treeStore);
 
-        for (auto &paramPack : this->getSelectedPlatform()->getPipeline().getParamPacks()) {
+        for (auto &paramPack : this->pipeline.getParamPacks()) {
             auto row = *treeStore->append();
             row[record.paramName] = paramPack.first;
             row[record.selected] = true;
@@ -129,7 +127,7 @@ MainWindow::MainWindow() : imageView(this) {
         dialog.add_filter(filter);
         if (dialog.run() != Gtk::RESPONSE_ACCEPT) { return; }
         std::string fileName = dialog.get_filename();
-        std::string object = this->getSelectedPlatform()->getPipeline().paramsToJson(selectedParams);
+        std::string object = this->pipeline.paramsToJson(selectedParams);
         if (fileName.substr(fileName.size() - 5) != ".json") { fileName += ".json"; }
         std::ofstream file(fileName);
         if (file) {
@@ -153,18 +151,16 @@ MainWindow::MainWindow() : imageView(this) {
     header.set_title("mandelpipeline");
 
     set_titlebar(header);
-    //verticalBox.add(header);
-    verticalBox.add(mainView);
 
     //set scroll policy
     parameterBox.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
-    parameterBox.add(platform.getParameterBox());
+    parameterBox.add(*Gtk::manage(new PipelineParameterBox(pipeline)));
     parameterBox.show_all();
 
     mainView.add1(imageView);
     mainView.add2(parameterBox);
 
-    this->add(verticalBox);
+    this->add(mainView);
 
     calculateButton.clicked();
 
@@ -196,7 +192,7 @@ void MainWindow::calculateNow() {
             return false;
         }
         if (*showingImage) {
-            this->imageView.updateView(platform.getRenderedImage());
+            this->imageView.updateView(pipeline.reductionAction.getOutput(_C("reducedImage")).getValue());
             *showingImage = false;
         }
         return true;
@@ -210,17 +206,17 @@ void MainWindow::calculateNow() {
 
     std::thread([=] {
         try {
-            this->platform.setReset(true);
+            this->pipeline.calcAction.getInput(_C("reset calculation")).setDefaultValue(true);
             do {
                 if (*cancel) { break; }
-                this->platform.getPipeline().run();
+                this->pipeline.run();
 
                 *showingImage = true;
                 while (*showingImage)
                     ;
 
-                this->platform.setReset(false);
-            } while (!this->platform.isDone());
+                this->pipeline.calcAction.getInput(_C("reset calculation")).setDefaultValue(false);
+            } while (!this->pipeline.calcAction.getOutput(_C("done")).getValue());
         } catch (const std::exception &e) { *error = e.what(); }
         *done = true;
     }).detach();

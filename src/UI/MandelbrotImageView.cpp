@@ -8,6 +8,33 @@
  *      Author: tly
  */
 
+void pipeline_scale(MandelPipeline& pipeline, float factor){
+    //get current scale.
+    auto& scale = pipeline.positionParams.getParam(_C("scale"));
+    scale.setValue(tmul(scale.getValue(),fromFloatToType<HighPrecisionType>(factor)));
+}
+
+//translate by x,y in image space
+void pipeline_translate(MandelPipeline& pipeline, float x,float y){
+    //get current position and scale.
+    auto& param = pipeline.positionParams;
+    auto offsetReal = param.getValue(_C("center real"));
+    auto offsetImag = param.getValue(_C("center imag"));
+    auto scale = param.getValue(_C("scale"));
+    float rotationAngle = param.getValue(_C("angle")) / 180 * G_PI;
+
+    auto cosA = fromFloatToType<decltype(scale)>(std::cos(rotationAngle));
+    auto sinA = fromFloatToType<decltype(scale)>(std::sin(rotationAngle));
+    auto X = tmul(scale,fromFloatToType<decltype(scale)>(x));
+    auto Y = tmul(scale,fromFloatToType<decltype(scale)>(y));
+    auto newX = tsub(tmul(X,cosA),tmul(Y,sinA));
+    auto newY = tadd(tmul(X,sinA),tmul(Y,cosA));
+
+    param.getParam(_C("center real")).setValue(tadd(offsetReal,newX));
+    param.getParam(_C("center imag")).setValue(tadd(offsetImag,newY));
+}
+
+
 int sgn(int x) { return (x < 0) ? -1 : 1; }
 
 MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
@@ -28,11 +55,11 @@ MandelbrotImageView::MandelbrotImageView(struct MainWindow *window)
                 float y = 2.0f * (this->yPos + this->h / 2.0f) / float(this->pixBuf->get_height()) - 1;
                 y *= float(this->pixBuf->get_height()) / float(this->pixBuf->get_width());
                 if (e->button == 1) {
-                    this->window->getSelectedPlatform()->translate(x, y);
-                    this->window->getSelectedPlatform()->scale(scale);
+                    pipeline_translate(this->window->pipeline, x, y);
+                    pipeline_scale(this->window->pipeline, scale);
                 } else {
-                    this->window->getSelectedPlatform()->scale(1 / scale);
-                    this->window->getSelectedPlatform()->translate(-x, -y);
+                    pipeline_scale(this->window->pipeline, 1 / scale);
+                    pipeline_translate(this->window->pipeline, -x, -y);
                 }
 
                 this->w = -1;

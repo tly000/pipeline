@@ -16,8 +16,8 @@ struct Parameter {
 
     virtual bool setValueFromString(std::string val) = 0;
     virtual std::string getValueAsString() const = 0;
+    virtual ~Parameter() = default;
 
-    virtual ~Parameter() = default;//making it virtual
     const std::string name;
 
     void registerObserver(std::function<void(Parameter *)> observer) { this->observers.push_back(observer); }
