@@ -15,11 +15,9 @@ struct SuccessiveIterationAction : CalculationActionBase<
                                        KV("filterBuffer", UCharBuffer),
                                        KV("first", uint8_t)> {
 
-    SuccessiveIterationAction(Factory &f);
+    SuccessiveIterationAction();
 
 protected:
-    Factory &factory;
-
     KernelGeneratorAction<FloatImage, UInt2Buffer> finalActionGenerator;
     KernelAction<Input(
                      KV("iterationImage", FloatImage),
@@ -39,8 +37,8 @@ protected:
     BufferGeneratorAction<Vec<2, uint32_t>> positionBufferGenerator1;
     BufferGeneratorAction<Vec<2, uint32_t>> positionBufferGenerator2;
     BufferGeneratorAction<uint8_t> filterBufferGenerator;
+    BufferGeneratorAction<uint32_t> atomicIndexBufferGenerator;
 
-    UIntBuffer atomicIndexBuffer;
     UInt2Buffer *positionBuffer1, *positionBuffer2;
 
     FunctionCallAction<Input(KV("imageRange", Range)), KV("elemCount", uint32_t)> bufferRangeAction{

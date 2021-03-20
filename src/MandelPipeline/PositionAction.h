@@ -18,6 +18,7 @@
 
 struct PositionAction :
 	BoxedAction<Input(
+        KV("platform", std::shared_ptr<Factory>),
         KV("numeric type", NumericType),
 		KV("center real",VariantNumericType),
 		KV("center imag",VariantNumericType),
@@ -29,9 +30,10 @@ struct PositionAction :
 	),Output(
 		KV("positionImage",VariantComplexImage)
 	)>{
-	PositionAction(Factory& factory);
+	PositionAction();
 
     FunctionCallAction<Input(
+        KV("platform", std::shared_ptr<Factory>),
         KV("numeric type",NumericType),
         KV("imageRange",Range)
     ), KV("positionImage",VariantComplexImage)> positionImageGenerator;

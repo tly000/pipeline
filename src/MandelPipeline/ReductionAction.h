@@ -16,6 +16,7 @@
  */
 
 struct ReductionAction : BoxedAction<Input(
+    KV("platform", std::shared_ptr<Factory>),
     KV("numeric type", NumericType),
 	KV("enable multisampling",bool),
 	KV("size",uint32_t),
@@ -24,7 +25,7 @@ struct ReductionAction : BoxedAction<Input(
 ),Output(
 	KV("reducedImage",RGBAImage)
 )>{
-	ReductionAction(Factory& factory);
+	ReductionAction();
 
     ImageGeneratorAction<std::uint32_t> reducedImageGenerator;
 	KernelDefinesAction<

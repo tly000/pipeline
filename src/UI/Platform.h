@@ -16,12 +16,9 @@
  */
 
 struct Platform {
-	Platform(std::shared_ptr<Factory> factory):
-		factory(factory){}
-
 	PipelineWrapper& getPipeline(){
 		if(!pipeline){
-			pipeline = std::make_unique<MandelPipeline>(factory);
+			pipeline = std::make_unique<MandelPipeline>();
 		}
 		return *pipeline;
 	}
@@ -71,18 +68,14 @@ struct Platform {
 		param.getParam(_C("angle")).setValue(currentAngle + angle);
 	}
 
-	std::string getName() const {
-		return factory->getDeviceName();
-	}
-
 	bool isDone() const {
 		return this->pipeline->calcAction.getOutput(_C("done")).getValue();
 	}
 	void setReset(bool enable){
-		this->pipeline->calcAction.getInput(_C("reset calculation")).setDefaultValue(enable);
+		this->getPipeline();
+        this->pipeline->calcAction.getInput(_C("reset calculation")).setDefaultValue(enable);
 	}
 protected:
-    std::shared_ptr<Factory> factory;
 	std::unique_ptr<MandelPipeline> pipeline = nullptr;
 	std::unique_ptr<PipelineParameterBox> paramBox = nullptr;
 };

@@ -13,7 +13,8 @@
 
 void testPipeline(std::shared_ptr<Factory> f,std::string pipelineName, std::string typeName,std::string test,std::string method,int testCount){
 	std::cout << "testing pipeline " << pipelineName << " with type " << typeName << " and method " << method << std::endl;
-	MandelPipeline pipeline(f);
+	MandelPipeline pipeline;
+    pipeline.generalParam.setValue(_C("platform"), f);
 
 	std::string testFile = fileToString("./" + test + ".json");
 	pipeline.paramsFromJson(testFile);

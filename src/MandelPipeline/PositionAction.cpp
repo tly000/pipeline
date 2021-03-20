@@ -5,11 +5,11 @@
 #include "PositionAction.h"
 #include "VariantUtils.h"
 
-PositionAction::PositionAction(Factory &factory)
-    : positionImageGenerator([&](const NumericType &type, const Range &imageRange) {
-          return make_variant_complex_image(factory, type, imageRange);
+PositionAction::PositionAction()
+    : positionImageGenerator([&](const std::shared_ptr<Factory>& factory, const NumericType &type, const Range &imageRange) {
+          return make_variant_complex_image(*factory, type, imageRange);
       }),
-      kernelGeneratorAction(factory), rotationAction([](const VariantNumericType &scale, float angle) {
+      rotationAction([](const VariantNumericType &scale, float angle) {
           angle *= 3.14159 / 180;
           return std::visit(
               [&]<typename T>(T scale) -> VariantVec2 {
@@ -25,6 +25,9 @@ PositionAction::PositionAction(Factory &factory)
     this->delegateInput(_C("numeric type"), definesAction.getInput(_C("Type")));
     this->delegateInput(_C("numeric type"), positionImageGenerator.getInput(_C("numeric type")));
     this->delegateInput(_C("imageRange"), positionImageGenerator.getInput(_C("imageRange")));
+
+    this->delegateInput(_C("platform"),this->positionImageGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->kernelGeneratorAction.getInput(_C("platform")));
 
     definesAction.naturalConnect(kernelGeneratorAction);
     kernelGeneratorAction.getInput(_C("programName")).setDefaultValue("position");

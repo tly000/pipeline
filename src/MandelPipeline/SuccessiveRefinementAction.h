@@ -13,13 +13,12 @@
 struct SuccessiveRefinementAction :
 	CalculationActionBase<KV("positionBuffer",UInt2Buffer),KV("stepSize",uint32_t)>{
 
-	SuccessiveRefinementAction(Factory& f);
+	SuccessiveRefinementAction();
 protected:
-	Factory& factory;
-
 	BufferGeneratorAction<Vec<2,uint32_t>> positionBufferGenerator1;
 	BufferGeneratorAction<Vec<2,uint32_t>> positionBufferGenerator2;
 	BufferGeneratorAction<uint8_t> filterBufferGenerator;
+    BufferGeneratorAction<uint32_t> atomicIndexBufferGenerator;
 
 	FunctionCallAction<Input(KV("imageRange",Range)),KV("elemCount",uint32_t)> bufferRangeAction{
 		[](const Range& r){
@@ -45,7 +44,6 @@ protected:
 		KV("stepSize",uint32_t)
 	),KernelOutput<>> buildBufferAction;
 
-	UIntBuffer atomicIndexBuffer;
 	UInt2Buffer* positionBuffer1 = nullptr, *positionBuffer2 = nullptr;
 
 	uint32_t currentRange = 0;

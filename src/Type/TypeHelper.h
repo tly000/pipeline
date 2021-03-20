@@ -6,15 +6,16 @@
  *  Created on: 04.05.2016
  *      Author: tly
  */
-#include "../../kernels/Type/Q16_16.h"
-#include "../../kernels/Type/Q32_32.h"
+#include "../../kernels/Type/Fixed16.h"
 #include "../../kernels/Type/Fixed4.h"
 #include "../../kernels/Type/Fixed8.h"
-#include "../../kernels/Type/Fixed16.h"
-#include "../../kernels/Type/float.h"
+#include "../../kernels/Type/Q16_16.h"
+#include "../../kernels/Type/Q32_32.h"
 #include "../../kernels/Type/double.h"
+#include "../../kernels/Type/float.h"
 #include "../../kernels/Type/longdouble.h"
 #include "../../kernels/Type/qf128.h"
+#include "../Platform/Factory.h"
 #include <string>
 
 template<typename T> T fromFloatToType(float);
@@ -85,3 +86,6 @@ template<> float128 fromString<float128>(const std::string&);
 template<> std::string toString<float128>(const float128&);
 
 #endif
+
+template<> std::shared_ptr<Factory> fromString<std::shared_ptr<Factory>>(const std::string&);
+template<> std::string toString<std::shared_ptr<Factory>>(const std::shared_ptr<Factory>&);

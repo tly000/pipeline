@@ -22,6 +22,7 @@ bool SuccessiveIterationAction::step() {
 
             this->positionBufferGenerator1.run();
             this->positionBufferGenerator2.run();
+            this->atomicIndexBufferGenerator.run();
             this->positionBuffer1 = &this->positionBufferGenerator1.template getOutput<0>().getValue();
             this->positionBuffer2 = &this->positionBufferGenerator2.template getOutput<0>().getValue();
             this->positionBuffer1->copyFromBuffer(currentPositionVector.data(), currentPositionVector.data() + currentPositionVector.size());
@@ -33,14 +34,15 @@ bool SuccessiveIterationAction::step() {
         this->kernelAction.run();
 
         std::uint32_t size = 0;
-        this->atomicIndexBuffer.copyFromBuffer(&size, &size + 1);
+        auto& atomicIndexBuffer = this->atomicIndexBufferGenerator.getOutput<0>().getValue();
+        atomicIndexBuffer.copyFromBuffer(&size, &size + 1);
         this->buildBufferAction.getInput(_C("positionBuffer")).setDefaultValue(*this->positionBuffer1);
         this->buildBufferAction.getInput(_C("newPositionBuffer")).setDefaultValue(*this->positionBuffer2);
-        this->buildBufferAction.getInput(_C("atomicIndex")).setDefaultValue(this->atomicIndexBuffer);
+        this->buildBufferAction.getInput(_C("atomicIndex")).setDefaultValue(atomicIndexBuffer);
         this->buildBufferAction.getInput(_C("globalSize")).setDefaultValue(Range{currentRange, 1, 1});
         this->buildBufferAction.run();
 
-        this->atomicIndexBuffer.copyToBuffer(&size, &size + 1);
+        atomicIndexBuffer.copyToBuffer(&size, &size + 1);
 
         if (!decreasingPointCount) {
             decreasingPointCount = currentRange > size;
@@ -67,15 +69,7 @@ void SuccessiveIterationAction::reset() {
     decreasingPointCount = false;
 }
 
-SuccessiveIterationAction::SuccessiveIterationAction(Factory &f)
-    : CalculationActionBase<KV("positionBuffer", UInt2Buffer), KV("filterBuffer", UCharBuffer), KV("first", uint8_t)>(f),
-      factory(f),
-      finalActionGenerator(f),
-      buildBufferActionGenerator(f),
-      positionBufferGenerator1(f),
-      positionBufferGenerator2(f),
-      filterBufferGenerator(f),
-      atomicIndexBuffer(Buffer<std::uint32_t>(f.createBuffer(1, sizeof(std::uint32_t)))) {
+SuccessiveIterationAction::SuccessiveIterationAction() {
     this->kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("successiveIterationKernel");
 
     this->finalActionGenerator.getInput(_C("programName")).setDefaultValue("calculation");
@@ -97,4 +91,11 @@ SuccessiveIterationAction::SuccessiveIterationAction(Factory &f)
 
     this->filterBufferGenerator.template output<0>() >> this->kernelAction.getInput(_C("filterBuffer"));
     this->filterBufferGenerator.template output<0>() >> this->buildBufferAction.getInput(_C("filterBuffer"));
+
+    this->delegateInput(_C("platform"),this->buildBufferActionGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->finalActionGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->filterBufferGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->positionBufferGenerator1.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->positionBufferGenerator2.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->atomicIndexBufferGenerator.getInput(_C("platform")));
 }

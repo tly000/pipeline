@@ -3,14 +3,7 @@
 //
 #include "ColoringAction.h"
 
-ColoringAction::ColoringAction(Factory &factory)
-    :factory(factory),
-     gradientBufferGenerator1(factory),
-     gradientBufferGenerator2(factory),
-     curveBufferGenerator1(factory),
-     curveBufferGenerator2(factory),
-     kernelGeneratorAction(factory),
-     coloredImageGenerator(factory){
+ColoringAction::ColoringAction(){
     this->delegateInput(_C("outer gradient"),this->gradientBufferGenerator1.getInput(_C("data")));
     this->delegateInput(_C("inner gradient"),this->gradientBufferGenerator2.getInput(_C("data")));
 
@@ -24,6 +17,13 @@ ColoringAction::ColoringAction(Factory &factory)
     this->delegateInput(_C("iterations"),this->definesAction.getInput(_C("MAXITER")));
     this->delegateInput(_C("numeric type"),this->definesAction.getInput(_C("Type")));
     this->definesAction.naturalConnect(kernelGeneratorAction);
+
+    this->delegateInput(_C("platform"),this->coloredImageGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->gradientBufferGenerator1.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->gradientBufferGenerator2.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->curveBufferGenerator1.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->curveBufferGenerator2.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->kernelGeneratorAction.getInput(_C("platform")));
 
     this->delegateInput(_C("imageRange"),this->coloredImageGenerator.getInput(_C("imageRange")));
     kernelGeneratorAction.getInput(_C("programName")).setDefaultValue("coloring");

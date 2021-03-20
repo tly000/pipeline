@@ -4,15 +4,7 @@
 
 #include "SuccessiveRefinementAction.h"
 
-SuccessiveRefinementAction::SuccessiveRefinementAction(Factory &f)
-    :CalculationActionBase(f),
-     factory(f),
-     positionBufferGenerator1(f),
-     positionBufferGenerator2(f),
-     filterBufferGenerator(f),
-     filterKernelGenerator(f),
-     buildBufferActionGenerator(f),
-     atomicIndexBuffer(Buffer<std::uint32_t>(f.createBuffer(1, sizeof(std::uint32_t)))){
+SuccessiveRefinementAction::SuccessiveRefinementAction() {
     this->kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("successiveRefinementKernel");
 
     this->definesAction.naturalConnect(this->filterKernelGenerator);
@@ -35,6 +27,12 @@ SuccessiveRefinementAction::SuccessiveRefinementAction(Factory &f)
 
     this->filterBufferGenerator.template output<0>() >> this->filterKernelAction.getInput(_C("filterBuffer"));
     this->filterBufferGenerator.template output<0>() >> this->buildBufferAction.getInput(_C("filterBuffer"));
+
+    this->delegateInput(_C("platform"),this->positionBufferGenerator1.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->positionBufferGenerator2.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->buildBufferActionGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->filterKernelGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"),this->atomicIndexBufferGenerator.getInput(_C("platform")));
 }
 
 void SuccessiveRefinementAction::reset() {
@@ -77,6 +75,7 @@ bool SuccessiveRefinementAction::step() {
         currentRange = currentPositionVector.size();
         this->positionBufferGenerator1.run();
         this->positionBufferGenerator2.run();
+        this->atomicIndexBufferGenerator.run();
         this->positionBuffer1 = &this->positionBufferGenerator1.template getOutput<0>().getValue();
         this->positionBuffer2 = &this->positionBufferGenerator2.template getOutput<0>().getValue();
         this->positionBuffer1->copyFromBuffer(currentPositionVector.data(), currentPositionVector.data() + currentPositionVector.size());
@@ -97,16 +96,17 @@ bool SuccessiveRefinementAction::step() {
         this->filterKernelAction.getInput(_C("globalSize")).setDefaultValue(Range{filterRange,1,1});
         this->filterKernelAction.run();
 
+        auto& atomicIndexBuffer = this->atomicIndexBufferGenerator.getOutput<0>().getValue();
         uint32_t size = 0;
-        this->atomicIndexBuffer.copyFromBuffer(&size, &size + 1);
+        atomicIndexBuffer.copyFromBuffer(&size, &size + 1);
         this->buildBufferAction.getInput(_C("positionBuffer")).setDefaultValue(*this->positionBuffer1);
         this->buildBufferAction.getInput(_C("newPositionBuffer")).setDefaultValue(*this->positionBuffer2);
-        this->buildBufferAction.getInput(_C("atomicIndex")).setDefaultValue(this->atomicIndexBuffer);
+        this->buildBufferAction.getInput(_C("atomicIndex")).setDefaultValue(atomicIndexBuffer);
         this->buildBufferAction.getInput(_C("globalSize")).setDefaultValue(Range{filterRange,1,1});
         this->buildBufferAction.getInput(_C("stepSize")).setDefaultValue(currentStepSize);
         this->buildBufferAction.run();
 
-        this->atomicIndexBuffer.copyToBuffer(&size, &size + 1);
+        atomicIndexBuffer.copyToBuffer(&size, &size + 1);
 
         std::swap(this->positionBuffer1,this->positionBuffer2);
         this->currentRange = size;

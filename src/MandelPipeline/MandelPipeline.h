@@ -36,11 +36,10 @@
  */
 
 struct MandelPipeline : PipelineWrapper{
-    std::shared_ptr<Factory> factory;
-
     UIParameterAction<
+        KV("platform", std::shared_ptr<Factory>),
         KV("numeric type",NumericType)
-    > typeParam{"type"};
+    > generalParam{"general"};
 
 	UIParameterAction<
 		KV("width",uint32_t),
@@ -96,6 +95,7 @@ struct MandelPipeline : PipelineWrapper{
 	PositionAction positionAction;
 
 	SlotAction<Input(
+        KV("platform", std::shared_ptr<Factory>),
         KV("numeric type", NumericType),
 		KV("visualize steps",bool),
 		KV("reset calculation",bool),
@@ -154,7 +154,7 @@ struct MandelPipeline : PipelineWrapper{
 		KV("action",CalcActionType*)
 	> methodSelectionAction;
 
-	MandelPipeline(std::shared_ptr<Factory> factory);
+	MandelPipeline();
 
 	void run();
 };

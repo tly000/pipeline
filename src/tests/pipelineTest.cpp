@@ -11,7 +11,8 @@
  */
 
 symbolexport void pipelineTest(){
-	MandelPipeline gpuPipeline(std::make_shared<CLFactory>());
+	MandelPipeline gpuPipeline;
+    gpuPipeline.generalParam.setValue(_C("platform"), std::make_shared<CLFactory>());
 	gpuPipeline.run();
 }
 

@@ -3,21 +3,20 @@
 //
 #include "MandelPipeline.h"
 
-MandelPipeline::MandelPipeline(std::shared_ptr<Factory> factory)
-    : factory(factory), positionAction(*factory), coloringAction(*factory), reductionAction(*factory),
-      creationMap{
-          {"normal", [this] { return std::make_unique<NormalCalculationAction>(*this->factory); }},
-          {"grid", [this] { return std::make_unique<GridbasedCalculationAction>(*this->factory); }},
-          {"successive refinement", [this] { return std::make_unique<SuccessiveRefinementAction>(*this->factory); }},
-          {"Mariani-Silver", [this] { return std::make_unique<MarianiSilverAction>(*this->factory); }},
-          {"successive iteration", [this] { return std::make_unique<SuccessiveIterationAction>(*this->factory); }},
+MandelPipeline::MandelPipeline()
+    : creationMap{
+          {"normal", [this] { return std::make_unique<NormalCalculationAction>(); }},
+          {"grid", [this] { return std::make_unique<GridbasedCalculationAction>(); }},
+          {"successive refinement", [this] { return std::make_unique<SuccessiveRefinementAction>(); }},
+          {"Mariani-Silver", [this] { return std::make_unique<MarianiSilverAction>(); }},
+          {"successive iteration", [this] { return std::make_unique<SuccessiveIterationAction>(); }},
       },
       methodSelectionAction{[this](const CalculationMethod &method) {
           std::string s = method.getString();
           if (!methodMap.count(s)) { methodMap.emplace(s, creationMap.at(s)()); }
           return methodMap.at(method.getString()).get();
       }} {
-    this->addParam(typeParam);
+    this->addParam(generalParam);
     this->addParam(imageParams);
     this->addParam(multisampleParams);
     this->addParam(positionParams);
@@ -31,8 +30,8 @@ MandelPipeline::MandelPipeline(std::shared_ptr<Factory> factory)
 
     //connect positionaction
     positionParams.naturalConnect(convertedPositionParams);
-    typeParam.naturalConnect(convertedPositionParams);
-    typeParam.naturalConnect(positionAction);
+    generalParam.naturalConnect(convertedPositionParams);
+    generalParam.naturalConnect(positionAction);
     convertedPositionParams.naturalConnect(positionAction);
     multisampleParams.naturalConnect(positionAction);
     imageRangeGenerator.naturalConnect(positionAction);
@@ -42,8 +41,8 @@ MandelPipeline::MandelPipeline(std::shared_ptr<Factory> factory)
     parserAction.naturalConnect(calcAction);
 
     calcParams.naturalConnect(convertedCalcParams);
-    typeParam.naturalConnect(convertedCalcParams);
-    typeParam.naturalConnect(calcAction);
+    generalParam.naturalConnect(convertedCalcParams);
+    generalParam.naturalConnect(calcAction);
     convertedCalcParams.naturalConnect(calcAction);
     algoParams.naturalConnect(calcAction);
     positionAction.naturalConnect(calcAction);
@@ -55,7 +54,7 @@ MandelPipeline::MandelPipeline(std::shared_ptr<Factory> factory)
     calcAction.getInput(_C("reset calculation")).setDefaultValue(true);
 
     //connect coloringAction
-    typeParam.naturalConnect(coloringAction);
+    generalParam.naturalConnect(coloringAction);
     algoParams.naturalConnect(coloringAction);
     calcParams.naturalConnect(coloringAction);
     calcAction.naturalConnect(coloringAction);
@@ -64,7 +63,7 @@ MandelPipeline::MandelPipeline(std::shared_ptr<Factory> factory)
     imageRangeGenerator.naturalConnect(coloringAction);
 
     //connect reductionAction
-    typeParam.naturalConnect(reductionAction);
+    generalParam.naturalConnect(reductionAction);
     algoParams.naturalConnect(reductionAction);
     multisampleParams.naturalConnect(reductionAction);
     coloringAction.naturalConnect(reductionAction);
@@ -72,7 +71,8 @@ MandelPipeline::MandelPipeline(std::shared_ptr<Factory> factory)
     reducedImageRangeGenerator.naturalConnect(reductionAction);
 
     //set default values:
-    typeParam.setValue(_C("numeric type"), "float");
+    generalParam.setValue(_C("platform"), Factory::getAllFactories().front());
+    generalParam.setValue(_C("numeric type"), "float");
 
     imageParams.setValue(_C("width"), 512);
     imageParams.setValue(_C("height"), 512);

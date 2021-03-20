@@ -22,7 +22,7 @@ struct MainWindow : Gtk::Window{
 	MainWindow();
 
 	Platform* getSelectedPlatform(){
-		return selectedPlatform;
+		return &platform;
 	}
 
 	void calculateNow();
@@ -35,17 +35,11 @@ protected:
 
 	Gtk::Button calculateButton{"calculate"};
 	Gtk::MenuButton saveButton;
-	Gtk::ComboBoxText platformBox;
-	Gtk::ComboBoxText typeBox;
 
 	Gtk::ScrolledWindow parameterBox;
 	sigc::connection calcbuttonConnection;
 
-	std::map<std::string,std::unique_ptr<Platform>> platformMap;
-
-	Platform* selectedPlatform = nullptr;
-
-	void loadPlatform();
+	Platform platform;
 };
 
 

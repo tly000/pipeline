@@ -15,10 +15,8 @@
 struct MarianiSilverAction :
 	CalculationActionBase<KV("positionBuffer",UInt2Buffer)>{
 
-	MarianiSilverAction(Factory& f);
+	MarianiSilverAction();
 protected:
-	Factory& factory;
-
 	struct Rectangle{
 		uint32_t x,y,w,h;
 	};
@@ -28,6 +26,7 @@ protected:
 	BufferGeneratorAction<Rectangle> rectangleBufferGenerator1;
 	BufferGeneratorAction<Rectangle> rectangleBufferGenerator2;
 	BufferGeneratorAction<uint8_t> filterBufferGenerator;
+    BufferGeneratorAction<uint32_t> atomicIndexBufferGenerator;
 
 	FunctionCallAction<Input(KV("imageRange",Range)),KV("elemCount",uint32_t)> bufferRangeAction{
 		[](const Range& r){
@@ -51,7 +50,6 @@ protected:
 		KV("atomicIndex",UIntBuffer)
 	),KernelOutput<>> buildBufferAction;
 
-	UIntBuffer atomicIndexBuffer;
 	RectangleBuffer* rectBuffer1 = nullptr, *rectBuffer2 = nullptr;
 
 	int32_t currentStepSize = -1;

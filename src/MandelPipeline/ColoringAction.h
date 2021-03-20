@@ -19,6 +19,7 @@
 
 struct ColoringAction :
 	BoxedAction<Input(
+        KV("platform", std::shared_ptr<Factory>),
         KV("numeric type", NumericType),
 		KV("outer gradient",Gradient),
 		KV("outer curve",Curve),
@@ -36,9 +37,7 @@ struct ColoringAction :
 	),Output(
 		KV("coloredImage",Float3Image)
 	)>{
-	ColoringAction(Factory& factory);
-
-	Factory& factory;
+	ColoringAction();
 
     ImageGeneratorAction<Vec<3,float>> coloredImageGenerator;
 

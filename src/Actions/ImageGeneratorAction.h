@@ -11,16 +11,13 @@
  */
 
 template<typename T> struct ImageGeneratorAction
-	: LazyAction<Input(KV("imageRange",Range)),Output(Image<T>)>{
-
-	ImageGeneratorAction(Factory& factory) : factory(factory){}
+	: LazyAction<Input(KV("imageRange",Range), KV("platform", std::shared_ptr<Factory>)),Output(Image<T>)>{
 protected:
-	Factory& factory;
-
 	void executeImpl(){
 		uint32_t width = this->template getInput<0>().getValue().x;
 		uint32_t height = this->template getInput<0>().getValue().y;
-		this->template getOutput<0>().setValue(Image<T>(factory.createImage(width, height, sizeof(T))));
+        auto& factory = *this->getInput(_C("platform")).getValue();
+        this->template getOutput<0>().setValue(Image<T>(factory.createImage(width, height, sizeof(T))));
 	}
 };
 

@@ -21,6 +21,7 @@
 
 template<typename... AdditionalKernelParams> struct CalculationActionBase :
 	BoxedAction<Input(
+        KV("platform", std::shared_ptr<Factory>),
         KV("numeric type", NumericType),
 		KV("visualize steps",bool),
 		KV("reset calculation",bool),
@@ -45,13 +46,10 @@ template<typename... AdditionalKernelParams> struct CalculationActionBase :
 		KV("time",uint64_t),
 		KV("done",bool)
 	)>{
-		CalculationActionBase(Factory& factory)
-	  : iterationImageGenerator(factory),
-        statsImageGenerator(factory),
-        processedPositionImageGenerator([&](const NumericType& type, const Range& imageRange) {
-            return make_variant_complex_image(factory, type, imageRange);
-        }),
-        kernelGeneratorAction(factory) {
+		CalculationActionBase()
+	  : processedPositionImageGenerator([&](const std::shared_ptr<Factory>& factory, const NumericType& type, const Range& imageRange) {
+            return make_variant_complex_image(*factory, type, imageRange);
+        }) {
 		this->delegateInput(_C("processed formula"), definesAction.getInput(_C("FORMULA")));
 		this->delegateInput(_C("enable juliamode"), definesAction.getInput(_C("JULIAMODE")));
 		this->delegateInput(_C("iterations"), definesAction.getInput(_C("MAXITER")));
@@ -67,6 +65,11 @@ template<typename... AdditionalKernelParams> struct CalculationActionBase :
         this->delegateInput(_C("imageRange"), iterationImageGenerator.getInput(_C("imageRange")));
         this->delegateInput(_C("imageRange"), statsImageGenerator.getInput(_C("imageRange")));
         this->delegateInput(_C("imageRange"), processedPositionImageGenerator.getInput(_C("imageRange")));
+
+        this->delegateInput(_C("platform"), processedPositionImageGenerator.getInput(_C("platform")));
+        this->delegateInput(_C("platform"), kernelGeneratorAction.getInput(_C("platform")));
+        this->delegateInput(_C("platform"), iterationImageGenerator.getInput(_C("platform")));
+        this->delegateInput(_C("platform"), statsImageGenerator.getInput(_C("platform")));
 
 		definesAction.naturalConnect(kernelGeneratorAction);
 		kernelGeneratorAction.getInput(_C("programName")).setDefaultValue("calculation");
@@ -91,6 +94,7 @@ template<typename... AdditionalKernelParams> struct CalculationActionBase :
     ImageGeneratorAction<float> iterationImageGenerator;
     ImageGeneratorAction<Vec<4,float>> statsImageGenerator;
     FunctionCallAction<Input(
+        KV("platform", std::shared_ptr<Factory>),
         KV("numeric type",NumericType),
         KV("imageRange",Range)
     ), KV("positionImage",VariantComplexImage)> processedPositionImageGenerator;

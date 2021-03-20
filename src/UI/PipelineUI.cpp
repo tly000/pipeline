@@ -14,34 +14,6 @@
  */
 
 MainWindow::MainWindow() : imageView(this) {
-    for (uint32_t i = 0; i < CLFactory::getNumberOfDevices(); i++) {
-        auto factory = std::make_shared<CLFactory>(i);
-        std::string name = factory->getDeviceName();
-        platformBox.append(name);
-        platformMap.emplace(name, std::make_unique<Platform>(factory));
-    }
-
-    auto factory = std::make_shared<CPUFactory>();
-    std::string name = factory->getDeviceName();
-    platformBox.append(name);
-    platformMap.emplace(name, std::make_unique<Platform>(factory));
-
-    platformBox.set_active(0);
-    platformBox.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::loadPlatform));
-    typeBox.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::loadPlatform));
-
-    auto deviceLabel = Gtk::manage(new Gtk::Label("Device:"));
-    header.pack_start(*deviceLabel);
-    header.pack_start(platformBox);
-
-    header.pack_start(*Gtk::manage(new Gtk::Label("Type:")));
-    typeBox.append("float");
-    typeBox.append("double");
-    typeBox.append("Fixed4");
-    typeBox.append("Fixed8");
-    typeBox.append("qf128");
-    header.pack_start(typeBox);
-
     auto openButton = Gtk::manage(new Gtk::Button());
     openButton->set_image_from_icon_name("document-open-symbolic");
     openButton->signal_clicked().connect([this] {
@@ -64,7 +36,7 @@ MainWindow::MainWindow() : imageView(this) {
             }
         }
     });
-    header.pack_end(*openButton);
+    header.pack_start(*openButton);
     auto popOverBox = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_VERTICAL));
     auto saveImageButton = Gtk::manage(new Gtk::Button());
     saveImageButton->set_image_from_icon_name("camera-photo-symbolic");
@@ -175,22 +147,27 @@ MainWindow::MainWindow() : imageView(this) {
     saveButton.set_image_from_icon_name("media-floppy-symbolic");
     saveButton.set_popover(*popOver);
     calcbuttonConnection = calculateButton.signal_clicked().connect([this] { this->calculateNow(); });
-    header.pack_end(saveButton);
-    header.pack_end(calculateButton);
+    header.pack_start(saveButton);
+    header.pack_start(calculateButton);
+    header.set_show_close_button(true);
+    header.set_title("mandelpipeline");
 
-    verticalBox.add(header);
+    set_titlebar(header);
+    //verticalBox.add(header);
     verticalBox.add(mainView);
+
+    //set scroll policy
+    parameterBox.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
+    parameterBox.add(platform.getParameterBox());
+    parameterBox.show_all();
 
     mainView.add1(imageView);
     mainView.add2(parameterBox);
 
     this->add(verticalBox);
 
-    typeBox.set_active(0);
     calculateButton.clicked();
 
-    //set scroll policy
-    parameterBox.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
     this->show_all();
 }
 
@@ -219,7 +196,7 @@ void MainWindow::calculateNow() {
             return false;
         }
         if (*showingImage) {
-            this->imageView.updateView(selectedPlatform->getRenderedImage());
+            this->imageView.updateView(platform.getRenderedImage());
             *showingImage = false;
         }
         return true;
@@ -233,41 +210,18 @@ void MainWindow::calculateNow() {
 
     std::thread([=] {
         try {
-            this->selectedPlatform->setReset(true);
+            this->platform.setReset(true);
             do {
                 if (*cancel) { break; }
-                this->selectedPlatform->getPipeline().run();
+                this->platform.getPipeline().run();
 
                 *showingImage = true;
                 while (*showingImage)
                     ;
 
-                this->selectedPlatform->setReset(false);
-            } while (!this->selectedPlatform->isDone());
+                this->platform.setReset(false);
+            } while (!this->platform.isDone());
         } catch (const std::exception &e) { *error = e.what(); }
         *done = true;
     }).detach();
-}
-
-void MainWindow::loadPlatform() {
-    if (parameterBox.get_children().size()) { parameterBox.remove(); }
-    std::string platformName = platformBox.get_active_text();
-    std::string typeName = typeBox.get_active_text();
-    auto accessPair = std::make_pair(platformName, typeName);
-
-    auto& platform = this->platformMap.at(platformName);
-    platform->getPipeline().getParamPack("type").getParam("numeric type").setValueFromString(typeName);
-    if (this->selectedPlatform != nullptr) {
-        for (auto &pack : this->selectedPlatform->getPipeline().getParamPacks()) {
-            std::string packname = pack.first;
-            auto &packOfNewPlatform = platform->getPipeline().getParamPack(packname);
-            for (auto &param : *pack.second) {
-                packOfNewPlatform.getParam(param->name).setValueFromString(param->getValueAsString());
-            }
-        }
-    }
-    this->selectedPlatform = platform.get();
-
-    parameterBox.add(platform->getParameterBox());
-    parameterBox.show_all();
 }

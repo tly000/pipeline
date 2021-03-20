@@ -4,17 +4,16 @@
 
 #include "MarianiSilverAction.h"
 
-MarianiSilverAction::MarianiSilverAction(Factory &f)
-    :CalculationActionBase(f),
-     factory(f),
-     positionBufferGenerator(f),
-     rectangleBufferGenerator1(f),
-     rectangleBufferGenerator2(f),
-     filterBufferGenerator(f),
-     filterKernelGenerator(f),
-     buildBufferActionGenerator(f),
-     atomicIndexBuffer(Buffer<std::uint32_t>(f.createBuffer(2, sizeof(std::uint32_t)))){
+MarianiSilverAction::MarianiSilverAction() {
     this->kernelGeneratorAction.getInput(_C("kernelName")).setDefaultValue("marianiSilverKernel");
+
+    this->delegateInput(_C("platform"), positionBufferGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"), rectangleBufferGenerator1.getInput(_C("platform")));
+    this->delegateInput(_C("platform"), rectangleBufferGenerator2.getInput(_C("platform")));
+    this->delegateInput(_C("platform"), filterBufferGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"), atomicIndexBufferGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"), filterKernelGenerator.getInput(_C("platform")));
+    this->delegateInput(_C("platform"), buildBufferActionGenerator.getInput(_C("platform")));
 
     this->definesAction.naturalConnect(this->filterKernelGenerator);
     this->filterKernelGenerator.getInput(_C("kernelName")).setDefaultValue("marianiSilverFilter");
@@ -57,6 +56,7 @@ bool MarianiSilverAction::step() {
         this->positionBufferGenerator.run();
         this->rectangleBufferGenerator1.run();
         this->rectangleBufferGenerator2.run();
+        this->atomicIndexBufferGenerator.run();
 
         this->rectangleCount = 1;
         this->currentRange = currentPositionVector.size();
@@ -96,15 +96,16 @@ bool MarianiSilverAction::step() {
         this->filterKernelAction.getInput(_C("globalSize")).setDefaultValue(Range{this->rectangleCount,1,1});
         this->filterKernelAction.run();
 
+        auto& atomicIndexBuffer = this->atomicIndexBufferGenerator.getOutput<0>().getValue();
         std::uint32_t data[2]{0,0};
-        this->atomicIndexBuffer.copyFromBuffer(std::begin(data), std::end(data));
+        atomicIndexBuffer.copyFromBuffer(std::begin(data), std::end(data));
         this->buildBufferAction.getInput(_C("rectangleBuffer")).setDefaultValue(*this->rectBuffer1);
         this->buildBufferAction.getInput(_C("newRectangleBuffer")).setDefaultValue(*this->rectBuffer2);
-        this->buildBufferAction.getInput(_C("atomicIndex")).setDefaultValue(this->atomicIndexBuffer);
+        this->buildBufferAction.getInput(_C("atomicIndex")).setDefaultValue(atomicIndexBuffer);
         this->buildBufferAction.getInput(_C("globalSize")).setDefaultValue(Range{this->rectangleCount,1,1});
         this->buildBufferAction.run();
 
-        this->atomicIndexBuffer.copyToBuffer(std::begin(data), std::end(data));
+        atomicIndexBuffer.copyToBuffer(std::begin(data), std::end(data));
         std::swap(this->rectBuffer1,this->rectBuffer2);
         this->currentRange = data[0];
         this->rectangleCount = data[1];
