@@ -2,7 +2,7 @@
 #include "../Utils.h"
 #include "../Multisampling.h"
 
-kernel void positionKernel(global write_only Complex* output,uint32_t w,uint32_t h, Type offsetReal, Type offsetImag, Complex scaleFactor){
+kernel void positionKernel(global Complex* output,uint32_t w,uint32_t h, Type offsetReal, Type offsetImag, Complex scaleFactor){
 	int2 globalID = {
 		get_global_id(0),
 		get_global_id(1)

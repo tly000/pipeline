@@ -1,7 +1,7 @@
 #include "../Utils.h"
 #include "../Multisampling.h"
 
-kernel void reductionKernel(global read_only float* input,uint32_t w,uint32_t h,global write_only uchar4* output,uint32_t wo,uint32_t ho){
+kernel void reductionKernel(global float* input,uint32_t w,uint32_t h,global uchar4* output,uint32_t wo,uint32_t ho){
 	int2 globalID = {
 		get_global_id(0),
 		get_global_id(1)

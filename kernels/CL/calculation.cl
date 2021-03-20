@@ -91,8 +91,8 @@ void doCalculation(const int2 position,
 }
 
 kernel void mandelbrotKernel(
-	global read_only Complex* positionInput,uint32_t w,uint32_t h,
-	global write_only float* iterOutput,uint32_t w2,uint32_t h2,
+	global Complex* positionInput,uint32_t w,uint32_t h,
+	global float* iterOutput,uint32_t w2,uint32_t h2,
 	global Complex* processedPositionOutput,uint32_t w3,uint32_t h3,
 	global float4* statsOutput,uint32_t w4,uint32_t h4,
 	const Type cReal,const Type cImag){
