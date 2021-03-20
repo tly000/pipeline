@@ -15,22 +15,7 @@
  *      Author: tly
  */
 
-struct AbstractPlatform{
-	virtual PipelineWrapper& getPipeline() = 0;
-	virtual PipelineParameterBox& getParameterBox() = 0;
-	virtual const Image<unsigned>& getRenderedImage() = 0;
-
-	virtual void scale(float factor) = 0;
-	virtual void translate(float x,float y) = 0;
-	virtual void rotate(float angle) = 0;
-	virtual std::string getName() const = 0;
-	virtual bool isDone() const = 0;
-	virtual void setReset(bool enable) = 0;
-
-	virtual ~AbstractPlatform() = default;
-};
-
-struct Platform : AbstractPlatform{
+struct Platform {
 	Platform(std::shared_ptr<Factory> factory):
 		factory(factory){}
 
@@ -54,10 +39,8 @@ struct Platform : AbstractPlatform{
 
 	void scale(float factor){
 		//get current scale.
-		auto& param = this->pipeline->positionParams;
-		auto scale = param.getValue(_C("scale"));
-
-		param.setValue(_C("scale"), tmul(scale,fromFloatToType<decltype(scale)>(factor)));
+		auto& scale = this->pipeline->positionParams.getParam(_C("scale"));
+        scale.setValue(tmul(scale.getValue(),fromFloatToType<HighPrecisionType>(factor)));
 	}
 
 	//translate by x,y in image space
@@ -76,8 +59,8 @@ struct Platform : AbstractPlatform{
 		auto newX = tsub(tmul(X,cosA),tmul(Y,sinA));
 		auto newY = tadd(tmul(X,sinA),tmul(Y,cosA));
 
-		param.setValue(_C("center real"),tadd(offsetReal,newX));
-		param.setValue(_C("center imag"),tadd(offsetImag,newY));
+		param.getParam(_C("center real")).setValue(tadd(offsetReal,newX));
+		param.getParam(_C("center imag")).setValue(tadd(offsetImag,newY));
 	}
 
 	//translate by x,y in image space
@@ -85,14 +68,14 @@ struct Platform : AbstractPlatform{
 		//get current position and scale.
 		auto& param = this->pipeline->positionParams;
 		float currentAngle = param.getValue(_C("angle"));
-		param.setValue(_C("angle"), currentAngle + angle);
+		param.getParam(_C("angle")).setValue(currentAngle + angle);
 	}
 
 	std::string getName() const {
 		return factory->getDeviceName();
 	}
 
-	bool isDone() const{
+	bool isDone() const {
 		return this->pipeline->calcAction.getOutput(_C("done")).getValue();
 	}
 	void setReset(bool enable){

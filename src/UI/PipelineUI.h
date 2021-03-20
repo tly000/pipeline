@@ -21,7 +21,7 @@
 struct MainWindow : Gtk::Window{
 	MainWindow();
 
-	AbstractPlatform* getSelectedPlatform(){
+	Platform* getSelectedPlatform(){
 		return selectedPlatform;
 	}
 
@@ -41,9 +41,9 @@ protected:
 	Gtk::ScrolledWindow parameterBox;
 	sigc::connection calcbuttonConnection;
 
-	std::map<std::string,std::unique_ptr<AbstractPlatform>> platformMap;
+	std::map<std::string,std::unique_ptr<Platform>> platformMap;
 
-	AbstractPlatform* selectedPlatform = nullptr;
+	Platform* selectedPlatform = nullptr;
 
 	void loadPlatform();
 };

@@ -14,17 +14,17 @@
  */
 
 MainWindow::MainWindow() : imageView(this) {
-    auto factory = std::make_shared<CPUFactory>();
-    std::string name = factory->getDeviceName();
-    platformBox.append(name);
-    platformMap.emplace(name, std::make_unique<Platform>(factory));
-
     for (uint32_t i = 0; i < CLFactory::getNumberOfDevices(); i++) {
         auto factory = std::make_shared<CLFactory>(i);
         std::string name = factory->getDeviceName();
         platformBox.append(name);
         platformMap.emplace(name, std::make_unique<Platform>(factory));
     }
+
+    auto factory = std::make_shared<CPUFactory>();
+    std::string name = factory->getDeviceName();
+    platformBox.append(name);
+    platformMap.emplace(name, std::make_unique<Platform>(factory));
 
     platformBox.set_active(0);
     platformBox.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::loadPlatform));
