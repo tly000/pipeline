@@ -183,7 +183,6 @@ void MandelbrotImageView::updateView(const Image<unsigned> &image) {
                                       sizeof(unsigned) * image.getWidth() * image.getHeight());
     update_transform();
     queue_draw();
-    while (Gtk::Main::events_pending()) { Gtk::Main::iteration(false); }
 }
 
 bool MandelbrotImageView::mousePositionInRectangle() {

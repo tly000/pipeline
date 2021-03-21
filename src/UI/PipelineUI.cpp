@@ -175,7 +175,6 @@ void MainWindow::setSensitive(bool s) {
 
 void MainWindow::calculateNow() {
     std::shared_ptr<std::string> error = std::make_shared<std::string>("");
-    std::shared_ptr<std::atomic_bool> showingImage = std::make_shared<atomic_bool>(false);
     std::shared_ptr<std::atomic_bool> done = std::make_shared<atomic_bool>(false);
     std::shared_ptr<std::atomic_bool> cancel = std::make_shared<atomic_bool>(false);
 
@@ -190,10 +189,6 @@ void MainWindow::calculateNow() {
             calcbuttonConnection.disconnect();
             calcbuttonConnection = this->calculateButton.signal_clicked().connect([=] { this->calculateNow(); });
             return false;
-        }
-        if (*showingImage) {
-            this->imageView.updateView(pipeline.reductionAction.getOutput(_C("reducedImage")).getValue());
-            *showingImage = false;
         }
         return true;
     });
@@ -210,11 +205,7 @@ void MainWindow::calculateNow() {
             do {
                 if (*cancel) { break; }
                 this->pipeline.run();
-
-                *showingImage = true;
-                while (*showingImage)
-                    ;
-
+                this->imageView.updateView(pipeline.reductionAction.getOutput(_C("reducedImage")).getValue());
                 this->pipeline.calcAction.getInput(_C("reset calculation")).setDefaultValue(false);
             } while (!this->pipeline.calcAction.getOutput(_C("done")).getValue());
         } catch (const std::exception &e) { *error = e.what(); }
